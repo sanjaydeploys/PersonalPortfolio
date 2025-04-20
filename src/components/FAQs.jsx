@@ -4,33 +4,22 @@ import '../styles/Faq.css';
 const Faq = () => {
   const faqs = [
     {
-      question: 'Who is Sanjay Patidar and where is he from?',
-      answer: 'Sanjay Patidar, a dedicated individual with a passion for technology and innovation, was born on May 24, 1998, in the lively city of Indore, Madhya Pradesh, India. Growing up in this culturally rich environment has greatly influenced his outlook on life and his approach to problem-solving.',
+      question: 'Who is Sanjay Patidar and what are his notable achievements?',
+      answer: 'Sanjay Patidar is a Software Development Engineer and founder of Zedemy, a serverless learning platform. He developed SmartServe DO, an AI chatbot for LIC Development Officers, and led EduXcel to a top Google ranking through optimized site architecture and MongoDB indexing.',
     },
     {
-      question: 'What technologies and skills does Sanjay Patidar possess?',
-      answer: ' Sanjay Patidar is skilled in a wide range of technologies, such as React, Node.js, Express.js, MongoDB, Git, Docker, and Kubernetes. Beyond technical expertise, he excels in agile methodologies, SEO optimization, content and link building, as well as communication and leadership.      ',
+      question: 'What technologies does Sanjay Patidar specialize in?',
+      answer: 'Sanjay specializes in full-stack development with expertise in React.js, Node.js, AWS Lambda, MongoDB, and WebRTC. He builds scalable web applications, leveraging tools like Tailwind CSS, Redux, and Socket.io for efficient and modern solutions.',
     },
     {
-      question: 'How can I contact Sanjay Patidar?',
-      answer: "You can reach out to Sanjay Patidar via email at sanjay.patidar.eduxcel@gmail.com or explore his online portfolio at https://sanjay-patidar.vercel.app. His digital footprint also extends to GitHub under the username hello-developer-sanjay.      ",
+      question: 'What are some of Sanjay Patidar’s key projects?',
+      answer: 'Sanjay’s key projects include Zedemy, a serverless learning platform with AWS Lambda; SmartServe DO, an AI chatbot with Gemini API integration; ConnectNow, a WebRTC-based video chat app; and EventPoa, an event management system using the MERN stack.',
     },
     {
-      question: "What is Sanjay Patidar's professional experience?",
-      answer: "Sanjay Patidar has led six standalone projects, showcasing his technical prowess and delivering tangible outcomes. He has significantly contributed to elevating EduXcel to the forefront of the tech industry through innovative insights and cutting-edge education initiatives. Sanjay's expertise extends to optimizing SEO strategies, resulting in global visibility with over 12,000 impressions across 116+ countries.      ",
-    },
-    {
-      question: "What was Sanjay Patidar's educational journey?",
-      answer: " Sanjay Patidar pursued his Bachelor of Engineering in Computer Science & Engineering from Chandigarh University. Prior to that, he completed his secondary education at Jawahar Navodaya Vidyalaya, laying a strong foundation for his academic and professional endeavors.",
-    },
-
-    {
-question : " How has Sanjay Patidar's journey at Jawahar Navodaya Vidyalaya and Chandigarh University shaped his professional trajectory?",
-answer :"At Jawahar Navodaya Vidyalaya, Sanjay Patidar cultivated a nurturing educational environment, fostering growth and development from July 2009 to April 2017. His journey continued at Chandigarh University, where he honed his technical skills and embraced opportunities for personal and professional growth, culminating in a Bachelor's degree in Computer Science & Engineering."
-
+      question: 'How can I contact Sanjay Patidar for collaboration or inquiries?',
+      answer: 'You can contact Sanjay Patidar via email at sanjaypatidar.engineer@gmail.com, visit his portfolio at sanjay-patidar.vercel.app, or explore his GitHub at github.com/hello-developer-sanjay for collaboration or inquiries.',
     },
   ];
-  
 
   const [activeIndex, setActiveIndex] = useState(null);
 
@@ -39,10 +28,8 @@ answer :"At Jawahar Navodaya Vidyalaya, Sanjay Patidar cultivated a nurturing ed
   };
 
   return (
-
     <div className="faq-container">
-        <div className="flex justify-center items-center  mt-4">
-        </div>
+      <div className="flex justify-center items-center mt-4"></div>
       {faqs.map((faq, index) => (
         <div className="faq-item" key={index}>
           <div className={`question ${activeIndex === index ? 'active' : ''}`} onClick={() => handleToggle(index)}>
