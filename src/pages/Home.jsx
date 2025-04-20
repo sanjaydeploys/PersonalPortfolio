@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
+        // eslint-disable-next-line react/prop-types
+
   /* eslint-disable react/no-unescaped-entities */
   import {  useEffect, useState } from 'react';
   import styled from 'styled-components';
@@ -714,10 +716,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
 
 
   const Home = () => {
-    const [formData, setFormData] = useState({
-      latitude: null,
-      longitude: null,
-    });
+   
     const [animationEnabled, setAnimationEnabled] = useState(true);
     const [imageLoading, setImageLoading] = useState(true);
 
@@ -802,31 +801,6 @@ const SocialIconWrapper = ({ icon, label, link }) => {
   
   
 
-    const copyContactNumberforlap = () => {
-      const contactNumberforlap = document.getElementById('contactNumberforlap');
-      const range = document.createRange();
-      range.selectNode(contactNumberforlap);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-      alert('Contact number copied ! Please use this contact number responsibly for legitimate purposes only. Illegal activities or unauthorized promotion are strictly prohibited. ');
-    };
-    const copyInstaIDforlap = () => {
-      const instaIDforlap = document.getElementById('instaIDforlap');
-      const range = document.createRange();
-      range.selectNode(instaIDforlap);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-      alert('Instagram ID copied ! Note: By copying this Instagram ID, you agree to use it for legitimate purposes only. Unauthorized promotion or misuse of this ID is strictly prohibited. ');
-    };
-  
- 
-    
-    
-
     const copyGithubIDforlap = () => {
       const githubID = document.getElementById('githubIDforlap');
       const range = document.createRange();
@@ -848,76 +822,9 @@ const SocialIconWrapper = ({ icon, label, link }) => {
       alert('Linkedin Profile copied ! Reminder: By copying this link to Linkedin Profile, you can access valuable projects and insights. . ');
     };
   
-    const copyContactNumberforu = () => {
-      const contactNumberforu = document.getElementById('contactNumberforu');
-      const range = document.createRange();
-      range.selectNode(contactNumberforu);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-      alert('Contact number copied ! Please use this contact number responsibly for legitimate purposes only. Illegal activities or unauthorized promotion are strictly prohibited. ');
-    };
-    const copyInstaIDforu = () => {
-      const instaIDforu = document.getElementById('instaIDforu');
-      const range = document.createRange();
-      range.selectNode(instaIDforu);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-      alert('Instagram ID copied ! Note: By copying this Instagram ID, you agree to use it for legitimate purposes only. Unauthorized promotion or misuse of this ID is strictly prohibited. ');
-    };
-    const copyEduIDforlap = () => {
-      const eduIDforlap = document.getElementById('eduIDforlap');
-      const range = document.createRange();
-      range.selectNode(eduIDforlap);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-      alert('EduXcel website link copied ! Note: By copying this website link,you can access valuable Tech insights. . ');
-    };
 
-    useEffect(() => {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const timestamp = position.timestamp;
-          const date = new Date(timestamp); // Convert timestamp to Date object
-          console.log(`Latitude: ${latitude}, Longitude: ${longitude}, Timestamp: ${date}`);
-          setFormData({
-            latitude,
-            longitude,
-          });
-    
-          // Send coordinates to the server
-          fetch('https://portfolio-api-5aug.onrender.com/api/store-visited-location', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ latitude, longitude, timestamp }),
-          })
-            .then(response => {
-              if (!response.ok) {
-                throw new Error('Failed to store location');
-              }
-              return response.json();
-            })
-            .then(data => console.log(data))
-            .catch(error => console.error('Error storing location:', error.message));
-        },
-        (error) => {
-          console.error('Error getting location:', error.message);
-        },
-        { enableHighAccuracy: true }
-      );
-    
-      return () => {
-        navigator.geolocation.clearWatch(watchId);
-      };
-    }, []);
+
+  
   
   useEffect(() => {
       // Display an info toast message
@@ -976,6 +883,69 @@ const SocialIconWrapper = ({ icon, label, link }) => {
       return () => clearInterval(interval);
     }, []);
 
+
+    const faqData = [
+      {
+        '@type': 'Question',
+        name: 'Who is Sanjay Patidar and what are his notable achievements?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Sanjay Patidar is a Software Development Engineer and founder of Zedemy, a serverless learning platform. He developed SmartServe DO, an AI chatbot for LIC Development Officers, and led EduXcel to a top Google ranking through optimized site architecture and MongoDB indexing.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What technologies does Sanjay Patidar specialize in?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Sanjay specializes in full-stack development with expertise in React.js, Node.js, AWS Lambda, MongoDB, and WebRTC. He builds scalable web applications, leveraging tools like Tailwind CSS, Redux, and Socket.io for efficient and modern solutions.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What are some of Sanjay Patidar’s key projects?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Sanjay’s key projects include Zedemy, a serverless learning platform with AWS Lambda; SmartServe DO, an AI chatbot with Gemini API integration; ConnectNow, a WebRTC-based video chat app; and EventPoa, an event management system using the MERN stack.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How can I contact Sanjay Patidar for collaboration or inquiries?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'You can contact Sanjay Patidar via email at sanjaypatidar.engineer@gmail.com, visit his portfolio at sanjay-patidar.vercel.app, or explore his GitHub at github.com/hello-developer-sanjay for collaboration or inquiries.',
+        },
+      },
+    ];
+  
+    const structuredData = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Sanjay Patidar | Software Engineer & Web Developer',
+        description: 'Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB.',
+        url: 'https://sanjay-patidar.vercel.app',
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': 'https://sanjay-patidar.vercel.app',
+        },
+        author: {
+          '@type': 'Person',
+          name: 'Sanjay Patidar',
+        },
+        publisher: {
+          '@type': 'Person',
+          name: 'Sanjay Patidar',
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqData,
+      },
+    ];
+  
     return (
       <HomeContainer
         initial={{ opacity: 0 }}
@@ -983,227 +953,46 @@ const SocialIconWrapper = ({ icon, label, link }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.7, ease: 'easeInOut' }}
       >
-    <Helmet>
+  
+  <Helmet>
+      <html lang="en" />
+      <title>Sanjay Patidar | Software Engineer & Web Developer</title>
+      <meta
+        name="description"
+        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+      />
+      <meta
+        name="keywords"
+        content="Sanjay Patidar, software engineer, web developer, full-stack developer, React.js, Node.js, AWS, MongoDB, Zedemy, SmartServe DO, ConnectNow, EventPoa, portfolio, technology, coding"
+      />
+      <meta name="author" content="Sanjay Patidar" />
+      <meta name="robots" content="index, follow" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="canonical" href="https://sanjay-patidar.vercel.app" />
+      <meta property="og:title" content="Sanjay Patidar | Software Engineer & Web Developer" />
+      <meta
+        property="og:description"
+        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+      />
+      <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta property="og:image:alt" content="Sanjay Patidar Profile" />
+      <meta property="og:url" content="https://sanjay-patidar.vercel.app" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Sanjay Patidar Portfolio" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Sanjay Patidar | Software Engineer & Web Developer" />
+      <meta
+        name="twitter:description"
+        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+      />
+      <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta name="twitter:site" content="@sanjaypatidar" />
+      <meta name="twitter:creator" content="@sanjaypatidar" />
+      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+    </Helmet>
     
-    <title>Sanjay Patidar | Web Developer & UI/UX Designer | Software Engineer | Educated at Jawahar Navodaya Vidyalaya and Chandigarh University | Neemuch | Indore | Delhi | Bangalore | Mandsaur | India (458220) | Top Web Developer in India </title>
-    <meta
-      name="description"
-      content="Discover the remarkable journey of Sanjay Patidar, a dedicated and passionate individual excelling in the realms of web development and UI/UX design. As a Computer Science and Engineering student, Sanjay embodies a profound commitment to mastering the intricacies of programming, with a specialized focus on crafting immersive digital experiences. Currently pursuing a Bachelor of Engineering degree at Chandigarh University, Sanjay brings forth a proactive approach and an unwavering dedication to excellence in all endeavors. His educational odyssey began at Jawahar Navodaya Vidyalaya School, where he laid the foundation for his academic and extracurricular prowess from 2009 to 2016. This esteemed residential institution, administered under the Ministry of Education, fostered holistic development and instilled a fervent pursuit of excellence. Throughout his tenure, Sanjay actively engaged in a plethora of inter-school competitions, showcasing his versatility and achieving distinction in both academic and non-academic domains. Building upon this robust foundation, Sanjay embarked on his tertiary education journey at Chandigarh University, where he embarked on a quest for knowledge and innovation. Embracing the cutting-edge infrastructure and progressive pedagogical approaches of the university, he delved deep into the intricacies of Computer Science Engineering. His academic trajectory is marked by a stellar GPA of 7.5, a testament to his unwavering dedication and intellectual acumen. Beyond the confines of academia, Sanjay's passion for technology extends to the realms of practical application. Actively participating in coding competitions, hackathons, and collaborative projects, he honed his problem-solving prowess and cultivated invaluable teamwork skills. His journey is characterized by a relentless pursuit of excellence, driven by a profound sense of creativity, innovation, and a commitment to delivering exceptional digital solutions. Explore the professional portfolio of Sanjay Patidar, where innovation meets expertise, and witness firsthand the culmination of passion, creativity, and a relentless pursuit of excellence in web development and UI/UX design."
-    />
     
-    <link rel="canonical" href="https://sanjay-patidar.vercel.app" />
-
-    <meta property="og:title" content="Sanjay Patidar | Web Developer & UI/UX Designer | Software Engineer | Educated at Jawahar Navodaya Vidyalaya and Chandigarh University | Neemuch | Indore | Delhi | Bangalore | Mandsaur | India (458220) | Top Web Developer in India " />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://sanjay-patidar.vercel.app" />
-    <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
-    <meta property="og:image:alt" content="Sanjay Patidar" />
-    <meta property="og:site_name" content="Sanjay Patidar | Web Developer & UI/UX Designer | Software Engineer | Educated at Jawahar Navodaya Vidyalaya and Chandigarh University | Neemuch | Indore | Delhi | Bangalore | Mandsaur | India (458220) | Top Web Developer in India " />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sanjay Patidar | Web Developer & UI/UX Designer | Software Engineer | Educated at Jawahar Navodaya Vidyalaya and Chandigarh University | Neemuch | Indore | Delhi | Bangalore | Mandsaur | India (458220) | Top Web Developer in India " />
-    <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
-    <meta name="twitter:site" content="@sanjaypatidar" />
-    <meta name="twitter:creator" content="@sanjaypatidar" />
-
-    <meta name="keywords" content="portfolio, personal-portfolio,developer_sanju,sanjay, Sanjay, SANJAY, Sanjay Patidar, SANJAY PATIDAR, SANJAY WEB DEVELOPER, SANJAY DEVELOPER, Full Stack Web Developer, Mern Stack Web Developer, sanjay patidar, sanjay-patidar, professional, web developer portfolio, coder, web development, UI/UX design, Chandigarh University, EduXcel, Indore,contact, developer, programmer, engineer, AI, Artificial Intelligence ,tech enthusiastic, creativity ,creator, work , technology, coding, projects, experiences, resume, cv" />
-    <meta name="author" content="Sanjay Patidar" />
-
-    <script type="application/ld+json">
-       {JSON.stringify({
-         '@context': 'http://schema.org',
-         '@type': 'Person',
-         "name": "Sanjay Patidar",
-         "birthDate": "1998-07-01",
-         "birthPlace": {
-           "@type": "Place",
-           "address": {
-             "@type": "PostalAddress",
-             "addressLocality": "Indore"
-           }
-         },
-         "alumniOf": {
-           "@type": "CollegeOrUniversity",
-           "name": "Chandigarh University",
-           "location": {
-             "@type": "Place",
-             "address": {
-               "@type": "PostalAddress",
-               "addressLocality": "Chandigarh",
-               "addressRegion": "Punjab",
-               "addressCountry": "India"
-             }
-           }
-         },
-         "address": [
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Indore",
-             "addressRegion": "Madhya Pradesh",
-             "postalCode": "452001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Chandigarh",
-             "addressRegion": "Punjab",
-             "postalCode": "160001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Mumbai",
-             "addressRegion": "Maharashtra",
-             "postalCode": "400001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Bangalore",
-             "addressRegion": "Karnataka",
-             "postalCode": "560001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Delhi",
-             "addressRegion": "Delhi",
-             "postalCode": "110001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Kolkata",
-             "addressRegion": "West Bengal",
-             "postalCode": "700001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Chennai",
-             "addressRegion": "Tamil Nadu",
-             "postalCode": "600001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Hyderabad",
-             "addressRegion": "Telangana",
-             "postalCode": "500001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Pune",
-             "addressRegion": "Maharashtra",
-             "postalCode": "411001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Ahmedabad",
-             "addressRegion": "Gujarat",
-             "postalCode": "380001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Jaipur",
-             "addressRegion": "Rajasthan",
-             "postalCode": "302001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Lucknow",
-             "addressRegion": "Uttar Pradesh",
-             "postalCode": "226001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Bhopal",
-             "addressRegion": "Madhya Pradesh",
-             "postalCode": "462001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Nagpur",
-             "addressRegion": "Maharashtra",
-             "postalCode": "440001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Visakhapatnam",
-             "addressRegion": "Andhra Pradesh",
-             "postalCode": "530001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Kochi",
-             "addressRegion": "Kerala",
-             "postalCode": "682001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Guwahati",
-             "addressRegion": "Assam",
-             "postalCode": "781001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Bhubaneswar",
-             "addressRegion": "Odisha",
-             "postalCode": "751001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Dehradun",
-             "addressRegion": "Uttarakhand",
-             "postalCode": "248001",
-             "addressCountry": "India"
-           },
-           {
-             "@type": "PostalAddress",
-             "addressLocality": "Raipur",
-             "addressRegion": "Chhattisgarh",
-             "postalCode": "492001",
-             "addressCountry": "India"
-           }
-         ],
-         "worksFor": {
-           "@type": "Organization",
-           "name": "Eduxcel" 
-         },
-         "url": "https://sanjay-patidar.vercel.app/",
-         "sameAs": [
-           "https://www.linkedin.com/in/sanjay-patidar-25b580292/",
-           "https://github.com/hello-developer-sanjay",
-           "https://www.instagram.com/sanjay_patidar_mcmxcviii/",
-           "https://sanjay-patidar.vercel.app/projects",
-                        "https://eduxcel.vercel.app/signup",
-                        "https://sanjay-patidar.vercel.app/projects/all",
-                                   "https://sanjay-patidar.vercel.app/skills",
-                                   "https://sanjay-patidar.vercel.app/education",
-                                   "https://sanjay-patidar.vercel.app/certifications",
-                                              "https://sanjay-patidar.vercel.app/resume",
-                                              "https://sanjay-patidar.vercel.app/contact"
-
-
-
-         ]
-   
-
-       })}
-     </script>
-  </Helmet>
-        <BackgroundOverlay />
+          <BackgroundOverlay />
         <FlexContainer>
 
         <ProfileImageContainer>
@@ -1239,24 +1028,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
 
       <Onlyforlap>
   
-      <Next>
-  Contact Sanjay Patidar | Web Developer | Software Engineer
-  <button 
-    onClick={() => window.location.href = 'tel:+91 9165751109'} 
-    style={{
-      marginLeft: '4px',
-      color: '#000501',
-      padding: '2px 4px',
-      border: '2px solid #ff6b6b',
-      borderRadius: '30px',
-      cursor: 'pointer',
-      boxShadow: '0px 0px 10px #ffd700'
-    }}
-  >    <span role="img" aria-label="Phone" className="bounce">📞</span>
 
-    <span className="call-text">Call Sanjay Patidar</span>
-  </button>
-</Next>
 <Next>
   Write an Email to Sanjay Patidar | Web Developer | India
 
@@ -1279,25 +1051,10 @@ const SocialIconWrapper = ({ icon, label, link }) => {
 
 </Next>
 
-      <Next>
-      📞 Sanjay Patidar <span className="light">Contact | Mobile Number : </span>{' '}
-        <a href="tel:+9165751109" id="contactNumberforlap" style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }}>+91 9165751109</a> 📞 | OR |
-        
-        <button onClick={copyContactNumberforlap} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Number</button>
-      </Next>
-  
-      <Next>
-    🔗 <span className="light">Sanjay Patidar Instagram ID : </span>{' '}
-    <a href="https://www.instagram.com/patidarsanju.io"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="instaIDforlap" target="_blank">patidarsanju.io</a>
-    {' '} | OR | {' '}
-    <button onClick={copyInstaIDforlap} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Insta ID</button>
-  </Next>
-  
-  
   
   <Next>
     🔗 <span className="light">Sanjay Patidar Github Profile : </span>{' '}
-    <a href="https://github.com/hello-developer-sanjay"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="githubIDforlap" target="_blank">hello-developer-sanjay</a>
+    <a href="https://github.com/hello-developer-sanjay"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="githubIDforlap" target="_blank">github.com/hello-developer-sanjay</a>
     {' '} | OR | {' '}
     <button onClick={copyGithubIDforlap} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Github ID</button>
   </Next>
@@ -1305,7 +1062,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
   
   <Next>
     🔗 <span className="light">Sanjay Patidar Linkedin Profile : </span>{' '}
-    <a href="https://www.linkedin.com/in/sanjay-patidar-25b580292"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="linkedinIDforlap" target="_blank">sanjay-patidar-25b580292</a>
+    <a href="https://www.linkedin.com/in/sanjay-patidar"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="linkedinIDforlap" target="_blank">www.linkedin.com/in/sanjay-patidar</a>
     {' '} | OR | {' '}
     <button onClick={copyLinkedinIDforlap} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Linkedin ID</button>
   </Next>
@@ -1337,43 +1094,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
              <Animation/>
 
 <Onlyformob>
-<Next>
-
-<button 
-
-  onClick={() => window.location.href = 'tel:+91 9165751109'} 
-  style={{
-    marginLeft: '4px',
-    color: '#000501',
-    padding: '2px 4px',
-    border: '2px solid #ff6b6b',
-    borderRadius: '30px',
-    cursor: 'pointer',
-    boxShadow: '0px 0px 10px #ffd700'
-  }}
->
-  <span className="call-text">Call Sanjay Patidar</span>
-  <span role="img" aria-label="Phone" className="bounce">📞</span>
-  
-</button>
-{' '} Contact Sanjay Patidar | Web Developer | Software Engineer 
-{' '}
-
-</Next>
-
-    <Next>
-    📞 Sanjay Patidar <span className="light">Contact | Mobile Number : </span>{' '}
-      <a href="tel:+91 9165751109" id="contactNumberforu" style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }}>+91 9165751109</a> 📞 | OR |
-      
-      <button onClick={copyContactNumberforu} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Number</button>
-    </Next>
-
-    <Next>
-  🔗 <span className="light">Sanjay Patidar Instagram ID : </span>{' '}
-  <a href="https://www.instagram.com/sanjay_patidar_mcmxcviii"style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }} id="instaIDforu" target="_blank">sanjay_patidar_mcmxcviii</a>
-  {' '} | OR | {' '}
-  <button onClick={copyInstaIDforu} style={{ marginLeft: '4px', color: '#000501', padding: '2px 4px', border: '2px solid #ff6b6b', borderRadius: '30px', cursor: 'pointer' }}>Copy Insta ID</button>
-</Next>
+ 
 
 
     <Next>
