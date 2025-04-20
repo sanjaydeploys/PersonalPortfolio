@@ -974,7 +974,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
         property="og:description"
         content="Portfolio of Sanjay Patidar, Software Engineer and Founder of Zedemy, specializing in full-stack development with React.js, Node.js, and AWS. Explore now."
       />
-      <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/HogwartsEdX/profileImag.jpeg" />
       <meta property="og:image:alt" content="Sanjay Patidar Profile" />
       <meta property="og:url" content="https://sanjay-patidar.vercel.app" />
       <meta property="og:type" content="website" />
@@ -985,7 +985,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
         name="twitter:description"
         content="Portfolio of Sanjay Patidar, Software Engineer and Founder of Zedemy, specializing in full-stack development with React.js, Node.js, and AWS. Explore now."
       />
-      <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/HogwartsEdX/profileImag.jpeg" />
       <meta name="twitter:site" content="@sanjaypatidar" />
       <meta name="twitter:creator" content="@sanjaypatidar" />
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
