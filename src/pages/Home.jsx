@@ -956,10 +956,10 @@ const SocialIconWrapper = ({ icon, label, link }) => {
   
   <Helmet>
       <html lang="en" />
-      <title>Sanjay Patidar | Software Engineer & Web Developer</title>
+      <title>Sanjay Patidar | Software Engineer & Founder at Zedemy</title>
       <meta
         name="description"
-        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+        content="Portfolio of Sanjay Patidar, Software Engineer and Founder of Zedemy, specializing in full-stack development with React.js, Node.js, and AWS. Explore now."
       />
       <meta
         name="keywords"
@@ -969,10 +969,10 @@ const SocialIconWrapper = ({ icon, label, link }) => {
       <meta name="robots" content="index, follow" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="canonical" href="https://sanjay-patidar.vercel.app" />
-      <meta property="og:title" content="Sanjay Patidar | Software Engineer & Web Developer" />
+      <meta property="og:title" content="Sanjay Patidar | Software Engineer & Founder at Zedemy" />
       <meta
         property="og:description"
-        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+        content="Portfolio of Sanjay Patidar, Software Engineer and Founder of Zedemy, specializing in full-stack development with React.js, Node.js, and AWS. Explore now."
       />
       <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
       <meta property="og:image:alt" content="Sanjay Patidar Profile" />
@@ -980,10 +980,10 @@ const SocialIconWrapper = ({ icon, label, link }) => {
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Sanjay Patidar Portfolio" />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="Sanjay Patidar | Software Engineer & Web Developer" />
+      <meta name="twitter:title" content="Sanjay Patidar | Software Engineer & Founder at Zedemy" />
       <meta
         name="twitter:description"
-        content="Portfolio of Sanjay Patidar, a Software Development Engineer specializing in full-stack web development with expertise in React.js, Node.js, AWS, and MongoDB."
+        content="Portfolio of Sanjay Patidar, Software Engineer and Founder of Zedemy, specializing in full-stack development with React.js, Node.js, and AWS. Explore now."
       />
       <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
       <meta name="twitter:site" content="@sanjaypatidar" />
