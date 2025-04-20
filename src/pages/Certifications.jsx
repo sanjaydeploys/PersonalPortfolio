@@ -81,224 +81,98 @@ const Certifications = () => {
     }
   }
 `;
+const faqData = [
+  {
+    '@type': 'Question',
+    name: 'What certifications has Sanjay Patidar earned?',
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: 'Sanjay Patidar has earned the AWS Cloud Solutions Architect Specialization from Coursera, demonstrating expertise in cloud architecture and serverless solutions.',
+    },
+  },
+  {
+    '@type': 'Question',
+    name: 'How do Sanjay Patidar’s certifications enhance his projects?',
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: 'Sanjay’s AWS certification enables him to build scalable, serverless platforms like Zedemy, leveraging AWS Lambda, S3, and API Gateway for efficient solutions.',
+    },
+  },
+  {
+    '@type': 'Question',
+    name: 'Where can I view Sanjay Patidar’s certification details?',
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: 'You can view Sanjay Patidar’s AWS Cloud Solutions Architect certification details on his portfolio at sanjay-patidar.vercel.app/certifications.',
+    },
+  },
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Sanjay Patidar | Certifications',
+    description: 'Certifications of Sanjay Patidar, Software Engineer and Founder of Zedemy, including AWS Cloud Solutions Architect Specialization.',
+    url: 'https://sanjay-patidar.vercel.app/certifications',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': 'https://sanjay-patidar.vercel.app/certifications',
+    },
+    author: {
+      '@type': 'Person',
+      name: 'Sanjay Patidar',
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Sanjay Patidar',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqData,
+  },
+];
+
   return (
     <>
       <Helmet>
-        <title>Sanjay Patidar | Web Developer & UI/UX Designer | Certifications | Crafting Scalable Digital Solutions for Global Innovation</title>
-        <meta
-          name="description"
-          content="Explore certifications obtained by Sanjay Patidar. Discover various certifications in Artificial Intelligence, Python, Machine Learning, Django, Full Stack Web Development, UI Design, and more.Discover the remarkable journey of Sanjay Patidar, a dedicated and passionate individual excelling in the realms of web development and UI/UX design. As a Computer Science and Engineering student, Sanjay embodies a profound commitment to mastering the intricacies of programming, with a specialized focus on crafting immersive digital experiences. Currently pursuing a Bachelor of Engineering degree at Chandigarh University, Sanjay brings forth a proactive approach and an unwavering dedication to excellence in all endeavors. His educational odyssey began at Jawahar Navodaya Vidyalaya School, where he laid the foundation for his academic and extracurricular prowess from 2009 to 2016. This esteemed residential institution, administered under the Ministry of Education, fostered holistic development and instilled a fervent pursuit of excellence. Throughout his tenure, Sanjay actively engaged in a plethora of inter-school competitions, showcasing his versatility and achieving distinction in both academic and non-academic domains. Building upon this robust foundation, Sanjay embarked on his tertiary education journey at Chandigarh University, where he embarked on a quest for knowledge and innovation. Embracing the cutting-edge infrastructure and progressive pedagogical approaches of the university, he delved deep into the intricacies of Computer Science Engineering. His academic trajectory is marked by a stellar GPA of 7.5, a testament to his unwavering dedication and intellectual acumen. Beyond the confines of academia, Sanjay's passion for technology extends to the realms of practical application. Actively participating in coding competitions, hackathons, and collaborative projects, he honed his problem-solving prowess and cultivated invaluable teamwork skills. His journey is characterized by a relentless pursuit of excellence, driven by a profound sense of creativity, innovation, and a commitment to delivering exceptional digital solutions. Explore the professional portfolio of Sanjay Patidar, where innovation meets expertise, and witness firsthand the culmination of passion, creativity, and a relentless pursuit of excellence in web development and UI/UX design."
-        />
-        <meta name="keywords" content="Sanjay Patidar, certifications, AI, Python, Machine Learning, Django, Full Stack Web Development, UI Design" />
-        <meta property="og:title" content="Sanjay Patidar | Web Developer & UI/UX Designer | Certifications" />
-        <meta property="og:description" content="Explore certifications obtained by Sanjay Patidar. Discover various certifications in Artificial Intelligence, Python, Machine Learning, Django, Full Stack Web Development, UI Design, and more.Discover the remarkable journey of Sanjay Patidar, a dedicated and passionate individual excelling in the realms of web development and UI/UX design. As a Computer Science and Engineering student, Sanjay embodies a profound commitment to mastering the intricacies of programming, with a specialized focus on crafting immersive digital experiences. Currently pursuing a Bachelor of Engineering degree at Chandigarh University, Sanjay brings forth a proactive approach and an unwavering dedication to excellence in all endeavors. His educational odyssey began at Jawahar Navodaya Vidyalaya School, where he laid the foundation for his academic and extracurricular prowess from 2009 to 2016. This esteemed residential institution, administered under the Ministry of Education, fostered holistic development and instilled a fervent pursuit of excellence. Throughout his tenure, Sanjay actively engaged in a plethora of inter-school competitions, showcasing his versatility and achieving distinction in both academic and non-academic domains. Building upon this robust foundation, Sanjay embarked on his tertiary education journey at Chandigarh University, where he embarked on a quest for knowledge and innovation. Embracing the cutting-edge infrastructure and progressive pedagogical approaches of the university, he delved deep into the intricacies of Computer Science Engineering. His academic trajectory is marked by a stellar GPA of 7.5, a testament to his unwavering dedication and intellectual acumen. Beyond the confines of academia, Sanjay's passion for technology extends to the realms of practical application. Actively participating in coding competitions, hackathons, and collaborative projects, he honed his problem-solving prowess and cultivated invaluable teamwork skills. His journey is characterized by a relentless pursuit of excellence, driven by a profound sense of creativity, innovation, and a commitment to delivering exceptional digital solutions. Explore the professional portfolio of Sanjay Patidar, where innovation meets expertise, and witness firsthand the culmination of passion, creativity, and a relentless pursuit of excellence in web development and UI/UX design." />
-        <meta property="og:url" content="https://sanjay-patidar.vercel.app/certifications" />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/icon+(2).png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Sanjay Patidar | Web Developer & UI/UX Designer | Certifications" />
-        <meta name="twitter:description" content="Explore certifications obtained by Sanjay Patidar. Discover various certifications in Artificial Intelligence, Python, Machine Learning, Django, Full Stack Web Development, UI Design, and more.Discover the remarkable journey of Sanjay Patidar, a dedicated and passionate individual excelling in the realms of web development and UI/UX design. As a Computer Science and Engineering student, Sanjay embodies a profound commitment to mastering the intricacies of programming, with a specialized focus on crafting immersive digital experiences. Currently pursuing a Bachelor of Engineering degree at Chandigarh University, Sanjay brings forth a proactive approach and an unwavering dedication to excellence in all endeavors. His educational odyssey began at Jawahar Navodaya Vidyalaya School, where he laid the foundation for his academic and extracurricular prowess from 2009 to 2016. This esteemed residential institution, administered under the Ministry of Education, fostered holistic development and instilled a fervent pursuit of excellence. Throughout his tenure, Sanjay actively engaged in a plethora of inter-school competitions, showcasing his versatility and achieving distinction in both academic and non-academic domains. Building upon this robust foundation, Sanjay embarked on his tertiary education journey at Chandigarh University, where he embarked on a quest for knowledge and innovation. Embracing the cutting-edge infrastructure and progressive pedagogical approaches of the university, he delved deep into the intricacies of Computer Science Engineering. His academic trajectory is marked by a stellar GPA of 7.5, a testament to his unwavering dedication and intellectual acumen. Beyond the confines of academia, Sanjay's passion for technology extends to the realms of practical application. Actively participating in coding competitions, hackathons, and collaborative projects, he honed his problem-solving prowess and cultivated invaluable teamwork skills. His journey is characterized by a relentless pursuit of excellence, driven by a profound sense of creativity, innovation, and a commitment to delivering exceptional digital solutions. Explore the professional portfolio of Sanjay Patidar, where innovation meets expertise, and witness firsthand the culmination of passion, creativity, and a relentless pursuit of excellence in web development and UI/UX design." />
-        <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/icon+(2).png" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'http://schema.org',
-            '@type': 'Person',
-            "name": "Sanjay Patidar",
-            "birthDate": "1998-07-01",
-            "birthPlace": {
-              "@type": "Place",
-              "address": {
-                "@type": "PostalAddress",
-                "addressLocality": "Indore"
-              }
-            },
-            "alumniOf": {
-              "@type": "CollegeOrUniversity",
-              "name": "Chandigarh University",
-              "location": {
-                "@type": "Place",
-                "address": {
-                  "@type": "PostalAddress",
-                  "addressLocality": "Chandigarh",
-                  "addressRegion": "Punjab",
-                  "addressCountry": "India"
-                }
-              }
-            },
-            "address": [
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Indore",
-                "addressRegion": "Madhya Pradesh",
-                "postalCode": "452001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Chandigarh",
-                "addressRegion": "Punjab",
-                "postalCode": "160001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Mumbai",
-                "addressRegion": "Maharashtra",
-                "postalCode": "400001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Bangalore",
-                "addressRegion": "Karnataka",
-                "postalCode": "560001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Delhi",
-                "addressRegion": "Delhi",
-                "postalCode": "110001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Kolkata",
-                "addressRegion": "West Bengal",
-                "postalCode": "700001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Chennai",
-                "addressRegion": "Tamil Nadu",
-                "postalCode": "600001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Hyderabad",
-                "addressRegion": "Telangana",
-                "postalCode": "500001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Pune",
-                "addressRegion": "Maharashtra",
-                "postalCode": "411001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Ahmedabad",
-                "addressRegion": "Gujarat",
-                "postalCode": "380001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Jaipur",
-                "addressRegion": "Rajasthan",
-                "postalCode": "302001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Lucknow",
-                "addressRegion": "Uttar Pradesh",
-                "postalCode": "226001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Bhopal",
-                "addressRegion": "Madhya Pradesh",
-                "postalCode": "462001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Nagpur",
-                "addressRegion": "Maharashtra",
-                "postalCode": "440001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Visakhapatnam",
-                "addressRegion": "Andhra Pradesh",
-                "postalCode": "530001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Kochi",
-                "addressRegion": "Kerala",
-                "postalCode": "682001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Guwahati",
-                "addressRegion": "Assam",
-                "postalCode": "781001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Bhubaneswar",
-                "addressRegion": "Odisha",
-                "postalCode": "751001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Dehradun",
-                "addressRegion": "Uttarakhand",
-                "postalCode": "248001",
-                "addressCountry": "India"
-              },
-              {
-                "@type": "PostalAddress",
-                "addressLocality": "Raipur",
-                "addressRegion": "Chhattisgarh",
-                "postalCode": "492001",
-                "addressCountry": "India"
-              }
-            ],
-            "worksFor": {
-              "@type": "Organization",
-              "name": "Eduxcel" 
-            },
-            "url": "https://sanjay-patidar.vercel.app/",
-            "sameAs": [
-              "https://www.linkedin.com/in/sanjay-patidar-25b580292/",
-              "https://github.com/hello-developer-sanjay",
-              "https://www.instagram.com/sanjay_patidar_mcmxcviii/",
-              "https://eduxcel.vercel.app/",
-                           "https://eduxcel.vercel.app/signup",
-                           
-  "https://sanjay-patidar.vercel.app/projects",
-  "https://sanjay-patidar.vercel.app/careers",
-
-  "https://sanjay-patidar.vercel.app/skills",
-  "https://sanjay-patidar.vercel.app/experiences",
-  "https://sanjay-patidar.vercel.app/certifications",
-  "https://sanjay-patidar.vercel.app/resume",
-  "https://sanjay-patidar.vercel.app/blogs",
-  "https://sanjay-patidar.vercel.app/education",
-  "https://sanjay-patidar.vercel.app/contact"
-
-
-            ]
-      
-
-          })}
-        </script>
-
-      </Helmet>
-
+      <html lang="en" />
+      <title>Sanjay Patidar | Software Engineer & Founder at Zedemy | Certifications</title>
+      <meta
+        name="description"
+        content="Certifications of Sanjay Patidar, Software Engineer and Founder of Zedemy, including AWS Cloud Solutions Architect. Explore now."
+      />
+      <meta
+        name="keywords"
+        content="Sanjay Patidar, certifications, AWS Cloud Solutions Architect, software engineer, Zedemy, full-stack developer, cloud architecture, portfolio"
+      />
+      <meta name="author" content="Sanjay Patidar" />
+      <meta name="robots" content="index, follow" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="canonical" href="https://sanjay-patidar.vercel.app/certifications" />
+      <meta property="og:title" content="Sanjay Patidar | Software Engineer & Founder at Zedemy | Certifications" />
+      <meta
+        property="og:description"
+        content="Certifications of Sanjay Patidar, Software Engineer and Founder of Zedemy, including AWS Cloud Solutions Architect. Explore now."
+      />
+      <meta property="og:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta property="og:image:alt" content="Sanjay Patidar Profile" />
+      <meta property="og:url" content="https://sanjay-patidar.vercel.app/certifications" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Sanjay Patidar Portfolio" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Sanjay Patidar | Software Engineer & Founder at Zedemy | Certifications" />
+      <meta
+        name="twitter:description"
+        content="Certifications of Sanjay Patidar, Software Engineer and Founder of Zedemy, including AWS Cloud Solutions Architect. Explore now."
+      />
+      <meta name="twitter:image" content="https://sanjaybasket.s3.ap-south-1.amazonaws.com/sanjay_patidar_profile.png" />
+      <meta name="twitter:site" content="@sanjaypatidar" />
+      <meta name="twitter:creator" content="@sanjaypatidar" />
+      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+    </Helmet>
       <SkillsHeading>Sanjay Patidar | Web Developer & UI/UX Designer | Certifications </SkillsHeading>
 
       <div className="certifications-container">
