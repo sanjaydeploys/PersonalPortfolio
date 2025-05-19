@@ -1153,7 +1153,7 @@ const SocialIconWrapper = ({ icon, label, link }) => {
       </ActionsContainer>
   
         <Subtitle>
-          Want to know more? Check out my <SubtitleLink href="/blogs">Blogs</SubtitleLink> for tech insights and tutorials.
+          Want to know more? Check out my <SubtitleLink href="https://zedemy.vercel.app/explore">Blogs on Zedemy</SubtitleLink> for tech insights and tutorials.
         </Subtitle>
         
 
