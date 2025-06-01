@@ -1130,7 +1130,6 @@ const SocialIconWrapper = ({ icon, label, link }) => {
         <ActionsContainer>
         {[
           { to: "/skills", text: "Explore My Skills", icon: <FaUserGraduate /> },
-          { to: "/education", text: "My Education", icon: <FaUserGraduate /> },
           { to: "/projects", text: "Discover My Projects", icon: <FaLaptopCode /> },
           { to: "/certifications", text: "Explore Certifications", icon: <FaCertificate /> },
           { to: "/experiences", text: "View My Experiences", icon: <FaBriefcase /> },
