@@ -236,9 +236,9 @@ const Projects = () => {
       try {
         let response;
         if (!category || category === 'all') {
-          response = await axios.get('https://portfolio-api-5aug.onrender.com/api/projects/category/all');
+          response = await axios.get('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/projects/category/all');
         } else {
-          response = await axios.get(`https://portfolio-api-5aug.onrender.com/api/projects/category/${category}`);
+          response = await axios.get(`https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/projects/category/${category}`);
         }
         setProjects(response.data || []);
         setLoading(false);
