@@ -162,7 +162,7 @@ const Sidebar = () => {
     async function fetchCertifications() {
       try {
         const response = await axios.get(
-          "https://portfolio-api-5aug.onrender.com/api/certifications"
+          "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/certifications"
         );
         setCertifications(response.data);
       } catch (error) {
