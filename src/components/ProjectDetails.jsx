@@ -296,7 +296,7 @@ const ProjectDetails = () => {
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        const response = await axios.get(`https://portfolio-api-5aug.onrender.com/api/project/${title}`);
+        const response = await axios.get(`https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/project/${title}`);
         setProject(response.data);
         setLoading(false);
       } catch (error) {
