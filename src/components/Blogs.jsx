@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-const backendBaseUrl = "https://portfolio-api-15jun-nbz1.onrender.com"; 
+const backendBaseUrl = "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/"; 
 const BlogsContainer = styled.div`
   padding: 2rem;
   display: flex;
