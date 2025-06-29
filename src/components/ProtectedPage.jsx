@@ -353,7 +353,7 @@ const ProtectedPage = () => {
   
     const handlePasswordSubmit = async () => {
       try {
-        const response = await axios.post('https://portfolio-api-5aug.onrender.com/api/authenticate', { password });
+        const response = await axios.post('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/authenticate', { password });
         if (response.data.authenticated) {
           setAuthenticated(true);
   
