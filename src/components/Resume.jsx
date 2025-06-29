@@ -182,13 +182,13 @@
       e.preventDefault();
       try {
         setLoading(true);
-        await fetch('https://portfolio-api-5aug.onrender.com/api/increment-resume-clicks', {
+        await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/increment-resume-clicks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-        const response = await fetch('https://portfolio-api-5aug.onrender.com/api/get-resume-click-count');
+        const response = await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/get-resume-click-count');
         const data = await response.json();
         setDownloadCount(data.count);
         window.open(pdfResumeUrl, '_blank');
@@ -201,7 +201,7 @@
 
         const runScript = async () => {
       try {
-          const response = await axios.get('https://portfolio-api-5aug.onrender.com/run-script');
+          const response = await axios.get('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/run-script');
           console.log(response.data);
       } catch (error) {
           console.error('Error running script:', error);
@@ -211,7 +211,7 @@
     useEffect(() => {
       const fetchDownloadCount = async () => {
         try {
-          const response = await fetch('https://portfolio-api-5aug.onrender.com/api/get-resume-click-count');
+          const response = await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/get-resume-click-count');
           const data = await response.json();
           setDownloadCount(data.count);
         } catch (error) {
