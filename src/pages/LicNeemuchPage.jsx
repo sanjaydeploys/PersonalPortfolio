@@ -1,5 +1,4 @@
 import { memo, useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { RingLoader } from 'react-spinners';
 
@@ -40,7 +39,6 @@ const LoadingText = styled.div`
 `;
 
 const LicNeemuchPage = memo(() => {
-  const dispatch = useDispatch();
   const [ssrHtml, setSsrHtml] = useState('');
   const [loading, setLoading] = useState(!window.__lic_neemuch_DATA__);
 
@@ -65,10 +63,12 @@ const LicNeemuchPage = memo(() => {
     if (window.__lic_neemuch_DATA__) {
       setSsrHtml(document.documentElement.outerHTML);
       setLoading(false);
-      dispatch({ type: 'FETCH_LIC_NEEMUCH_SUCCESS', payload: window.__lic_neemuch_DATA__ });
     } else {
       fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-neemuch')
-        .then((res) => res.text())
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+          return res.text();
+        })
         .then((html) => {
           setSsrHtml(html);
           setLoading(false);
@@ -87,7 +87,7 @@ const LicNeemuchPage = memo(() => {
         if (script) script.remove();
       });
     };
-  }, [dispatch]);
+  }, []);
 
   if (loading) {
     return (
