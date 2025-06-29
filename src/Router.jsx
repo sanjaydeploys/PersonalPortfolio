@@ -2,6 +2,7 @@ import  { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route ,useLocation } from "react-router-dom";
 import PageTransition from "./components/PageTransition"; // Import your PageTransition component
 import Home from "./pages/Home";
+import LicNeemuchPage from './pages/LicNeemuchPage';
 
 import BlogPage from "./components/BlogPage";
 import BlogPost from './components/BlogPost';
@@ -43,6 +44,7 @@ const AppRouter = () => {
       <Routes>
       <Route path="/" element={<HomeWithBlogSuggestion />} />
       <Route path="/founder-eduxcel" element={<Founder/>} />
+          <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
 
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
