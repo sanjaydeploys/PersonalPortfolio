@@ -130,7 +130,7 @@
       const fetchData = async (collection) => {
         try {
           const response = await fetch(
-            `https://portfolio-api-5aug.onrender.com/api/${collection}`
+            `https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/${collection}`
           );
           const responseData = await response.json();
           setBlogsData((prevData) => ({
