@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route ,useLocation } from "react-route
 import PageTransition from "./components/PageTransition"; // Import your PageTransition component
 import Home from "./pages/Home";
 import LicNeemuchPage from './pages/LicNeemuchPage';
+import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
 
 import BlogPage from "./components/BlogPage";
 import BlogPost from './components/BlogPost';
@@ -45,6 +46,7 @@ const AppRouter = () => {
       <Route path="/" element={<HomeWithBlogSuggestion />} />
       <Route path="/founder-eduxcel" element={<Founder/>} />
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
+          <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
 
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
