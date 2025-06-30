@@ -5,6 +5,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-neemuch"
     },
     {
+      "source": "/kileshwar-mahadev-ji-neemuch",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
