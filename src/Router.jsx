@@ -4,6 +4,9 @@ import PageTransition from "./components/PageTransition"; // Import your PageTra
 import Home from "./pages/Home";
 import LicNeemuchPage from './pages/LicNeemuchPage';
 import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
+import LicCaseStudy from './pages/LicCaseStudy';
+
+
 
 import BlogPage from "./components/BlogPage";
 import BlogPost from './components/BlogPost';
@@ -25,7 +28,6 @@ import Contact from "./components/Contact";
 import Career from './components/Career';
 import About from'./components/About';
 import  Founder from './components/Founder';
-
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -47,6 +49,7 @@ const AppRouter = () => {
       <Route path="/founder-eduxcel" element={<Founder/>} />
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
+          <Route path="/lic-case-study" element={<LicCaseStudy/>} />
 
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
