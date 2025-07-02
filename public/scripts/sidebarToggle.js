@@ -1,52 +1,42 @@
-(function () {
-  console.log('[sidebarToggle.js] Script loaded');
-  
-  function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
-    let attempts = 0;
-    const check = () => {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log(`[sidebarToggle.js] Found element: ${selector}`);
-        callback(element);
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        console.log(`[sidebarToggle.js] Waiting for ${selector}, attempt ${attempts}`);
-        setTimeout(check, interval);
-      } else {
-        console.error(`[sidebarToggle.js] Element ${selector} not found after ${maxAttempts} attempts`);
-      }
-    };
-    check();
-  }
+<script>
+  (function () {
+    console.log('[navToggle] Script loaded');
 
-  function initializeSidebar() {
-    waitForElement('.nav-toggle', (navToggle) => {
-      waitForElement('.sidebar-toggle', (sidebarToggle) => {
+    function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
+      let attempts = 0;
+      const check = () => {
+        const element = document.querySelector(selector);
+        if (element) {
+          console.log(`[navToggle] Found element: ${selector}`);
+          callback(element);
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          console.log(`[navToggle] Waiting for ${selector}, attempt ${attempts}`);
+          setTimeout(check, interval);
+        } else {
+          console.error(`[navToggle] Element ${selector} not found`);
+        }
+      };
+      check();
+    }
+
+    function initializeNavToggle() {
+      waitForElement('.nav-toggle', (navToggle) => {
         waitForElement('#nav-menu', (navMenu) => {
-          waitForElement('.sidebar-nav', (sidebarNav) => {
-            const toggleMenu = (toggle, menu) => {
-              toggle.addEventListener('click', () => {
-                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', !isExpanded);
-                menu.classList.toggle('active', !isExpanded);
-                console.log(`[sidebarToggle.js] Toggled ${menu.id}, expanded: ${!isExpanded}`);
-              });
-            };
-            toggleMenu(navToggle, navMenu);
-            toggleMenu(sidebarToggle, sidebarNav);
+          navToggle.addEventListener('click', () => {
+            const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', !isExpanded);
+            navMenu.classList.toggle('active', !isExpanded);
+            console.log(`[navToggle] Toggled menu, expanded: ${!isExpanded}`);
           });
         });
       });
-    });
-  }
+    }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('[sidebarToggle.js] DOMContentLoaded fired');
-      initializeSidebar();
-    });
-  } else {
-    console.log('[sidebarToggle.js] Document already loaded, initializing');
-    initializeSidebar();
-  }
-})();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeNavToggle);
+    } else {
+      initializeNavToggle();
+    }
+  })();
+</script>
