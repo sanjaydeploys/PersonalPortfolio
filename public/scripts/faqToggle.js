@@ -3,24 +3,26 @@
 
   function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq-item');
+
     faqItems.forEach((item) => {
       const question = item.querySelector('.faq-question');
       const answer = item.querySelector('.faq-answer');
+
       if (question && answer) {
-        question.addEventListener('click', () => {
+        const toggle = () => {
           const isExpanded = question.getAttribute('aria-expanded') === 'true';
           question.setAttribute('aria-expanded', !isExpanded);
-if (isExpanded) {
-  answer.classList.remove('active');
-} else {
-  answer.classList.add('active');
-}
-          console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent}, expanded: ${!isExpanded}`);
-        });
+          question.classList.toggle('active', !isExpanded);
+          answer.classList.toggle('active', !isExpanded);
+          console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent.trim()}, expanded: ${!isExpanded}`);
+        };
+
+        question.addEventListener('click', toggle);
+
         question.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            question.click();
+            toggle();
           }
         });
       } else {
