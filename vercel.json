@@ -21,6 +21,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
     },
     {
+      "source": "/connectnow-case-study",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
