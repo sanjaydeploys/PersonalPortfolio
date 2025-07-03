@@ -10,7 +10,11 @@
         question.addEventListener('click', () => {
           const isExpanded = question.getAttribute('aria-expanded') === 'true';
           question.setAttribute('aria-expanded', !isExpanded);
-          answer.classList.toggle('active', !isExpanded);
+if (isExpanded) {
+  answer.classList.remove('active');
+} else {
+  answer.classList.add('active');
+}
           console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent}, expanded: ${!isExpanded}`);
         });
         question.addEventListener('keydown', (e) => {
