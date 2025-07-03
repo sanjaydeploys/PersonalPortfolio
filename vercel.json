@@ -16,6 +16,10 @@
       "source": "/zedemy-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
     },
+     {
+      "source": "/eventease-case-study",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
