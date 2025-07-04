@@ -1,29 +1,34 @@
 (function () {
-  console.log('[faqToggle.js] Script loaded');
+  console.log('[faqToggle.js] Script loaded (aria-controls version)');
 
   function initializeFAQ() {
-    const faqItems = document.querySelectorAll('.faq-item');
-    faqItems.forEach((item) => {
-      const question = item.querySelector('.faq-question');
-      const answer = item.querySelector('.faq-answer');
+    const questions = document.querySelectorAll('.faq-question');
 
-      if (question && answer) {
-        const toggle = () => {
-          const isExpanded = question.getAttribute('aria-expanded') === 'true';
-          question.setAttribute('aria-expanded', !isExpanded);
-          question.classList.toggle('active', !isExpanded);
-          answer.classList.toggle('active', !isExpanded);
-          console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent.trim()}, expanded: ${!isExpanded}`);
-        };
+    questions.forEach(function (question) {
+      const answerId = question.getAttribute('aria-controls');
+      const answer = document.getElementById(answerId);
 
-        question.addEventListener('click', toggle);
-        question.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggle();
-          }
-        });
+      if (!answer) {
+        console.error('[faqToggle.js] FAQ answer not found for aria-controls:', answerId);
+        return;
       }
+
+      const toggle = () => {
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        question.setAttribute('aria-expanded', !isExpanded);
+        question.classList.toggle('active', !isExpanded);
+        answer.classList.toggle('active', !isExpanded);
+        console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent.trim()}, expanded: ${!isExpanded}`);
+      };
+
+      question.addEventListener('click', toggle);
+
+      question.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
     });
   }
 
