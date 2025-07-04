@@ -1,10 +1,10 @@
 (function () {
-  console.log('[faqToggle.js] Script loaded (aria-controls version)');
+  console.log('[faqToggle.js] Script loaded (debounced)');
 
   function initializeFAQ() {
     const questions = document.querySelectorAll('.faq-question');
 
-    questions.forEach(function (question) {
+    questions.forEach((question) => {
       const answerId = question.getAttribute('aria-controls');
       const answer = document.getElementById(answerId);
 
@@ -13,17 +13,20 @@
         return;
       }
 
+      // Remove any previous listeners
+      const newQuestion = question.cloneNode(true);
+      question.parentNode.replaceChild(newQuestion, question);
+
       const toggle = () => {
-        const isExpanded = question.getAttribute('aria-expanded') === 'true';
-        question.setAttribute('aria-expanded', !isExpanded);
-        question.classList.toggle('active', !isExpanded);
+        const isExpanded = newQuestion.getAttribute('aria-expanded') === 'true';
+        newQuestion.setAttribute('aria-expanded', !isExpanded);
+        newQuestion.classList.toggle('active', !isExpanded);
         answer.classList.toggle('active', !isExpanded);
-        console.log(`[faqToggle.js] Toggled FAQ: ${question.textContent.trim()}, expanded: ${!isExpanded}`);
+        console.log(`[faqToggle.js] Toggled FAQ: ${newQuestion.textContent.trim()}, expanded: ${!isExpanded}`);
       };
 
-      question.addEventListener('click', toggle);
-
-      question.addEventListener('keydown', (e) => {
+      newQuestion.addEventListener('click', toggle);
+      newQuestion.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           toggle();
@@ -33,7 +36,7 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeFAQ);
+    document.addEventListener('DOMContentLoaded', initializeFAQ, { once: true });
   } else {
     initializeFAQ();
   }
