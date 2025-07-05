@@ -52,7 +52,7 @@ const AppRouter = () => {
           <Route path="/lic-case-study" element={<LicCaseStudy/>} />
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
-<Route path="/" element={<homePage/>} />
+<Route path="/" element={<HomeWithBlogSuggestion/>} />
         <Route path="/projects/:category" element={<Projects />} />
         <Route path="/project/:title" element={<ProjectDetails />} />
         <Route path="/skills" element={<Skills />} />
