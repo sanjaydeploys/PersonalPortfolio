@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "https://js2h38fca8.execute-api.ap-south-1.amazonaws.com/prod"
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
     {
       "source": "/kileshwar-mahadev-ji-neemuch",
