@@ -45,7 +45,6 @@ const AppRouter = () => {
 
       <ScrollToTop />
       <Routes>
-      <Route path="/" element={<HomeWithBlogSuggestion />} />
       <Route path="/founder-eduxcel" element={<Founder/>} />
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
