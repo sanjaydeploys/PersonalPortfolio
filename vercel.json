@@ -29,8 +29,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
     {
-      "source": "/(.*)",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
+     "source": "/",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     }
   ],
   "headers": [
