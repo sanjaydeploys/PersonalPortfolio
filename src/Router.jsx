@@ -6,6 +6,7 @@ import LicNeemuchPage from './pages/LicNeemuchPage';
 import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
 import LicCaseStudy from './pages/LicCaseStudy';
 
+import homePage from "./pages/homePage";
 
 
 import BlogPage from "./components/BlogPage";
@@ -51,7 +52,7 @@ const AppRouter = () => {
           <Route path="/lic-case-study" element={<LicCaseStudy/>} />
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
-<Route path="/" element={<HomeWithBlogSuggestion />} />
+<Route path="/" element={<homePage/>} />
         <Route path="/projects/:category" element={<Projects />} />
         <Route path="/project/:title" element={<ProjectDetails />} />
         <Route path="/skills" element={<Skills />} />
