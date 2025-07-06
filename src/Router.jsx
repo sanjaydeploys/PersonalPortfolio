@@ -47,7 +47,10 @@ const AppRouter = () => {
       <ScrollToTop />
       <Routes>
       <Route path="/founder-eduxcel" element={<Founder/>} />
-          <Route path="/" element={<LicNeemuchPage />} />
+
+                  <Route path="/" element={<HomeWithBlogSuggestion />} />
+
+          <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
           <Route path="/lic-case-study" element={<LicCaseStudy/>} />
         <Route path="/projects" element={<Projects />} />
