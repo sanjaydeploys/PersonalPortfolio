@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    
+    {
+      "source": "/",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
+    },
     {
       "source": "/kileshwar-mahadev-ji-neemuch",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
@@ -9,10 +12,7 @@
       "source": "/sanwaliya-ji-mandir-bhadsoda",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
     },
-    {
-      "source": "/",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
-    },
+    
      {
       "source": "/lic-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
