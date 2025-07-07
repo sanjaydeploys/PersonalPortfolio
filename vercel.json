@@ -1,35 +1,35 @@
 {
   "rewrites": [
     {
-      "source": "/",
+      "src": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
     {
-      "source": "/kileshwar-mahadev-ji-neemuch",
+      "src": "/kileshwar-mahadev-ji-neemuch",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
     },
     {
-      "source": "/sanwaliya-ji-mandir-bhadsoda",
+      "src": "/sanwaliya-ji-mandir-bhadsoda",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
     },
     {
-      "source": "/lic-case-study",
+      "src": "/lic-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
     },
     {
-      "source": "/zedemy-case-study",
+      "src": "/zedemy-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
     },
     {
-      "source": "/eventease-case-study",
+      "src": "/eventease-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
     },
     {
-      "source": "/connectnow-case-study",
+      "src": "/connectnow-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
     {
-      "source": "/(.*)",
+      "src": "/(.*)",
       "destination": "/index.html"
     }
   ],
