@@ -1,48 +1,49 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
-    },
-    {
-      "source": "/kileshwar-mahadev-ji-neemuch",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
-    },
-    {
-      "source": "/sanwaliya-ji-mandir-bhadsoda",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
-    },
-    
-     {
-      "source": "/lic-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
-    },
-     {
-      "source": "/zedemy-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
-    },
-     {
-      "source": "/eventease-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
-    },
-    {
-      "source": "/connectnow-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
-    },
-    {
-     "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  "version": 2,
+  "builds": [
+    { "src": "public/**/*", "use": "@vercel/static" },
+    { "src": "build/**/*", "use": "@vercel/static" }
   ],
-  "headers": [
+  "routes": [
+    {
+      "src": "/public/scripts/(.*)",
+      "dest": "/public/scripts/$1"
+    },
+    {
+      "src": "/",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod"
+    },
+    {
+      "src": "/services",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/services"
+    },
+    {
+      "src": "/policies/jeevan-anand",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/jeevan-anand"
+    },
+    {
+      "src": "/policies/health-protection-plus",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/health-protection-plus"
+    },
+    {
+      "src": "/policies/jeevan-shanti",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/new-jeevan-shanti"
+    },
+    {
+      "src": "/policies/child-money-back",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/new-childrens-money-back"
+    },
+    {
+      "src": "/policies/jeevan-labh",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/jeevan-labh"
+    },
+    {
+      "src": "/policies/new-endowment",
+      "dest": "https://z6hr0bza57.execute-api.ap-south-1.amazonaws.com/prod/policies/new-endowment"
+    },
     {
       "src": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
-        }
-      ]
+      "dest": "/index.html"
     }
   ]
 }
