@@ -38,9 +38,9 @@ const LoadingText = styled.div`
   }
 `;
 
-const KileshwarMahadevPage = memo(() => {
+const SanjayCaseStudy = memo(() => {
   const [ssrHtml, setSsrHtml] = useState('');
-  const [loading, setLoading] = useState(!window.__lic_case_study_DATA__);
+  const [loading, setLoading] = useState(!window.__sanjay_case_study_DATA__);
 
   useEffect(() => {
     // Load existing and new scripts dynamically
@@ -61,7 +61,7 @@ const KileshwarMahadevPage = memo(() => {
     });
 
     // Handle SSR data
-    if (window.__lic_case_study_DATA__) {
+    if (window.__sanjay_case_study_DATA__) {
       setSsrHtml(document.documentElement.outerHTML);
       setLoading(false);
     } else {
@@ -94,7 +94,7 @@ const KileshwarMahadevPage = memo(() => {
     return (
       <LoadingContainer>
         <RingLoader color="#22c55e" size={50} />
-        <LoadingText>Loading Case  Study...</LoadingText>
+        <LoadingText>Loading Case Study...</LoadingText>
       </LoadingContainer>
     );
   }
@@ -108,4 +108,4 @@ const KileshwarMahadevPage = memo(() => {
   );
 });
 
-export default KileshwarMahadevPage;
+export default SanjayCaseStudy;
