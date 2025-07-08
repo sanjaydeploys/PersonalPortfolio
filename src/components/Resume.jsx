@@ -175,7 +175,7 @@
   ];
 
   const Resume = () => {
-    const pdfResumeUrl = 'https://mys3resources.s3.ap-south-1.amazonaws.com/Developer-Resume/Sanjay_Patidar_Resume_FullStack.pdf';
+    const pdfResumeUrl = 'https://mys3resources.s3.ap-south-1.amazonaws.com/Developer-Resume/Sanjay_Patidar_FullStack_Resume.pdf';
     const [downloadCount, setDownloadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const handleResumeClick = async (e) => {
