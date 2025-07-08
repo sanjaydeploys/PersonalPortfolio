@@ -13,6 +13,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
     },
     {
+      "source": "/sanjay-case-study",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanjay-case-study"
+    },
+    {
       "source": "/lic-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
     },
