@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import LicNeemuchPage from './pages/LicNeemuchPage';
 import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
 import LicCaseStudy from './pages/LicCaseStudy';
+import SanjayCaseStudy from './pages/SanjayCaseStudy';
 
 import homePage from "./pages/homePage";
 
@@ -53,6 +54,7 @@ const AppRouter = () => {
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
           <Route path="/lic-case-study" element={<LicCaseStudy/>} />
+          <Route path="/sanjay-case-study" element={<SanjayCaseStudy/>} />
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
         <Route path="/projects/:category" element={<Projects />} />
