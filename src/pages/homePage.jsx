@@ -40,7 +40,7 @@ const LoadingText = styled.div`
 
 const homePage = memo(() => {
   const [ssrHtml, setSsrHtml] = useState('');
-  const [loading, setLoading] = useState(!window.__lic_homepage_DATA__);
+  const [loading, setLoading] = useState(!window.__portfolio_home_DATA__);
 
   useEffect(() => {
     // Load existing and new scripts dynamically
@@ -61,7 +61,7 @@ const homePage = memo(() => {
     });
 
     // Handle SSR data
-    if (window.__lic_homepage_DATA__) {
+    if (window.__portfolio_home_DATA__) {
       setSsrHtml(document.documentElement.outerHTML);
       setLoading(false);
     } else {
