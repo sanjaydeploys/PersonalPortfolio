@@ -6,9 +6,9 @@ import LicNeemuchPage from './pages/LicNeemuchPage';
 import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
 import LicCaseStudy from './pages/LicCaseStudy';
 import SanjayCaseStudy from './pages/SanjayCaseStudy';
-
 import homePage from "./pages/homePage";
 
+import LicNeemuchSRS from "./pages/LicNeemuchSRS";
 
 import BlogPage from "./components/BlogPage";
 import BlogPost from './components/BlogPost';
@@ -54,6 +54,9 @@ const AppRouter = () => {
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
           <Route path="/lic-case-study" element={<LicCaseStudy/>} />
+          <Route path="/lic-neemuch-srs" element={<LicNeemuchSRS/>} />
+
+        
           <Route path="/sanjay-case-study" element={<SanjayCaseStudy/>} />
         <Route path="/projects" element={<Projects />} />
                 <Route path="/courses-by-sanjay-patidar" element={<Courses />} />
