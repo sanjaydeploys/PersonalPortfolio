@@ -49,7 +49,7 @@ const AppRouter = () => {
       <Routes>
       <Route path="/founder-eduxcel" element={<Founder/>} />
 
-                  <Route path="/" element={<HomeWithBlogSuggestion />} />
+                  <Route path="/" element={<homePage />} />
 
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
