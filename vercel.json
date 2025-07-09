@@ -21,6 +21,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
     },
     {
+      "source": "/lic-neemuch-srs",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-neemuch-srs"
+    },
+    {
       "source": "/zedemy-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
     },
