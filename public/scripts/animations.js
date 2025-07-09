@@ -1,39 +1,55 @@
-(function () {
-  console.log('[animations.js] Script loaded');
+document.addEventListener('DOMContentLoaded', () => {
+  // Matrix background animation
+  const canvas = document.getElementById('matrix-bg');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-  function isElementInViewport(el) {
-    const rect = el.getBoundingClientRect();
-    return (
-      rect.top >= 0 &&
-      rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-  }
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+  const fontSize = 14;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(1);
 
-  function handleScrollAnimations() {
-    const elements = document.querySelectorAll('.section, .card, .faq-item');
-    elements.forEach((el) => {
-      if (isElementInViewport(el)) {
-        el.classList.add('animate');
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00E5FF';
+    ctx.font = `${fontSize}px monospace`;
+
+    drops.forEach((y, i) => {
+      const text = chars.charAt(Math.floor(Math.random() * chars.length));
+      const x = i * fontSize;
+      ctx.fillText(text, x, y * fontSize);
+      if (y * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
       }
+      drops[i]++;
     });
   }
 
-  function initializeAnimations() {
-    document.addEventListener('scroll', handleScrollAnimations);
-    document.addEventListener('DOMContentLoaded', () => {
-      handleScrollAnimations();
-    });
-  }
+  setInterval(drawMatrix, 50);
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('[animations.js] DOMContentLoaded fired');
-      initializeAnimations();
-    });
-  } else {
-    console.log('[animations.js] Document already loaded, initializing');
-    initializeAnimations();
-  }
-})();
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drops.length = Math.floor(canvas.width / fontSize);
+    drops.fill(1);
+  });
+
+  // Intersection Observer for scroll animations
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 }
+  );
+
+  document.querySelectorAll('.section, .card, .faq-item, .tech-item, .impact-item').forEach((el) => {
+    observer.observe(el);
+  });
+});
