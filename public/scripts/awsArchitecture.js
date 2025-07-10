@@ -1,4 +1,4 @@
-const AWSArchitecture = {
+export default {
   init(canvas, tooltip) {
     let ctx = canvas.getContext('2d');
     let animationFrameId = null;
