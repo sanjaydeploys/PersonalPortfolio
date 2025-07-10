@@ -12,7 +12,6 @@ const AWSTooltip = {
       cloudwatch: { title: 'CloudWatch', description: 'Monitoring.', useCases: ['Logs', 'Metrics'] },
       cognito: { title: 'Cognito', description: 'User auth.', useCases: ['Sign-in', 'Sync'] }
     };
-
     const getCurrentProject = () => (window.AWSControls ? window.AWSControls.getCurrentProject() : 'lic');
 
     const updateTooltip = (e) => {
