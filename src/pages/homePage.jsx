@@ -24,6 +24,9 @@ const LicHome = memo(() => {
       { src: '/public/scripts/langToggleCaseStudy.js', defer: true },
       { src: '/public/scripts/audio.js', defer: true },
             { src: '/public/scripts/animations.js', defer: true },
+                  { src: '/public/scripts/impactAnimations.js', defer: true },
+
+      
 
     ];
 
