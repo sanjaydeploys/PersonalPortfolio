@@ -18,7 +18,6 @@ try {
         const canvas = document.getElementById(canvasId);
         const tooltip = document.getElementById(tooltipId);
         if (canvas && tooltip) {
-          console.log(`[AWSArchitecture] Found canvas and tooltip elements`);
           return { canvas, tooltip };
         }
         if (attempt >= maxAttempts) {
@@ -157,13 +156,14 @@ try {
               if (dataFlow && typeof dataFlow.isAnimating === 'function' && dataFlow.isAnimating()) {
                 dataFlow.drawParticles();
                 console.log('[AWSArchitecture] Particles drawn');
-              } else if (!dataFlow) {
-                console.log('[AWSArchitecture] Attempting to reinitialize dataFlow');
-                dataFlow = window.AWSDataFlow ? window.AWSDataFlow.init(canvas, JSON.parse(JSON.stringify(services)), JSON.parse(JSON.stringify(connections))) : null;
-                if (dataFlow) {
-                  console.log('[AWSArchitecture] DataFlow reinitialized successfully');
+              } else if (!dataFlow && window.AWSDataFlow) {
+                console.log('[AWSArchitecture] Initializing dataFlow');
+                dataFlow = window.AWSDataFlow.init(canvas, services, connections);
+                if (dataFlow && typeof dataFlow.start === 'function') {
+                  dataFlow.start();
+                  console.log('[AWSArchitecture] DataFlow initialized and started');
                 } else {
-                  console.error('[AWSArchitecture] DataFlow reinitialization failed');
+                  console.error('[AWSArchitecture] DataFlow initialization failed:', dataFlow);
                 }
               } else {
                 console.log('[AWSArchitecture] No animation (not animating)');
@@ -180,12 +180,6 @@ try {
           await loadIcons();
           resizeCanvas();
           window.addEventListener('resize', resizeCanvas);
-          if (window.AWSDataFlow) {
-            dataFlow = window.AWSDataFlow.init(canvas, JSON.parse(JSON.stringify(services)), JSON.parse(JSON.stringify(connections)));
-            console.log('[AWSArchitecture] Initial AWSDataFlow initialized:', !!dataFlow);
-          } else {
-            console.error('[AWSArchitecture] AWSDataFlow not available');
-          }
           if (window.AWSTooltip) {
             window.AWSTooltip.init(canvas, services, tooltip);
             console.log('[AWSArchitecture] AWSTooltip initialized');
@@ -198,7 +192,6 @@ try {
         }
       };
 
-      console.log('[AWSArchitecture] Checking document ready state');
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);
       } else {
