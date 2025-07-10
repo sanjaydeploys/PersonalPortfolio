@@ -29,7 +29,7 @@ try {
           this.from = { x: from.x, y: from.y };
           this.to = { x: to.x, y: to.y };
           this.project = project;
-          this.progress = 0;
+          this.progress = Math.random();
           this.speed = speed;
           this.direction = direction || 'right';
           this.color = this.getColor();
@@ -46,7 +46,7 @@ try {
         }
         draw() {
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.size * (1 + Math.sin(Date.now() / 200) * 0.2), 0, Math.PI * 2);
           ctx.fillStyle = this.color;
           ctx.fill();
 
