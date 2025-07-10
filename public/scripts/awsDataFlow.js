@@ -1,5 +1,6 @@
 const AWSDataFlow = {
-  init(canvas, services, connections, draw) {
+  init(canvas, services, connections) {
+    console.log('Initializing AWSDataFlow');
     const ctx = canvas.getContext('2d');
     let particles = [];
     let isAnimating = false;
@@ -30,8 +31,9 @@ const AWSDataFlow = {
       }
     }
 
-    // Create particles for a connection
+    // Create particles
     const createParticles = () => {
+      console.log(`Creating particles for project: ${selectedProject}`);
       particles = [];
       connections.forEach(conn => {
         if (selectedProject === 'all' || conn.project === selectedProject) {
@@ -44,31 +46,32 @@ const AWSDataFlow = {
           }
         }
       });
+      console.log(`Created ${particles.length} particles`);
     };
 
-    // Animation loop
-    const animate = () => {
-      if (!isAnimating) return;
-      draw(); // Draw base architecture
+    // Draw particles only
+    const drawParticles = () => {
+      console.log('Drawing particles');
       particles.forEach(particle => {
         particle.update();
         particle.draw();
       });
-      requestAnimationFrame(animate);
     };
 
     // Start/stop animation
     const startAnimation = () => {
+      console.log('Starting data flow animation');
       isAnimating = true;
       createParticles();
-      animate();
     };
     const stopAnimation = () => {
+      console.log('Stopping data flow animation');
       isAnimating = false;
     };
 
     // Update project filter
     const setProject = (project) => {
+      console.log(`Setting project filter to: ${project}`);
       selectedProject = project;
       createParticles();
     };
@@ -76,7 +79,9 @@ const AWSDataFlow = {
     return {
       start: startAnimation,
       stop: stopAnimation,
-      setProject
+      setProject,
+      drawParticles,
+      isAnimating: () => isAnimating
     };
   }
 };
