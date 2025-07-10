@@ -177,6 +177,9 @@ try {
               draw();
               if (dataFlow && dataFlow.isAnimating()) {
                 dataFlow.drawParticles();
+                console.log('[AWSArchitecture] Particles drawn');
+              } else {
+                console.log('[AWSArchitecture] No dataFlow or not animating');
               }
               animationFrameId = requestAnimationFrame(animate);
               console.log('[AWSArchitecture] Animation frame requested');
@@ -196,7 +199,7 @@ try {
           });
           if (window.AWSDataFlow) {
             dataFlow = window.AWSDataFlow.init(canvas, services, connections);
-            console.log('[AWSArchitecture] AWSDataFlow initialized');
+            console.log('[AWSArchitecture] AWSDataFlow initialized:', !!dataFlow);
           } else {
             console.error('[AWSArchitecture] AWSDataFlow not available');
           }
