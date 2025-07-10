@@ -2,8 +2,8 @@ try {
   console.log('[AWSTooltip] Script loaded and parsed');
 
   const AWSTooltip = {
-    init(canvas, tooltipId = 'aws-tooltip') {
-      console.log('[AWSTooltip] Initializing');
+    init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
+      console.log(`[AWSTooltip] Initializing with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
       const canvas = document.getElementById(canvasId);
       const tooltip = document.getElementById(tooltipId);
       if (!canvas || !tooltip) {
@@ -29,7 +29,7 @@ try {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         let foundService = null;
-        const { services } = window.AWSArchitecture.init().architectures[window.AWSControls.getCurrentProject() || 'lic'];
+        const { services } = window.AWSArchitecture.architectures[window.AWSControls.getCurrentProject() || 'lic'];
         services.forEach(service => {
           const dx = x - service.x;
           const dy = y - service.y;
