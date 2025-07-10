@@ -32,7 +32,7 @@ try {
           this.progress += this.speed;
           if (this.progress >= 1) this.progress = 0;
           this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
-          this.y = this.from.y + (this.to.y - this.to.y) * this.progress;
+          this.y = this.from.y + (this.to.y - this.from.y) * this.progress; // Fixed typo
         }
         draw() {
           ctx.beginPath();
