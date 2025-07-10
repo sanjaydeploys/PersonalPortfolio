@@ -1,5 +1,10 @@
 const AWSTooltip = {
   init(canvas, services, tooltipElement) {
+    console.log('[AWSTooltip] Initializing');
+    if (!canvas || !tooltipElement) {
+      console.error('[AWSTooltip] Canvas or tooltip element not found:', { canvas, tooltipElement });
+      return;
+    }
     const serviceDetails = {
       apiGateway: {
         title: 'API Gateway',
@@ -54,8 +59,12 @@ const AWSTooltip = {
     };
 
     const showTooltip = (service, x, y) => {
+      console.log(`[AWSTooltip] Showing tooltip for ${service.name} at (${x}, ${y})`);
       const details = serviceDetails[service.id];
-      if (!details) return;
+      if (!details) {
+        console.warn(`[AWSTooltip] No details found for service: ${service.id}`);
+        return;
+      }
       tooltipElement.innerHTML = `
         <div class="tooltip-title">${details.title}</div>
         <div class="tooltip-content">
@@ -65,18 +74,18 @@ const AWSTooltip = {
           </ul>
         </div>
       `;
-      // Adjust tooltip position to stay within canvas bounds
       const canvasRect = canvas.getBoundingClientRect();
       let tooltipX = x + 20;
       let tooltipY = y - 20;
-      if (tooltipX + 300 > canvasRect.width) tooltipX = x - 320; // Adjust if tooltip exceeds canvas width
-      if (tooltipY < 0) tooltipY = y + 20; // Adjust if tooltip is above canvas
+      if (tooltipX + 300 > canvasRect.width) tooltipX = x - 320;
+      if (tooltipY < 0) tooltipY = y + 20;
       tooltipElement.style.left = `${tooltipX}px`;
       tooltipElement.style.top = `${tooltipY}px`;
       tooltipElement.classList.add('show');
     };
 
     const hideTooltip = () => {
+      console.log('[AWSTooltip] Hiding tooltip');
       tooltipElement.classList.remove('show');
     };
 
@@ -100,6 +109,7 @@ const AWSTooltip = {
     });
 
     canvas.addEventListener('mouseout', hideTooltip);
+    console.log('[AWSTooltip] Event listeners added');
   }
 };
 
