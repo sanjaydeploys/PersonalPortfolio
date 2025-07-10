@@ -3,16 +3,29 @@ try {
 
   const AWSDataFlow = {
     init(canvas, services, connections) {
-      console.log('[AWSDataFlow] Initializing');
+      console.log('[AWSDataFlow] Initializing with canvas:', !!canvas, 'services:', !!services, 'connections:', !!connections);
       if (!canvas || !canvas.getContext) {
-        console.error('[AWSDataFlow] Canvas not available');
-        return null;
+        console.error('[AWSDataFlow] Canvas not available or invalid:', canvas);
+        return {
+          start: () => console.log('[AWSDataFlow] Start called but disabled due to canvas issue'),
+          stop: () => console.log('[AWSDataFlow] Stop called but disabled due to canvas issue'),
+          setProject: () => console.log('[AWSDataFlow] SetProject called but disabled due to canvas issue'),
+          drawParticles: () => {},
+          isAnimating: () => false
+        };
       }
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         console.error('[AWSDataFlow] Failed to get canvas context');
-        return null;
+        return {
+          start: () => console.log('[AWSDataFlow] Start called but disabled due to context issue'),
+          stop: () => console.log('[AWSDataFlow] Stop called but disabled due to context issue'),
+          setProject: () => console.log('[AWSDataFlow] SetProject called but disabled due to context issue'),
+          drawParticles: () => {},
+          isAnimating: () => false
+        };
       }
+      console.log('[AWSDataFlow] Canvas context acquired');
       let particles = [];
       let isAnimating = false;
       let selectedProject = 'all';
@@ -32,7 +45,7 @@ try {
           this.progress += this.speed;
           if (this.progress >= 1) this.progress = 0;
           this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
-          this.y = this.from.y + (this.to.y - this.from.y) * this.progress; // Fixed typo
+          this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
         }
         draw() {
           ctx.beginPath();
@@ -46,6 +59,10 @@ try {
       const createParticles = () => {
         console.log(`[AWSDataFlow] Creating particles for project: ${selectedProject}`);
         particles = [];
+        if (!services || !connections) {
+          console.error('[AWSDataFlow] Invalid services or connections data');
+          return;
+        }
         connections.forEach(conn => {
           if (selectedProject === 'all' || conn.project === selectedProject) {
             const from = services.find(s => s.id === conn.from);
