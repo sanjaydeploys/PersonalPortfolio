@@ -61,7 +61,7 @@ try {
 
       const start = () => {
         isAnimating = true;
-        const { services, connections } = window.AWSArchitecture.init().architectures[currentProject];
+        const { services, connections } = window.AWSArchitecture.architectures[currentProject];
         createParticles(services, connections);
         console.log('[AWSDataFlow] Simulation started');
       };
@@ -74,7 +74,7 @@ try {
       const setProject = (project) => {
         currentProject = project;
         if (isAnimating) {
-          const { services, connections } = window.AWSArchitecture.init().architectures[project];
+          const { services, connections } = window.AWSArchitecture.architectures[project];
           createParticles(services, connections);
         }
       };
