@@ -2,82 +2,70 @@ try {
   console.log('[AWSControls] Script loaded and parsed');
 
   const AWSControls = {
-    init() {
-      console.log('[AWSControls] Initializing');
+    init(controlsId = 'aws-controls') {
+      console.log(`[AWSControls] Initializing with controlsId: ${controlsId}`);
+      const controls = document.getElementById(controlsId);
+      if (!controls) {
+        console.error('[AWSControls] Controls container not found');
+        return;
+      }
 
-      const getElements = () => {
-        const playBtn = document.getElementById('play-simulation-btn');
-        const pauseBtn = document.getElementById('pause-simulation-btn');
-        const projectSelect = document.getElementById('project-select');
-        if (playBtn && pauseBtn && projectSelect) {
-          return { playBtn, pauseBtn, projectSelect };
-        }
+      let currentProject = 'lic';
+
+      const playBtn = controls.querySelector('#play-simulation-btn');
+      const pauseBtn = controls.querySelector('#pause-simulation-btn');
+      const projectSelect = controls.querySelector('#project-select');
+
+      if (!playBtn || !pauseBtn || !projectSelect) {
         console.error('[AWSControls] Required control elements not found');
-        return null;
-      };
+        return;
+      }
 
       const checkDependencies = () => {
-        if (window.AWSArchitecture && typeof window.AWSArchitecture.setProject === 'function' && window.AWSDataFlow) {
-          return true;
-        }
-        console.error('[AWSControls] Dependencies not found');
-        return false;
+        return window.AWSArchitecture && window.AWSDataFlow;
       };
 
-      const start = () => {
-        const elements = getElements();
-        if (!elements) {
-          document.getElementById('aws-fallback').style.display = 'block';
-          return;
-        }
-
-        const { playBtn, pauseBtn, projectSelect } = elements;
-
-        if (!checkDependencies()) {
+      const startSimulation = () => {
+        if (checkDependencies() && window.AWSDataFlow.start) {
+          window.AWSDataFlow.start();
           playBtn.disabled = true;
-          pauseBtn.disabled = true;
-          projectSelect.disabled = true;
-          return;
+          pauseBtn.disabled = false;
+          console.log('[AWSControls] Simulation started');
+        } else {
+          console.error('[AWSControls] Dependencies not available for start');
         }
-
-        playBtn.addEventListener('click', () => {
-          if (window.AWSDataFlow && window.AWSDataFlow.start) {
-            window.AWSDataFlow.start();
-            playBtn.disabled = true;
-            pauseBtn.disabled = false;
-            console.log('[AWSControls] Simulation started');
-          }
-        });
-
-        pauseBtn.addEventListener('click', () => {
-          if (window.AWSDataFlow && window.AWSDataFlow.stop) {
-            window.AWSDataFlow.stop();
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
-            console.log('[AWSControls] Simulation paused');
-          }
-        });
-
-        projectSelect.addEventListener('change', (e) => {
-          const project = e.target.value;
-          if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
-            window.AWSArchitecture.setProject(project);
-            if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
-              window.AWSDataFlow.setProject(project);
-            }
-            console.log(`[AWSControls] Switched to project: ${project}`);
-          }
-        });
-
-        pauseBtn.disabled = true;
-        console.log('[AWSControls] Event listeners attached');
       };
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-      } else {
-        start();
-      }
+      const stopSimulation = () => {
+        if (checkDependencies() && window.AWSDataFlow.stop) {
+          window.AWSDataFlow.stop();
+          playBtn.disabled = false;
+          pauseBtn.disabled = true;
+          console.log('[AWSControls] Simulation paused');
+        } else {
+          console.error('[AWSControls] Dependencies not available for stop');
+        }
+      };
+
+      playBtn.addEventListener('click', startSimulation);
+      pauseBtn.addEventListener('click', stopSimulation);
+      pauseBtn.disabled = true;
+
+      projectSelect.addEventListener('change', (e) => {
+        currentProject = e.target.value;
+        if (checkDependencies() && window.AWSArchitecture.setProject) {
+          window.AWSArchitecture.setProject(currentProject);
+          stopSimulation(); // Reset simulation on project change
+          console.log(`[AWSControls] Switched to ${currentProject}`);
+        } else {
+          console.error('[AWSControls] Dependencies not available for project switch');
+        }
+      });
+
+      const getCurrentProject = () => currentProject;
+
+      console.log('[AWSControls] Controls initialized');
+      return { startSimulation, stopSimulation, getCurrentProject };
     }
   };
 
