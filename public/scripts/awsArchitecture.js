@@ -111,141 +111,144 @@ try {
         }
       };
 
-      const initialize = async () => {
-        try {
-          await getElements();
-          ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('Failed to get 2D context');
+      const initialize = () => {
+        return new Promise((resolve, reject) => {
+          getElements()
+            .then(() => {
+              ctx = canvas.getContext('2d');
+              if (!ctx) throw new Error('Failed to get 2D context');
 
-          const resizeCanvas = () => {
-            const width = canvas.offsetWidth || 800;
-            const height = canvas.offsetHeight || 400;
-            canvas.width = width;
-            canvas.height = height;
-            architectures[currentProject].services.forEach(service => {
-              service.x = (service.x / 800) * width;
-              service.y = (service.y / 400) * height;
-            });
-            console.log(`[AWSArchitecture] Canvas resized to ${width}x${height}`);
-          };
-
-          const draw = (transition = false) => {
-            try {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.fillStyle = 'rgba(18, 18, 36, 1)';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              const { services, connections } = architectures[currentProject];
-              connections.forEach(conn => {
-                const from = services.find(s => s.id === conn.from);
-                const to = services.find(s => s.id === conn.to);
-                if (from && to) {
-                  ctx.beginPath();
-                  ctx.moveTo(from.x, from.y);
-                  ctx.lineTo(to.x, to.y);
-                  ctx.strokeStyle = 'rgba(255, 204, 0, 0.9)';
-                  ctx.lineWidth = 2.5;
-                  ctx.stroke();
-
-                  const angle = Math.atan2(to.y - from.y, to.x - from.x);
-                  const arrowSize = 12;
-                  ctx.beginPath();
-                  ctx.moveTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
-                  ctx.lineTo(to.x, to.y);
-                  ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
-                  ctx.fillStyle = 'rgba(255, 204, 0, 0.9)';
-                  ctx.fill();
-
-                  const midX = (from.x + to.x) / 2;
-                  const midY = (from.y + to.y) / 2 - 15;
-                  ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                  ctx.font = '14px "Segoe UI", sans-serif';
-                  ctx.fillText(conn.label, midX, midY);
-                }
-              });
-              services.forEach(service => {
-                ctx.save();
-                ctx.translate(service.x, service.y);
-                const radius = 30;
-                ctx.beginPath();
-                ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 150, 0, 0.7)' : service.type === 'database' ? 'rgba(0, 100, 150, 0.7)' : 'rgba(150, 0, 0, 0.7)';
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.fillStyle = 'white';
-                ctx.font = '12px "Segoe UI", sans-serif';
-                const lines = service.name.split(' ');
-                lines.forEach((line, i) => {
-                  ctx.fillText(line, 0, -5 + i * 15);
+              const resizeCanvas = () => {
+                const width = canvas.offsetWidth || 800;
+                const height = canvas.offsetHeight || 400;
+                canvas.width = width;
+                canvas.height = height;
+                architectures[currentProject].services.forEach(service => {
+                  service.x = (service.x / 800) * width;
+                  service.y = (service.y / 400) * height;
                 });
-                ctx.restore();
-              });
-              if (dataFlow && dataFlow.isAnimating()) {
-                dataFlow.drawParticles();
-                console.log('[AWSArchitecture] Particles drawn');
-              }
-              console.log('[AWSArchitecture] Architecture drawn');
-            } catch (error) {
-              console.error('[AWSArchitecture] Draw error:', error);
-              showFallback();
-            }
-          };
+                console.log(`[AWSArchitecture] Canvas resized to ${width}x${height}`);
+              };
 
-          const animate = () => {
-            try {
-              draw();
-              if (!dataFlow && window.AWSDataFlow) {
-                dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
-                console.log('[AWSArchitecture] DataFlow initialized:', !!dataFlow);
-                if (dataFlow && typeof dataFlow.start === 'function') {
-                  dataFlow.start(); // Auto-start on successful init
-                  console.log('[AWSArchitecture] Animation auto-started');
+              const draw = (transition = false) => {
+                try {
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  ctx.fillStyle = 'rgba(18, 18, 36, 1)';
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                  const { services, connections } = architectures[currentProject];
+                  connections.forEach(conn => {
+                    const from = services.find(s => s.id === conn.from);
+                    const to = services.find(s => s.id === conn.to);
+                    if (from && to) {
+                      ctx.beginPath();
+                      ctx.moveTo(from.x, from.y);
+                      ctx.lineTo(to.x, to.y);
+                      ctx.strokeStyle = 'rgba(255, 204, 0, 0.9)';
+                      ctx.lineWidth = 2.5;
+                      ctx.stroke();
+
+                      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                      const arrowSize = 12;
+                      ctx.beginPath();
+                      ctx.moveTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+                      ctx.lineTo(to.x, to.y);
+                      ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+                      ctx.fillStyle = 'rgba(255, 204, 0, 0.9)';
+                      ctx.fill();
+
+                      const midX = (from.x + to.x) / 2;
+                      const midY = (from.y + to.y) / 2 - 15;
+                      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                      ctx.font = '14px "Segoe UI", sans-serif';
+                      ctx.fillText(conn.label, midX, midY);
+                    }
+                  });
+                  services.forEach(service => {
+                    ctx.save();
+                    ctx.translate(service.x, service.y);
+                    const radius = 30;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 150, 0, 0.7)' : service.type === 'database' ? 'rgba(0, 100, 150, 0.7)' : 'rgba(150, 0, 0, 0.7)';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px "Segoe UI", sans-serif';
+                    const lines = service.name.split(' ');
+                    lines.forEach((line, i) => {
+                      ctx.fillText(line, 0, -5 + i * 15);
+                    });
+                    ctx.restore();
+                  });
+                  if (dataFlow && dataFlow.isAnimating()) {
+                    dataFlow.drawParticles();
+                    console.log('[AWSArchitecture] Particles drawn');
+                  }
+                  console.log('[AWSArchitecture] Architecture drawn');
+                } catch (error) {
+                  console.error('[AWSArchitecture] Draw error:', error);
+                  showFallback();
                 }
-              }
-              animationFrameId = requestAnimationFrame(animate);
-              console.log('[AWSArchitecture] Animation frame requested');
-            } catch (error) {
-              console.error('[AWSArchitecture] Animation error:', error);
-              showFallback();
-            }
-          };
+              };
 
-          const setProject = (project) => {
-            if (architectures[project]) {
-              currentProject = project;
+              const animate = () => {
+                try {
+                  draw();
+                  if (!dataFlow && window.AWSDataFlow) {
+                    dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
+                    console.log('[AWSArchitecture] DataFlow initialized:', !!dataFlow);
+                    if (dataFlow && typeof dataFlow.start === 'function') {
+                      dataFlow.start();
+                      console.log('[AWSArchitecture] Animation auto-started');
+                    }
+                  }
+                  animationFrameId = requestAnimationFrame(animate);
+                  console.log('[AWSArchitecture] Animation frame requested');
+                } catch (error) {
+                  console.error('[AWSArchitecture] Animation error:', error);
+                  showFallback();
+                }
+              };
+
+              const setProject = (project) => {
+                if (architectures[project]) {
+                  currentProject = project;
+                  resizeCanvas();
+                  if (dataFlow && typeof dataFlow.setProject === 'function') {
+                    dataFlow.setProject(project);
+                  }
+                  draw(true);
+                  console.log(`[AWSArchitecture] Switched to project: ${project}`);
+                } else {
+                  console.error(`[AWSArchitecture] Invalid project: ${project}`);
+                }
+              };
+
               resizeCanvas();
-              if (dataFlow && typeof dataFlow.setProject === 'function') {
-                dataFlow.setProject(project);
+              window.addEventListener('resize', resizeCanvas);
+              if (window.AWSTooltip) {
+                window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
               }
-              draw(true); // Trigger with transition flag
-              console.log(`[AWSArchitecture] Switched to project: ${project}`);
-            } else {
-              console.error(`[AWSArchitecture] Invalid project: ${project}`);
-            }
-          };
-
-          resizeCanvas();
-          window.addEventListener('resize', resizeCanvas);
-          if (window.AWSTooltip) {
-            window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
-          }
-          animate();
-
-          return { setProject };
-        } catch (error) {
-          console.error('[AWSArchitecture] Initialization error:', error);
-          showFallback();
-        }
+              animate();
+              resolve({ setProject });
+            })
+            .catch(error => {
+              console.error('[AWSArchitecture] Initialization error:', error);
+              showFallback();
+              reject(error);
+            });
+        });
       };
 
-      return { init: initialize };
+      return { init };
     }
   };
 
   window.AWSArchitecture = AWSArchitecture;
   console.log('[AWSArchitecture] Initializing immediately');
-  AWSArchitecture.init().catch(err => console.error('[AWSArchitecture] Init failed:', err));
+  AWSArchitecture.init();
 } catch (error) {
   console.error('[AWSArchitecture] Script-level error:', error);
   const fallback = document.getElementById('aws-fallback');
