@@ -73,14 +73,14 @@ try {
 
           projectSelect.addEventListener('change', (e) => {
             console.log(`[AWSControls] Project selected: ${e.target.value}`);
-            if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
-              window.AWSDataFlow.setProject(e.target.value);
-              if (window.AWSArchitecture && window.AWSArchitecture.draw) {
-                window.AWSArchitecture.draw();
-                console.log('[AWSControls] Architecture redrawn');
+            if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
+              window.AWSArchitecture.setProject(e.target.value);
+              if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
+                window.AWSDataFlow.setProject(e.target.value);
               }
+              console.log('[AWSControls] Architecture and data flow updated');
             } else {
-              console.error('[AWSControls] AWSDataFlow.setProject not available');
+              console.error('[AWSControls] Project switch failed');
             }
           });
 
