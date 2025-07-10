@@ -35,12 +35,14 @@ try {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         let foundService = null;
-        const { services } = window.AWSArchitecture.architectures[getCurrentProject()];
-        services.forEach(service => {
-          const dx = x - service.x;
-          const dy = y - service.y;
-          if (Math.sqrt(dx * dx + dy * dy) < 25) foundService = service;
-        });
+        if (window.AWSArchitecture && window.AWSArchitecture.architectures) {
+          const { services } = window.AWSArchitecture.architectures[getCurrentProject()];
+          services.forEach(service => {
+            const dx = x - service.x;
+            const dy = y - service.y;
+            if (Math.sqrt(dx * dx + dy * dy) < 25) foundService = service;
+          });
+        }
         if (foundService && serviceDetails[foundService.id]) {
           tooltip.innerHTML = `
             <div style="background: rgba(0,0,0,0.9); color: white; padding: 8px; border-radius: 5px 5px 0 0;">${serviceDetails[foundService.id].title}</div>
