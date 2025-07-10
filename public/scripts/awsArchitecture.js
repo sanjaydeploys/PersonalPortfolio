@@ -38,6 +38,10 @@ try {
 
           let animationFrameId = null;
           let currentProject = 'lic';
+          let scale = 1.0;
+          let isDragging = false;
+          let lastX = 0, lastY = 0;
+          let offsetX = 0, offsetY = 0;
 
           const architectures = {
             lic: {
@@ -106,18 +110,19 @@ try {
             canvas.width = canvas.offsetWidth || 800;
             canvas.height = canvas.offsetHeight || 400;
             architectures[currentProject].services.forEach(service => {
-              service.x = (service.x / 800) * canvas.width;
-              service.y = (service.y / 400) * canvas.height;
+              service.x = (service.x / 800) * canvas.width + offsetX;
+              service.y = (service.y / 400) * canvas.height + offsetY;
             });
             draw();
           };
 
-          const drawService = (service) => {
+          const drawService = (service, highlight = false) => {
             ctx.save();
             ctx.translate(service.x, service.y);
+            ctx.scale(scale, scale);
             ctx.beginPath();
             ctx.arc(0, 0, 25, 0, Math.PI * 2);
-            ctx.fillStyle = {
+            ctx.fillStyle = highlight ? 'rgba(255, 255, 0, 0.8)' : ({
               gateway: '#1E90FF',
               compute: '#32CD32',
               database: '#FFD700',
@@ -126,15 +131,15 @@ try {
               messaging: '#FF69B4',
               monitoring: '#4682B4',
               auth: '#6A5ACD'
-            }[service.type] || '#808080';
+            }[service.type] || '#808080');
             ctx.fill();
             ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2 / scale;
             ctx.stroke();
             ctx.fillStyle = 'white';
-            ctx.font = '12px sans-serif';
+            ctx.font = `12px sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText(service.name, 0, 35);
+            ctx.fillText(service.name, 0, 35 / scale);
             ctx.restore();
           };
 
@@ -143,12 +148,12 @@ try {
             ctx.moveTo(from.x, from.y);
             ctx.lineTo(to.x, to.y);
             ctx.strokeStyle = 'rgba(255, 153, 0, 0.8)';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2 / scale;
             ctx.stroke();
             const midX = (from.x + to.x) / 2;
-            const midY = (from.y + to.y) / 2 - 10;
+            const midY = (from.y + to.y) / 2 - 10 / scale;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.font = '12px sans-serif';
+            ctx.font = `12px sans-serif`;
             ctx.fillText(label, midX, midY);
           };
 
@@ -157,7 +162,7 @@ try {
             ctx.fillStyle = 'rgba(26, 26, 46, 1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             const { services, connections } = architectures[currentProject];
-            services.forEach(drawService);
+            services.forEach(s => drawService(s));
             connections.forEach(conn => {
               const from = services.find(s => s.id === conn.from);
               const to = services.find(s => s.id === conn.to);
@@ -176,6 +181,9 @@ try {
           const setProject = (project) => {
             if (architectures[project]) {
               currentProject = project;
+              offsetX = 0;
+              offsetY = 0;
+              scale = 1.0;
               resizeCanvas();
               draw();
               console.log(`[AWSArchitecture] Switched to ${project}`);
@@ -185,11 +193,43 @@ try {
             }
           };
 
+          canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoom = e.deltaY < 0 ? 1.1 : 0.9;
+            scale *= zoom;
+            scale = Math.max(0.5, Math.min(2.0, scale));
+            resizeCanvas();
+          });
+
+          canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+          });
+
+          canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+              const dx = (e.clientX - lastX) / scale;
+              const dy = (e.clientY - lastY) / scale;
+              offsetX += dx;
+              offsetY += dy;
+              lastX = e.clientX;
+              lastY = e.clientY;
+              resizeCanvas();
+            }
+          });
+
+          canvas.addEventListener('mouseup', () => isDragging = false);
+          canvas.addEventListener('mouseleave', () => isDragging = false);
+
           resizeCanvas();
           window.addEventListener('resize', resizeCanvas);
           animate();
 
-          return { setProject, draw };
+          return { setProject, draw, highlightService: (id) => {
+            const service = architectures[currentProject].services.find(s => s.id === id);
+            if (service) drawService(service, true);
+          } };
         } catch (error) {
           console.error('[AWSArchitecture] Initialization error:', error);
           showFallback();
