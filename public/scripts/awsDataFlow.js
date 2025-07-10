@@ -82,13 +82,13 @@ try {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (window.AWSArchitecture && window.AWSArchitecture.init) {
-        const { canvas } = window.AWSArchitecture.getElements().result || {};
+        const canvas = window.AWSArchitecture.getCanvas();
         if (canvas) AWSDataFlow.init(canvas);
       }
     });
   } else {
     if (window.AWSArchitecture && window.AWSArchitecture.init) {
-      const { canvas } = window.AWSArchitecture.getElements().result || {};
+      const canvas = window.AWSArchitecture.getCanvas();
       if (canvas) AWSDataFlow.init(canvas);
     }
   }
