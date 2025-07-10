@@ -8,57 +8,28 @@ try {
         console.error('[AWSTooltip] Canvas or tooltip element not found:', { canvas, tooltipElement });
         return;
       }
+
       const serviceDetails = {
-        apiGateway: {
-          title: 'API Gateway',
-          description: 'Manages HTTP requests and routes them to Lambda functions.',
-          useCases: ['RESTful APIs', 'WebSocket APIs', 'Rate limiting']
-        },
-        lambda1: {
-          title: 'Lambda (CRM)',
-          description: 'Executes serverless compute tasks for CRM logic.',
-          useCases: ['Data processing', 'Event-driven logic', 'Microservices']
-        },
-        dynamodb: {
-          title: 'DynamoDB',
-          description: 'NoSQL database for high-speed data storage and retrieval.',
-          useCases: ['User data', 'Session management', 'Real-time analytics']
-        },
-        s3: {
-          title: 'S3',
-          description: 'Object storage for static assets and backups.',
-          useCases: ['Static websites', 'Media storage', 'Data archiving']
-        },
-        cloudfront: {
-          title: 'CloudFront',
-          description: 'CDN for low-latency content delivery.',
-          useCases: ['Website acceleration', 'Global content distribution', 'Edge caching']
-        },
-        sns: {
-          title: 'SNS',
-          description: 'Pub/sub messaging for notifications.',
-          useCases: ['Email alerts', 'SMS notifications', 'Push notifications']
-        },
-        sqs: {
-          title: 'SQS',
-          description: 'Message queue for decoupling services.',
-          useCases: ['Task queuing', 'Event buffering', 'Asynchronous processing']
-        },
-        cloudwatch: {
-          title: 'CloudWatch',
-          description: 'Monitoring and logging for AWS resources.',
-          useCases: ['Performance tracking', 'Error logging', 'Alarms']
-        },
-        stepFunctions: {
-          title: 'Step Functions',
-          description: 'Orchestrates serverless workflows.',
-          useCases: ['Workflow automation', 'State management', 'Task coordination']
-        },
-        cognito: {
-          title: 'Cognito',
-          description: 'User authentication and authorization.',
-          useCases: ['User sign-up', 'Sign-in', 'Access control']
-        }
+        reactFrontend: { title: 'React Frontend', description: 'Dynamic UI layer.', useCases: ['Interactive Design', 'SEO Optimization', 'Form Submission'] },
+        cloudFront: { title: 'CDN (CloudFront)', description: 'Global content delivery.', useCases: ['Fast Loading', 'Caching', 'Scalability'] },
+        cloudflareDNS: { title: 'DNS (Cloudflare)', description: 'Domain management.', useCases: ['Routing', 'Security', 'Performance'] },
+        lambda: { title: 'Lambda', description: 'Serverless compute.', useCases: ['Event Processing', 'API Logic', 'Scalability'] },
+        apiGateway: { title: 'API Gateway', description: 'API management.', useCases: ['Routing', 'Rate Limiting', 'Monitoring'] },
+        mongoDB: { title: 'MongoDB Atlas', description: 'NoSQL database.', useCases: ['Flexible Storage', 'High Availability', 'Scalability'] },
+        sslCert: { title: 'SSL Certificate', description: 'Security layer.', useCases: ['Encryption', 'Trust', 'Compliance'] },
+        emailService: { title: 'Email Service (SES)', description: 'Notification system.', useCases: ['Alerts', 'Confirmations', 'Marketing'] },
+        cloudWatch: { title: 'CloudWatch', description: 'Monitoring solution.', useCases: ['Logging', 'Metrics', 'Alarms'] },
+        dynamodb: { title: 'DynamoDB', description: 'NoSQL database.', useCases: ['High Performance', 'Scalable Storage', 'Key-Value Access'] },
+        codeEditor: { title: 'Code Editor', description: 'In-browser coding.', useCases: ['Learning', 'Development', 'Testing'] },
+        certificateService: { title: 'Certificate Service', description: 'Certification generation.', useCases: ['Verification', 'Download', 'Tracking'] },
+        vercelRewrites: { title: 'Vercel Rewrites', description: 'Routing layer.', useCases: ['API Proxy', 'SEO', 'Custom Paths'] },
+        lambdaAuth: { title: 'Lambda (Auth)', description: 'Authentication logic.', useCases: ['Login', 'JWT Management', 'Security'] },
+        lambdaEvent: { title: 'Lambda (Event)', description: 'Event management.', useCases: ['CRUD Operations', 'Scheduling', 'Workflows'] },
+        lambdaCalendar: { title: 'Lambda (Calendar)', description: 'Calendar sync.', useCases: ['Integration', 'Synchronization', 'Automation'] },
+        googleCalendar: { title: 'Google Calendar API', description: 'External calendar.', useCases: ['Scheduling', 'Sync', 'Collaboration'] },
+        githubCICD: { title: 'GitHub → Vercel CI/CD', description: 'Deployment pipeline.', useCases: ['Automation', 'Testing', 'Deployment'] },
+        socketServer: { title: 'Socket.IO Server', description: 'Real-time signaling.', useCases: ['Chat', 'Video Calls', 'Data Push'] },
+        webrtc: { title: 'WebRTC (P2P)', description: 'Peer-to-peer communication.', useCases: ['Video', 'Audio', 'File Sharing'] }
       };
 
       const showTooltip = (service, x, y) => {
@@ -69,12 +40,10 @@ try {
           return;
         }
         tooltipElement.innerHTML = `
-          <div class="tooltip-title">${details.title}</div>
-          <div class="tooltip-content">
-            <p>${details.description}</p>
-            <ul>
-              ${details.useCases.map(useCase => `<li>${useCase}</li>`).join('')}
-            </ul>
+          <div class="tooltip-title" style="background: rgba(0, 0, 0, 0.8); color: white; padding: 5px; border-radius: 5px 5px 0 0;">${details.title}</div>
+          <div class="tooltip-content" style="background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            <p style="margin: 0 0 10px;">${details.description}</p>
+            <ul style="margin: 0; padding-left: 20px;">${details.useCases.map(useCase => `<li style="margin-bottom: 5px;">${useCase}</li>`).join('')}</ul>
           </div>
         `;
         const canvasRect = canvas.getBoundingClientRect();
@@ -84,11 +53,13 @@ try {
         if (tooltipY < 0) tooltipY = y + 20;
         tooltipElement.style.left = `${tooltipX}px`;
         tooltipElement.style.top = `${tooltipY}px`;
+        tooltipElement.style.display = 'block';
         tooltipElement.classList.add('show');
       };
 
       const hideTooltip = () => {
         console.log('[AWSTooltip] Hiding tooltip');
+        tooltipElement.style.display = 'none';
         tooltipElement.classList.remove('show');
       };
 
@@ -100,15 +71,9 @@ try {
         services.forEach(service => {
           const dx = x - service.x;
           const dy = y - service.y;
-          if (Math.sqrt(dx * dx + dy * dy) < 25) {
-            foundService = service;
-          }
+          if (Math.sqrt(dx * dx + dy * dy) < 30) foundService = service;
         });
-        if (foundService) {
-          showTooltip(foundService, x, y);
-        } else {
-          hideTooltip();
-        }
+        foundService ? showTooltip(foundService, x, y) : hideTooltip();
       });
 
       canvas.addEventListener('mouseout', hideTooltip);
