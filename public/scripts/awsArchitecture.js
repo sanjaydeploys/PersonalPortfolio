@@ -5,6 +5,8 @@ try {
     init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
       console.log(`[AWSArchitecture] Attempting initialization with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
 
+      let canvas, ctx, tooltip, animationFrameId, dataFlow, currentProject = 'lic';
+
       const showFallback = () => {
         const fallback = document.getElementById('aws-fallback');
         if (fallback) {
@@ -15,15 +17,15 @@ try {
 
       const getElements = (attempt = 1, maxAttempts = 10) => {
         console.log(`[AWSArchitecture] Checking for elements, attempt ${attempt}/${maxAttempts}`);
-        const canvas = document.getElementById(canvasId);
-        const tooltip = document.getElementById(tooltipId);
+        canvas = document.getElementById(canvasId);
+        tooltip = document.getElementById(tooltipId);
         if (canvas && tooltip) {
-          return { canvas, tooltip };
+          return Promise.resolve();
         }
         if (attempt >= maxAttempts) {
           console.error(`[AWSArchitecture] Failed to find canvas or tooltip after ${maxAttempts} attempts`);
           showFallback();
-          return null;
+          return Promise.reject(new Error('Elements not found'));
         }
         return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
       };
@@ -109,24 +111,11 @@ try {
         }
       };
 
-      const start = async () => {
+      const initialize = async () => {
         try {
-          console.log('[AWSArchitecture] Starting initialization');
-          const elements = await getElements();
-          if (!elements) return;
-
-          const { canvas, tooltip } = elements;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            console.error('[AWSArchitecture] Failed to get 2D context for canvas');
-            showFallback();
-            return;
-          }
-          console.log('[AWSArchitecture] Canvas context acquired');
-
-          let animationFrameId = null;
-          let currentProject = 'lic';
-          let dataFlow = null;
+          await getElements();
+          ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Failed to get 2D context');
 
           const resizeCanvas = () => {
             canvas.width = canvas.offsetWidth || 800;
@@ -136,13 +125,12 @@ try {
               service.y = (service.y / 400) * canvas.height;
             });
             console.log(`[AWSArchitecture] Canvas resized to ${canvas.width}x${canvas.height}`);
-            draw();
           };
 
           const draw = () => {
             try {
               ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.fillStyle = 'rgba(26, 26, 46, 1)';
+              ctx.fillStyle = 'rgba(18, 18, 36, 1)';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
               const { services, connections } = architectures[currentProject];
               connections.forEach(conn => {
@@ -152,38 +140,50 @@ try {
                   ctx.beginPath();
                   ctx.moveTo(from.x, from.y);
                   ctx.lineTo(to.x, to.y);
-                  ctx.strokeStyle = 'rgba(255, 153, 0, 0.8)';
-                  ctx.lineWidth = 2;
+                  ctx.strokeStyle = 'rgba(255, 204, 0, 0.9)';
+                  ctx.lineWidth = 2.5;
                   ctx.stroke();
 
-                  // Draw directional arrow
                   const angle = Math.atan2(to.y - from.y, to.x - from.x);
-                  const arrowSize = 10;
+                  const arrowSize = 12;
                   ctx.beginPath();
                   ctx.moveTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
                   ctx.lineTo(to.x, to.y);
                   ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
-                  ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.fillStyle = 'rgba(255, 204, 0, 0.9)';
                   ctx.fill();
 
                   const midX = (from.x + to.x) / 2;
-                  const midY = (from.y + to.y) / 2;
-                  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                  ctx.font = '12px sans-serif';
-                  ctx.fillText(conn.label, midX, midY - 10);
+                  const midY = (from.y + to.y) / 2 - 15;
+                  ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                  ctx.font = '14px "Segoe UI", sans-serif';
+                  ctx.fillText(conn.label, midX, midY);
                 }
               });
               services.forEach(service => {
                 ctx.save();
                 ctx.translate(service.x, service.y);
-                ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 128, 0, 0.8)' : service.type === 'database' ? 'rgba(0, 0, 128, 0.8)' : 'rgba(128, 0, 0, 0.8)';
-                ctx.fillRect(-25, -25, 50, 50);
+                const radius = 30;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 150, 0, 0.7)' : service.type === 'database' ? 'rgba(0, 100, 150, 0.7)' : 'rgba(150, 0, 0, 0.7)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
                 ctx.fillStyle = 'white';
-                ctx.font = '10px sans-serif';
+                ctx.font = '12px "Segoe UI", sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(service.name, 0, 0);
+                const lines = service.name.split(' ');
+                lines.forEach((line, i) => {
+                  ctx.fillText(line, 0, -5 + i * 15);
+                });
                 ctx.restore();
               });
+              if (dataFlow && dataFlow.isAnimating()) {
+                dataFlow.drawParticles();
+                console.log('[AWSArchitecture] Particles drawn');
+              }
               console.log('[AWSArchitecture] Architecture drawn');
             } catch (error) {
               console.error('[AWSArchitecture] Draw error:', error);
@@ -194,11 +194,9 @@ try {
           const animate = () => {
             try {
               draw();
-              if (dataFlow && typeof dataFlow.isAnimating === 'function' && dataFlow.isAnimating()) {
-                dataFlow.drawParticles();
-                console.log('[AWSArchitecture] Particles drawn');
-              } else {
-                console.log('[AWSArchitecture] No animation (not animating)');
+              if (!dataFlow && window.AWSDataFlow) {
+                dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
+                console.log('[AWSArchitecture] DataFlow initialized:', !!dataFlow);
               }
               animationFrameId = requestAnimationFrame(animate);
               console.log('[AWSArchitecture] Animation frame requested');
@@ -216,39 +214,33 @@ try {
                 dataFlow.setProject(project);
               }
               console.log(`[AWSArchitecture] Switched to project: ${project}`);
+              draw(); // Force immediate re-render
+            } else {
+              console.error(`[AWSArchitecture] Invalid project: ${project}`);
             }
           };
 
-          console.log('[AWSArchitecture] Starting async initialization');
           resizeCanvas();
           window.addEventListener('resize', resizeCanvas);
           if (window.AWSTooltip) {
             window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
-            console.log('[AWSArchitecture] AWSTooltip initialized');
           }
           animate();
-          console.log('[AWSArchitecture] Animation loop started');
 
-          return { stop: () => { if (animationFrameId) cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', resizeCanvas); }, setProject };
+          return { setProject };
         } catch (error) {
           console.error('[AWSArchitecture] Initialization error:', error);
           showFallback();
         }
       };
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-      } else {
-        start();
-      }
-
-      return { init };
+      return { init: initialize };
     }
   };
 
   window.AWSArchitecture = AWSArchitecture;
   console.log('[AWSArchitecture] Initializing immediately');
-  AWSArchitecture.init();
+  AWSArchitecture.init().catch(err => console.error('[AWSArchitecture] Init failed:', err));
 } catch (error) {
   console.error('[AWSArchitecture] Script-level error:', error);
   const fallback = document.getElementById('aws-fallback');
