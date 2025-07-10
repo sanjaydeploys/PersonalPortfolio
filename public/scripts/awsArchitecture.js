@@ -28,6 +28,87 @@ try {
         return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
       };
 
+      const architectures = {
+        lic: {
+          services: [
+            { id: 'reactFrontend', name: 'React Frontend (S3)', x: 100, y: 100, type: 'frontend' },
+            { id: 'cloudFront', name: 'CDN (CloudFront)', x: 250, y: 100, type: 'cdn' },
+            { id: 'cloudflareDNS', name: 'DNS (Cloudflare)', x: 400, y: 100, type: 'dns' },
+            { id: 'lambda', name: 'Lambda', x: 100, y: 250, type: 'compute' },
+            { id: 'apiGateway', name: 'API Gateway', x: 250, y: 250, type: 'gateway' },
+            { id: 'mongoDB', name: 'MongoDB Atlas', x: 400, y: 250, type: 'database' },
+            { id: 'sslCert', name: 'SSL Certificate', x: 250, y: 175, type: 'security' },
+            { id: 'emailService', name: 'Email Service (SES)', x: 325, y: 325, type: 'messaging' },
+            { id: 'cloudWatch', name: 'CloudWatch', x: 175, y: 325, type: 'monitoring' }
+          ],
+          connections: [
+            { from: 'reactFrontend', to: 'cloudFront', label: 'Content Delivery', direction: 'right' },
+            { from: 'cloudFront', to: 'cloudflareDNS', label: 'DNS Routing', direction: 'right' },
+            { from: 'reactFrontend', to: 'lambda', label: 'Inquiry POST', direction: 'down' },
+            { from: 'lambda', to: 'apiGateway', label: 'API Route', direction: 'right' },
+            { from: 'apiGateway', to: 'mongoDB', label: 'Data Store', direction: 'right' },
+            { from: 'sslCert', to: 'cloudFront', label: 'TLS', direction: 'down' },
+            { from: 'lambda', to: 'emailService', label: 'Notification', direction: 'down-right' },
+            { from: 'lambda', to: 'cloudWatch', label: 'Logs', direction: 'down-left' }
+          ]
+        },
+        zedemy: {
+          services: [
+            { id: 'reactFrontend', name: 'React Frontend (Vercel)', x: 100, y: 100, type: 'frontend' },
+            { id: 'lambda', name: 'Lambda', x: 250, y: 100, type: 'compute' },
+            { id: 'apiGateway', name: 'API Gateway', x: 400, y: 100, type: 'gateway' },
+            { id: 'dynamodb', name: 'DynamoDB', x: 550, y: 100, type: 'database' },
+            { id: 'codeEditor', name: 'Code Editor', x: 100, y: 250, type: 'frontend' },
+            { id: 'certificateService', name: 'Certificate Service', x: 250, y: 250, type: 'service' },
+            { id: 'vercelRewrites', name: 'Vercel Rewrites', x: 400, y: 250, type: 'routing' }
+          ],
+          connections: [
+            { from: 'reactFrontend', to: 'lambda', label: 'API Calls', direction: 'right' },
+            { from: 'lambda', to: 'apiGateway', label: 'Trigger', direction: 'right' },
+            { from: 'apiGateway', to: 'dynamodb', label: 'Data Ops', direction: 'right' },
+            { from: 'reactFrontend', to: 'codeEditor', label: 'In-Browser', direction: 'down' },
+            { from: 'lambda', to: 'certificateService', label: 'Generate', direction: 'down' },
+            { from: 'certificateService', to: 'dynamodb', label: 'Store', direction: 'right' },
+            { from: 'vercelRewrites', to: 'apiGateway', label: 'Route', direction: 'up' }
+          ]
+        },
+        eventease: {
+          services: [
+            { id: 'reactApp', name: 'React App (Vercel)', x: 100, y: 100, type: 'frontend' },
+            { id: 'apiGateway', name: 'API Gateway', x: 250, y: 100, type: 'gateway' },
+            { id: 'lambdaAuth', name: 'Lambda (Auth)', x: 400, y: 100, type: 'compute' },
+            { id: 'lambdaEvent', name: 'Lambda (Event)', x: 550, y: 100, type: 'compute' },
+            { id: 'lambdaCalendar', name: 'Lambda (Calendar)', x: 700, y: 100, type: 'compute' },
+            { id: 'mongoDB', name: 'MongoDB Atlas', x: 400, y: 250, type: 'database' },
+            { id: 'googleCalendar', name: 'Google Calendar API', x: 700, y: 250, type: 'external' },
+            { id: 'githubCICD', name: 'GitHub → Vercel CI/CD', x: 100, y: 250, type: 'devops' }
+          ],
+          connections: [
+            { from: 'reactApp', to: 'apiGateway', label: 'API Requests', direction: 'right' },
+            { from: 'apiGateway', to: 'lambdaAuth', label: 'Auth', direction: 'right' },
+            { from: 'apiGateway', to: 'lambdaEvent', label: 'CRUD', direction: 'right' },
+            { from: 'apiGateway', to: 'lambdaCalendar', label: 'Sync', direction: 'right' },
+            { from: 'lambdaEvent', to: 'mongoDB', label: 'Data Store', direction: 'down' },
+            { from: 'lambdaCalendar', to: 'googleCalendar', label: 'Sync', direction: 'down' },
+            { from: 'githubCICD', to: 'reactApp', label: 'Deploy', direction: 'down-right' }
+          ]
+        },
+        connectnow: {
+          services: [
+            { id: 'reactFrontend', name: 'React Frontend (Vercel)', x: 100, y: 100, type: 'frontend' },
+            { id: 'socketServer', name: 'Socket.IO Server', x: 250, y: 100, type: 'backend' },
+            { id: 'webrtc', name: 'WebRTC (P2P)', x: 400, y: 100, type: 'communication' },
+            { id: 'mongoDB', name: 'MongoDB', x: 550, y: 100, type: 'database' }
+          ],
+          connections: [
+            { from: 'reactFrontend', to: 'socketServer', label: 'Signaling', direction: 'right' },
+            { from: 'socketServer', to: 'webrtc', label: 'Offer/Answer', direction: 'right' },
+            { from: 'webrtc', to: 'reactFrontend', label: 'P2P Stream', direction: 'left' },
+            { from: 'socketServer', to: 'mongoDB', label: 'User Data', direction: 'down-right' }
+          ]
+        }
+      };
+
       const start = async () => {
         try {
           console.log('[AWSArchitecture] Starting initialization');
@@ -44,59 +125,15 @@ try {
           console.log('[AWSArchitecture] Canvas context acquired');
 
           let animationFrameId = null;
+          let currentProject = 'lic';
           let dataFlow = null;
-
-          const services = [
-            { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
-            { id: 'lambda1', name: 'Lambda (CRM)', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
-            { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' },
-            { id: 's3', name: 'S3', x: 500, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-s3.svg', type: 'storage' },
-            { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudfront.svg', type: 'cdn' },
-            { id: 'sns', name: 'SNS', x: 300, y: 400, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-sns.svg', type: 'messaging' },
-            { id: 'sqs', name: 'SQS', x: 500, y: 400, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-sqs.svg', type: 'messaging' },
-            { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudwatch.svg', type: 'monitoring' },
-            { id: 'stepFunctions', name: 'Step Functions', x: 700, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-step-functions.svg', type: 'workflow' },
-            { id: 'cognito', name: 'Cognito', x: 100, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cognito.svg', type: 'auth' }
-          ];
-
-          const connections = [
-            { from: 'apiGateway', to: 'lambda1', project: 'lic', label: 'HTTP Request' },
-            { from: 'lambda1', to: 'dynamodb', project: 'lic', label: 'Read/Write' },
-            { from: 'lambda1', to: 's3', project: 'lic', label: 'Store Assets' },
-            { from: 'cloudfront', to: 's3', project: 'zedemy', label: 'Content Delivery' },
-            { from: 'apiGateway', to: 'sns', project: 'notifications', label: 'Publish' },
-            { from: 'sns', to: 'sqs', project: 'notifications', label: 'Queue' },
-            { from: 'sqs', to: 'lambda1', project: 'notifications', label: 'Process' },
-            { from: 'lambda1', to: 'cloudwatch', project: 'all', label: 'Metrics' },
-            { from: 'stepFunctions', to: 'lambda1', project: 'analytics', label: 'Orchestrate' },
-            { from: 'cognito', to: 'apiGateway', project: 'all', label: 'Auth' }
-          ];
-
-          const loadIcons = async () => {
-            console.log('[AWSArchitecture] Loading service icons...');
-            for (const service of services) {
-              try {
-                const img = new Image();
-                img.src = service.icon;
-                service.img = img;
-                await new Promise((resolve, reject) => {
-                  img.onload = () => resolve();
-                  img.onerror = () => { service.img = null; resolve(); };
-                });
-              } catch (error) {
-                console.error(`[AWSArchitecture] Error loading icon for ${service.name}:`, error);
-                service.img = null;
-              }
-            }
-            console.log('[AWSArchitecture] Icon loading complete');
-          };
 
           const resizeCanvas = () => {
             canvas.width = canvas.offsetWidth || 800;
             canvas.height = canvas.offsetHeight || 400;
-            services.forEach(service => {
-              service.x = (service.x / 1280) * canvas.width;
-              service.y = (service.y / 600) * canvas.height;
+            architectures[currentProject].services.forEach(service => {
+              service.x = (service.x / 800) * canvas.width;
+              service.y = (service.y / 400) * canvas.height;
             });
             console.log(`[AWSArchitecture] Canvas resized to ${canvas.width}x${canvas.height}`);
             draw();
@@ -107,6 +144,7 @@ try {
               ctx.clearRect(0, 0, canvas.width, canvas.height);
               ctx.fillStyle = 'rgba(26, 26, 46, 1)';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
+              const { services, connections } = architectures[currentProject];
               connections.forEach(conn => {
                 const from = services.find(s => s.id === conn.from);
                 const to = services.find(s => s.id === conn.to);
@@ -117,6 +155,17 @@ try {
                   ctx.strokeStyle = 'rgba(255, 153, 0, 0.8)';
                   ctx.lineWidth = 2;
                   ctx.stroke();
+
+                  // Draw directional arrow
+                  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                  const arrowSize = 10;
+                  ctx.beginPath();
+                  ctx.moveTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+                  ctx.lineTo(to.x, to.y);
+                  ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+                  ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.fill();
+
                   const midX = (from.x + to.x) / 2;
                   const midY = (from.y + to.y) / 2;
                   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -127,20 +176,12 @@ try {
               services.forEach(service => {
                 ctx.save();
                 ctx.translate(service.x, service.y);
-                if (service.img) {
-                  ctx.drawImage(service.img, -25, -25, 50, 50);
-                } else {
-                  ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
-                  ctx.fillRect(-25, -25, 50, 50);
-                  ctx.fillStyle = 'white';
-                  ctx.font = '10px sans-serif';
-                  ctx.textAlign = 'center';
-                  ctx.fillText(service.name, 0, 0);
-                }
+                ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 128, 0, 0.8)' : service.type === 'database' ? 'rgba(0, 0, 128, 0.8)' : 'rgba(128, 0, 0, 0.8)';
+                ctx.fillRect(-25, -25, 50, 50);
                 ctx.fillStyle = 'white';
-                ctx.font = '14px sans-serif';
+                ctx.font = '10px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(service.name, 0, 40);
+                ctx.fillText(service.name, 0, 0);
                 ctx.restore();
               });
               console.log('[AWSArchitecture] Architecture drawn');
@@ -156,15 +197,6 @@ try {
               if (dataFlow && typeof dataFlow.isAnimating === 'function' && dataFlow.isAnimating()) {
                 dataFlow.drawParticles();
                 console.log('[AWSArchitecture] Particles drawn');
-              } else if (!dataFlow && window.AWSDataFlow) {
-                console.log('[AWSArchitecture] Initializing dataFlow');
-                dataFlow = window.AWSDataFlow.init(canvas, services, connections);
-                if (dataFlow && typeof dataFlow.start === 'function') {
-                  dataFlow.start();
-                  console.log('[AWSArchitecture] DataFlow initialized and started');
-                } else {
-                  console.error('[AWSArchitecture] DataFlow initialization failed:', dataFlow);
-                }
               } else {
                 console.log('[AWSArchitecture] No animation (not animating)');
               }
@@ -176,16 +208,28 @@ try {
             }
           };
 
+          const setProject = (project) => {
+            if (architectures[project]) {
+              currentProject = project;
+              resizeCanvas();
+              if (dataFlow && typeof dataFlow.setProject === 'function') {
+                dataFlow.setProject(project);
+              }
+              console.log(`[AWSArchitecture] Switched to project: ${project}`);
+            }
+          };
+
           console.log('[AWSArchitecture] Starting async initialization');
-          await loadIcons();
           resizeCanvas();
           window.addEventListener('resize', resizeCanvas);
           if (window.AWSTooltip) {
-            window.AWSTooltip.init(canvas, services, tooltip);
+            window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
             console.log('[AWSArchitecture] AWSTooltip initialized');
           }
           animate();
           console.log('[AWSArchitecture] Animation loop started');
+
+          return { stop: () => { if (animationFrameId) cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', resizeCanvas); }, setProject };
         } catch (error) {
           console.error('[AWSArchitecture] Initialization error:', error);
           showFallback();
@@ -198,7 +242,7 @@ try {
         start();
       }
 
-      return { stop: () => { if (animationFrameId) cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', resizeCanvas); } };
+      return { init };
     }
   };
 
