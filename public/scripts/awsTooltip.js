@@ -56,24 +56,32 @@ try {
           tooltip.style.left = `${tooltipX}px`;
           tooltip.style.top = `${tooltipY}px`;
           tooltip.style.display = 'block';
-          if (window.AWSArchitecture.highlightService) window.AWSArchitecture.highlightService(foundService.id);
+          if (window.AWSArchitecture && window.AWSArchitecture.highlightService) {
+            window.AWSArchitecture.highlightService(foundService.id);
+          }
         } else {
           tooltip.style.display = 'none';
-          if (window.AWSArchitecture.highlightService) window.AWSArchitecture.highlightService(null);
+          if (window.AWSArchitecture && window.AWSArchitecture.highlightService) {
+            window.AWSArchitecture.highlightService(null);
+          }
         }
       };
 
       const startTooltip = () => {
-        if (checkControls()) {
+        if (checkControls() && window.AWSArchitecture) {
           canvas.addEventListener('mousemove', updateTooltip);
           canvas.addEventListener('mouseout', () => tooltip.style.display = 'none');
           console.log('[AWSTooltip] Tooltip initialized');
         } else {
-          setTimeout(startTooltip, 100);
+          setTimeout(startTooltip, 500);
         }
       };
 
-      startTooltip();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startTooltip);
+      } else {
+        startTooltip();
+      }
     }
   };
 
