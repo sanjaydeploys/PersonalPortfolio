@@ -26,38 +26,39 @@ try {
 
       class Particle {
         constructor(from, to, speed, project, direction) {
-          this.from = from;
-          this.to = to;
+          this.from = { x: from.x, y: from.y };
+          this.to = { x: to.x, y: to.y };
           this.project = project;
           this.progress = 0;
           this.speed = speed;
-          this.x = from.x;
-          this.y = from.y;
           this.direction = direction || 'right';
+          this.color = this.getColor();
+          this.size = 4 + Math.random() * 2;
+        }
+        getColor() {
+          return this.project === 'lic' ? 'rgba(0, 255, 0, 0.8)' : this.project === 'zedemy' ? 'rgba(255, 165, 0, 0.8)' : this.project === 'eventease' ? 'rgba(0, 0, 255, 0.8)' : 'rgba(255, 0, 0, 0.8)';
         }
         update() {
           this.progress += this.speed;
           if (this.progress >= 1) this.progress = 0;
-          const dx = this.to.x - this.from.x;
-          const dy = this.to.y - this.from.y;
-          this.x = this.from.x + dx * this.progress;
-          this.y = this.from.y + dy * this.progress;
+          this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
+          this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
         }
         draw() {
           ctx.beginPath();
-          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = this.project === 'lic' ? 'rgba(0, 255, 0, 0.8)' : this.project === 'zedemy' ? 'rgba(255, 165, 0, 0.8)' : this.project === 'eventease' ? 'rgba(0, 0, 255, 0.8)' : 'rgba(255, 0, 0, 0.8)';
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
           ctx.fill();
 
-          // Draw directional tail
           if (this.progress > 0 && this.progress < 0.9) {
-            const tailX = this.x - (this.to.x - this.from.x) * this.speed * 10;
-            const tailY = this.y - (this.to.y - this.from.y) * this.speed * 10;
+            const tailLength = 15;
+            const tailX = this.x - (this.to.x - this.from.x) * this.speed * tailLength;
+            const tailY = this.y - (this.to.y - this.from.y) * this.speed * tailLength;
             ctx.beginPath();
             ctx.moveTo(tailX, tailY);
             ctx.lineTo(this.x, this.y);
-            ctx.strokeStyle = ctx.fillStyle;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 1.5;
             ctx.stroke();
           }
         }
@@ -66,14 +67,14 @@ try {
       const createParticles = () => {
         console.log(`[AWSDataFlow] Creating particles for project: ${selectedProject}`);
         particles = [];
+        const particleCount = { lic: 3, zedemy: 4, eventease: 5, connectnow: 6 }[selectedProject] || 3;
         connections.forEach(conn => {
           if (selectedProject === 'all' || conn.project === selectedProject) {
             const from = services.find(s => s.id === conn.from);
             const to = services.find(s => s.id === conn.to);
             if (from && to) {
-              const particleCount = selectedProject === 'connectnow' ? 5 : 3; // More particles for ConnectNow due to P2P
               for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle(from, to, 0.01 + Math.random() * 0.02, selectedProject, conn.direction));
+                particles.push(new Particle(from, to, 0.005 + Math.random() * 0.01, selectedProject, conn.direction));
               }
             }
           }
