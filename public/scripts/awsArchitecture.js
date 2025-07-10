@@ -1,9 +1,19 @@
 const AWSArchitecture = {
   init(canvasId, tooltipId, controls) {
+    console.log(`Initializing AWSArchitecture with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
     const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext('2d');
     const tooltip = document.getElementById(tooltipId);
+    if (!canvas || !tooltip) {
+      console.error('Canvas or tooltip element not found:', { canvas, tooltip });
+      return;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('Failed to get 2D context for canvas');
+      return;
+    }
     let animationFrameId = null;
+    let dataFlow = null;
 
     // AWS Services Configuration
     const services = [
@@ -19,7 +29,7 @@ const AWSArchitecture = {
       { id: 'cognito', name: 'Cognito', x: 100, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cognito.svg', type: 'auth' }
     ];
 
-    // Connections between services (for data flow)
+    // Connections between services
     const connections = [
       { from: 'apiGateway', to: 'lambda1', project: 'lic', label: 'HTTP Request' },
       { from: 'lambda1', to: 'dynamodb', project: 'lic', label: 'Read/Write' },
@@ -35,16 +45,20 @@ const AWSArchitecture = {
 
     // Load service icons with error handling
     const loadIcons = async () => {
+      console.log('Loading service icons...');
       for (const service of services) {
         try {
           const img = new Image();
           img.src = service.icon;
           service.img = img;
           await new Promise((resolve, reject) => {
-            img.onload = resolve;
+            img.onload = () => {
+              console.log(`Loaded icon for ${service.name}: ${service.icon}`);
+              resolve();
+            };
             img.onerror = () => {
               console.error(`Failed to load icon for ${service.name}: ${service.icon}`);
-              service.img = null; // Fallback to text-only rendering
+              service.img = null;
               resolve();
             };
           });
@@ -53,22 +67,24 @@ const AWSArchitecture = {
           service.img = null;
         }
       }
+      console.log('Icon loading complete');
     };
 
     // Resize canvas
     const resizeCanvas = () => {
+      console.log('Resizing canvas...');
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       services.forEach(service => {
-        // Adjust service positions for responsiveness
         service.x = (service.x / 1280) * canvas.width;
         service.y = (service.y / 600) * canvas.height;
       });
-      draw();
+      console.log(`Canvas resized to ${canvas.width}x${canvas.height}`);
     };
 
     // Draw services and connections
     const draw = () => {
+      console.log('Drawing architecture...');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       // Draw connections
       connections.forEach(conn => {
@@ -81,7 +97,6 @@ const AWSArchitecture = {
           ctx.strokeStyle = 'rgba(255, 153, 0, 0.5)';
           ctx.lineWidth = 2;
           ctx.stroke();
-          // Draw label
           const midX = (from.x + to.x) / 2;
           const midY = (from.y + to.y) / 2;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -96,9 +111,11 @@ const AWSArchitecture = {
         if (service.img) {
           ctx.drawImage(service.img, -25, -25, 50, 50);
         } else {
-          // Fallback rendering if image fails to load
           ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
           ctx.fillRect(-25, -25, 50, 50);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.font = '10px sans-serif';
+          ctx.fillText(service.name, 0, 0);
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '14px sans-serif';
@@ -106,33 +123,55 @@ const AWSArchitecture = {
         ctx.fillText(service.name, 0, 40);
         ctx.restore();
       });
+      console.log('Architecture drawn');
     };
 
-    // Animation loop to include base drawing
+    // Consolidated animation loop
     const animate = () => {
-      draw(); // Ensure base architecture is drawn
+      draw(); // Draw base architecture
+      if (dataFlow && dataFlow.isAnimating()) {
+        dataFlow.drawParticles(); // Draw particles if animation is active
+      }
       animationFrameId = requestAnimationFrame(animate);
     };
 
     // Initialize
     const init = async () => {
-      await loadIcons();
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-      controls.init(services, connections, draw);
-      AWSDataFlow.init(canvas, services, connections, draw); // Pass draw function
-      AWSTooltip.init(canvas, services, tooltip);
-      animate(); // Start animation loop
+      console.log('Starting AWSArchitecture initialization');
+      try {
+        await loadIcons();
+        resizeCanvas();
+        window.addEventListener('resize', () => {
+          console.log('Window resized, triggering canvas resize');
+          resizeCanvas();
+        });
+        dataFlow = AWSDataFlow.init(canvas, services, connections);
+        console.log('AWSDataFlow initialized');
+        AWSTooltip.init(canvas, services, tooltip);
+        console.log('AWSTooltip initialized');
+        controls.init(services, connections, draw);
+        console.log('AWSControls initialized');
+        animate();
+        console.log('Animation loop started');
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
     };
 
-    init();
+    // Ensure DOM is loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
 
     return {
       stop: () => {
+        console.log('Stopping AWSArchitecture');
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
         window.removeEventListener('resize', resizeCanvas);
       },
-      draw // Expose draw function for other scripts
+      draw
     };
   }
 };
