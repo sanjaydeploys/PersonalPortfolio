@@ -1,7 +1,15 @@
 const AWSDataFlow = {
   init(canvas, services, connections) {
-    console.log('Initializing AWSDataFlow');
+    console.log('[AWSDataFlow] Initializing');
+    if (!canvas || !canvas.getContext) {
+      console.error('[AWSDataFlow] Canvas not available');
+      return;
+    }
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('[AWSDataFlow] Failed to get canvas context');
+      return;
+    }
     let particles = [];
     let isAnimating = false;
     let selectedProject = 'all';
@@ -33,7 +41,7 @@ const AWSDataFlow = {
 
     // Create particles
     const createParticles = () => {
-      console.log(`Creating particles for project: ${selectedProject}`);
+      console.log(`[AWSDataFlow] Creating particles for project: ${selectedProject}`);
       particles = [];
       connections.forEach(conn => {
         if (selectedProject === 'all' || conn.project === selectedProject) {
@@ -46,12 +54,12 @@ const AWSDataFlow = {
           }
         }
       });
-      console.log(`Created ${particles.length} particles`);
+      console.log(`[AWSDataFlow] Created ${particles.length} particles`);
     };
 
-    // Draw particles only
+    // Draw particles
     const drawParticles = () => {
-      console.log('Drawing particles');
+      console.log('[AWSDataFlow] Drawing particles');
       particles.forEach(particle => {
         particle.update();
         particle.draw();
@@ -60,18 +68,18 @@ const AWSDataFlow = {
 
     // Start/stop animation
     const startAnimation = () => {
-      console.log('Starting data flow animation');
+      console.log('[AWSDataFlow] Starting animation');
       isAnimating = true;
       createParticles();
     };
     const stopAnimation = () => {
-      console.log('Stopping data flow animation');
+      console.log('[AWSDataFlow] Stopping animation');
       isAnimating = false;
     };
 
     // Update project filter
     const setProject = (project) => {
-      console.log(`Setting project filter to: ${project}`);
+      console.log(`[AWSDataFlow] Setting project filter to: ${project}`);
       selectedProject = project;
       createParticles();
     };
