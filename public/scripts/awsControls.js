@@ -6,7 +6,7 @@ try {
       console.log(`[AWSControls] Initializing with controlsId: ${controlsId}`);
       const controls = document.getElementById(controlsId);
       if (!controls) {
-        console.error('[AWSControls] Controls container not found');
+        console.error(`[AWSControls] Controls container ${controlsId} not found`);
         return null;
       }
 
