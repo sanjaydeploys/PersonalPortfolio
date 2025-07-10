@@ -22,6 +22,20 @@ try {
         return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
       };
 
+      // Retry mechanism for dependencies
+      const checkDependencies = (attempt = 1, maxAttempts = 10) => {
+        console.log(`[AWSControls] Checking dependencies, attempt ${attempt}/${maxAttempts}`);
+        if (window.AWSDataFlow && window.AWSArchitecture) {
+          console.log('[AWSControls] Dependencies available');
+          return true;
+        }
+        if (attempt >= maxAttempts) {
+          console.error('[AWSControls] Dependencies not available after 10 attempts');
+          return false;
+        }
+        return new Promise(resolve => setTimeout(() => resolve(checkDependencies(attempt + 1, maxAttempts)), 500));
+      };
+
       // Initialize controls
       const start = async () => {
         try {
@@ -32,32 +46,48 @@ try {
           }
           const { playBtn, pauseBtn, projectSelect } = elements;
 
-          if (!window.AWSDataFlow || !window.AWSArchitecture) {
-            console.error('[AWSControls] Dependencies not initialized:', {
-              AWSDataFlow: !!window.AWSDataFlow,
-              AWSArchitecture: !!window.AWSArchitecture
-            });
+          if (!(await checkDependencies())) {
+            console.error('[AWSControls] Aborting: Dependencies not available');
             return;
           }
 
           playBtn.addEventListener('click', () => {
             console.log('[AWSControls] Play button clicked');
-            window.AWSDataFlow.start();
-            playBtn.disabled = true;
-            pauseBtn.disabled = false;
+            if (window.AWSDataFlow) {
+              window.AWSDataFlow.start();
+              playBtn.disabled = true;
+              pauseBtn.disabled = false;
+              console.log('[AWSControls] Animation started');
+            } else {
+              console.error('[AWSControls] AWSDataFlow not available');
+            }
           });
 
           pauseBtn.addEventListener('click', () => {
             console.log('[AWSControls] Pause button clicked');
-            window.AWSDataFlow.stop();
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
+            if (window.AWSDataFlow) {
+              window.AWSDataFlow.stop();
+              playBtn.disabled = false;
+              pauseBtn.disabled = true;
+              console.log('[AWSControls] Animation paused');
+            } else {
+              console.error('[AWSControls] AWSDataFlow not available');
+            }
           });
 
           projectSelect.addEventListener('change', (e) => {
             console.log(`[AWSControls] Project selected: ${e.target.value}`);
-            window.AWSDataFlow.setProject(e.target.value);
-            window.AWSArchitecture.draw();
+            if (window.AWSDataFlow) {
+              window.AWSDataFlow.setProject(e.target.value);
+              if (window.AWSArchitecture) {
+                window.AWSArchitecture.draw();
+                console.log('[AWSControls] Architecture redrawn');
+              } else {
+                console.error('[AWSControls] AWSArchitecture not available');
+              }
+            } else {
+              console.error('[AWSControls] AWSDataFlow not available');
+            }
           });
 
           pauseBtn.disabled = true;
