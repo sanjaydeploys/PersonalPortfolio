@@ -54,9 +54,9 @@ try {
               pauseBtn.disabled = false;
               console.log('[AWSControls] Animation started');
             } else {
-              console.error('[AWSControls] AWSDataFlow.start not available, retrying initialization');
+              console.error('[AWSControls] AWSDataFlow.start not available, retrying');
               if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
-                window.AWSArchitecture.setProject(currentProject); // Force refresh
+                window.AWSArchitecture.setProject(projectSelect.value);
               }
             }
           });
