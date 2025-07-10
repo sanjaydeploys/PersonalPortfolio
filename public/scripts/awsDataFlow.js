@@ -18,26 +18,34 @@ try {
         constructor(from, to, speed) {
           this.from = { x: from.x, y: from.y };
           this.to = { x: to.x, y: to.y };
-          this.progress = 0;
+          this.progress = Math.random();
           this.speed = speed;
           this.color = 'rgba(255, 153, 0, 0.8)';
+          this.status = 'active';
         }
         update() {
           this.progress += this.speed;
-          if (this.progress >= 1) this.progress = 0;
+          if (this.progress >= 1) {
+            this.progress = 0;
+            this.status = Math.random() > 0.9 ? 'error' : 'active';
+          }
           this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
           this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
         }
         draw() {
           ctx.beginPath();
           ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
+          ctx.fillStyle = this.status === 'error' ? 'rgba(255, 0, 0, 0.8)' : this.color;
           ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(this.x - 10 * (1 - this.progress), this.y - 10 * (1 - this.progress));
-          ctx.lineTo(this.x, this.y);
-          ctx.strokeStyle = this.color;
-          ctx.stroke();
+          if (this.status === 'error') {
+            ctx.beginPath();
+            ctx.moveTo(this.x - 5, this.y - 5);
+            ctx.lineTo(this.x + 5, this.y + 5);
+            ctx.moveTo(this.x + 5, this.y - 5);
+            ctx.lineTo(this.x - 5, this.y + 5);
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+          }
         }
       }
 
