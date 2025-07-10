@@ -47,42 +47,40 @@ try {
             return;
           }
 
-          if (!(window.AWSDataFlow && typeof window.AWSDataFlow.start === 'function')) {
-            console.error('[AWSControls] AWSDataFlow.start not available:', window.AWSDataFlow);
-            playBtn.disabled = true;
-            pauseBtn.disabled = true;
-            projectSelect.disabled = true;
-            return;
-          }
-
           playBtn.addEventListener('click', () => {
             console.log('[AWSControls] Play button clicked');
-            if (window.AWSDataFlow.start) {
+            if (window.AWSDataFlow && window.AWSDataFlow.start) {
               window.AWSDataFlow.start();
               playBtn.disabled = true;
               pauseBtn.disabled = false;
               console.log('[AWSControls] Animation started');
+            } else {
+              console.error('[AWSControls] AWSDataFlow.start not available');
             }
           });
 
           pauseBtn.addEventListener('click', () => {
             console.log('[AWSControls] Pause button clicked');
-            if (window.AWSDataFlow.stop) {
+            if (window.AWSDataFlow && window.AWSDataFlow.stop) {
               window.AWSDataFlow.stop();
               playBtn.disabled = false;
               pauseBtn.disabled = true;
               console.log('[AWSControls] Animation paused');
+            } else {
+              console.error('[AWSControls] AWSDataFlow.stop not available');
             }
           });
 
           projectSelect.addEventListener('change', (e) => {
             console.log(`[AWSControls] Project selected: ${e.target.value}`);
-            if (window.AWSDataFlow.setProject) {
+            if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
               window.AWSDataFlow.setProject(e.target.value);
-              if (window.AWSArchitecture.draw) {
+              if (window.AWSArchitecture && window.AWSArchitecture.draw) {
                 window.AWSArchitecture.draw();
                 console.log('[AWSControls] Architecture redrawn');
               }
+            } else {
+              console.error('[AWSControls] AWSDataFlow.setProject not available');
             }
           });
 
