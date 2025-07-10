@@ -21,12 +21,12 @@ const AWSManager = {
 
     const loadAndInitModule = async (moduleName, path) => {
       try {
-        await import(path);
-        if (!window[moduleName]) {
-          throw new Error(`[AWSManager] ${moduleName} not defined after import`);
+        const module = await import(path);
+        if (!module.default) {
+          throw new Error(`[AWSManager] ${moduleName} default export not found`);
         }
         console.log(`[AWSManager] ${moduleName} loaded successfully`);
-        return window[moduleName];
+        return module.default;
       } catch (error) {
         console.error(`[AWSManager] Failed to load ${moduleName}:`, error);
         return null;
@@ -44,26 +44,25 @@ const AWSManager = {
         loadAndInitModule('sidebarToggle', '/public/scripts/sidebarToggle.js')
       ]);
 
-      if (!AWSArchitectureModule || !AWSDataFlowModule || !AWSControlsModule || !AWSTooltipModule || !sidebarToggleModule) {
-        console.error('[AWSManager] One or more modules failed to initialize');
-        return;
+      window.AWSArchitecture = AWSArchitectureModule ? AWSArchitectureModule.init(elements.canvas, elements.tooltip) : null;
+      window.AWSDataFlow = AWSDataFlowModule ? AWSDataFlowModule.init(elements.canvas) : null;
+      window.AWSControls = AWSControlsModule ? AWSControlsModule.init(elements.controls) : null;
+      window.AWSTooltip = AWSTooltipModule ? AWSTooltipModule.init(elements.canvas, elements.tooltip) : null;
+      window.sidebarToggle = sidebarToggleModule ? sidebarToggleModule.init(elements.toggleBtn, elements.menu) : null;
+
+      if (!window.AWSArchitecture || !window.AWSDataFlow || !window.AWSControls || !window.AWSTooltip || !window.sidebarToggle) {
+        console.error('[AWSManager] One or more components failed to initialize');
+      } else {
+        document.dispatchEvent(new CustomEvent('awsInitialized', { 
+          detail: { 
+            architecture: window.AWSArchitecture, 
+            dataFlow: window.AWSDataFlow, 
+            controls: window.AWSControls, 
+            tooltip: window.AWSTooltip 
+          } 
+        }));
+        console.log('[AWSManager] All components initialized');
       }
-
-      window.AWSArchitecture = AWSArchitectureModule.init(elements.canvas, elements.tooltip);
-      window.AWSDataFlow = AWSDataFlowModule.init(elements.canvas);
-      window.AWSControls = AWSControlsModule.init(elements.controls);
-      window.AWSTooltip = AWSTooltipModule.init(elements.canvas, elements.tooltip);
-      window.sidebarToggle = sidebarToggleModule.init(elements.toggleBtn, elements.menu);
-
-      document.dispatchEvent(new CustomEvent('awsInitialized', { 
-        detail: { 
-          architecture: window.AWSArchitecture, 
-          dataFlow: window.AWSDataFlow, 
-          controls: window.AWSControls, 
-          tooltip: window.AWSTooltip 
-        } 
-      }));
-      console.log('[AWSManager] All components initialized');
     };
 
     if (document.readyState === 'loading') {
