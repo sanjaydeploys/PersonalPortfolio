@@ -55,7 +55,7 @@ try {
         currentProject = e.target.value;
         if (checkDependencies() && window.AWSArchitecture.setProject) {
           window.AWSArchitecture.setProject(currentProject);
-          stopSimulation(); // Reset simulation on project change
+          stopSimulation();
           console.log(`[AWSControls] Switched to ${currentProject}`);
         } else {
           console.error('[AWSControls] Dependencies not available for project switch');
@@ -69,9 +69,15 @@ try {
     }
   };
 
-  window.AWSControls = AWSControls;
-  console.log('[AWSControls] Initializing immediately');
-  AWSControls.init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[AWSControls] DOM loaded, initializing');
+      AWSControls.init();
+    });
+  } else {
+    console.log('[AWSControls] DOM already loaded, initializing');
+    AWSControls.init();
+  }
 } catch (error) {
   console.error('[AWSControls] Script-level error:', error);
 }
