@@ -69,13 +69,11 @@ try {
         particles = [];
         const particleCount = { lic: 3, zedemy: 4, eventease: 5, connectnow: 6 }[selectedProject] || 3;
         connections.forEach(conn => {
-          if (selectedProject === 'all' || conn.project === selectedProject) {
-            const from = services.find(s => s.id === conn.from);
-            const to = services.find(s => s.id === conn.to);
-            if (from && to) {
-              for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle(from, to, 0.005 + Math.random() * 0.01, selectedProject, conn.direction));
-              }
+          const from = services.find(s => s.id === conn.from);
+          const to = services.find(s => s.id === conn.to);
+          if (from && to) {
+            for (let i = 0; i < particleCount; i++) {
+              particles.push(new Particle(from, to, 0.005 + Math.random() * 0.01, selectedProject, conn.direction));
             }
           }
         });
