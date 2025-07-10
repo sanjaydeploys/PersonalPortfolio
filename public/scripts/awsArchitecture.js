@@ -1,107 +1,109 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const canvas = document.getElementById('aws-canvas');
-  const ctx = canvas.getContext('2d');
-  let mouse = { x: null, y: null };
-  let nodes = [];
-  let connections = [];
+const AWSArchitecture = {
+  init(canvasId, tooltipId, controls) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById(tooltipId);
+    let animationFrameId = null;
 
-  // Set canvas size
-  const resizeCanvas = () => {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  };
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+    // AWS Services Configuration
+    const services = [
+      { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
+      { id: 'lambda1', name: 'Lambda (CRM)', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+      { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' },
+      { id: 's3', name: 'S3', x: 500, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-s3.svg', type: 'storage' },
+      { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudfront.svg', type: 'cdn' },
+      { id: 'sns', name: 'SNS', x: 300, y: 400, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-sns.svg', type: 'messaging' },
+      { id: 'sqs', name: 'SQS', x: 500, y: 400, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-sqs.svg', type: 'messaging' },
+      { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudwatch.svg', type: 'monitoring' },
+      { id: 'stepFunctions', name: 'Step Functions', x: 700, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-step-functions.svg', type: 'workflow' },
+      { id: 'cognito', name: 'Cognito', x: 100, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cognito.svg', type: 'auth' }
+    ];
 
-  // Node class (AWS services)
-  class Node {
-    constructor(name, x, y, icon) {
-      this.name = name;
-      this.x = x;
-      this.y = y;
-      this.icon = new Image();
-      this.icon.src = icon;
-      this.size = 40;
-      this.baseX = x;
-      this.baseY = y;
-    }
+    // Connections between services (for data flow)
+    const connections = [
+      { from: 'apiGateway', to: 'lambda1', project: 'lic', label: 'HTTP Request' },
+      { from: 'lambda1', to: 'dynamodb', project: 'lic', label: 'Read/Write' },
+      { from: 'lambda1', to: 's3', project: 'lic', label: 'Store Assets' },
+      { from: 'cloudfront', to: 's3', project: 'zedemy', label: 'Content Delivery' },
+      { from: 'apiGateway', to: 'sns', project: 'notifications', label: 'Publish' },
+      { from: 'sns', to: 'sqs', project: 'notifications', label: 'Queue' },
+      { from: 'sqs', to: 'lambda1', project: 'notifications', label: 'Process' },
+      { from: 'lambda1', to: 'cloudwatch', project: 'all', label: 'Metrics' },
+      { from: 'stepFunctions', to: 'lambda1', project: 'analytics', label: 'Orchestrate' },
+      { from: 'cognito', to: 'apiGateway', project: 'all', label: 'Auth' }
+    ];
 
-    draw() {
-      ctx.drawImage(this.icon, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-      ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.name, this.x, this.y + this.size / 2 + 15);
-    }
-
-    update() {
-      // Repel or attract based on mouse proximity
-      const dx = this.x - mouse.x;
-      const dy = this.y - mouse.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < 100) {
-        const force = (100 - distance) / 100;
-        this.x += (dx / distance) * force * 5;
-        this.y += (dy / distance) * force * 5;
-      } else {
-        // Return to base position
-        this.x += (this.baseX - this.x) * 0.05;
-        this.y += (this.baseY - this.y) * 0.05;
+    // Load service icons
+    const loadIcons = async () => {
+      for (const service of services) {
+        const img = new Image();
+        img.src = service.icon;
+        service.img = img;
+        await new Promise(resolve => img.onload = resolve);
       }
-    }
+    };
+
+    // Resize canvas
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      draw();
+    };
+
+    // Draw services and connections
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw connections
+      connections.forEach(conn => {
+        const from = services.find(s => s.id === conn.from);
+        const to = services.find(s => s.id === conn.to);
+        if (from && to) {
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y);
+          ctx.lineTo(to.x, to.y);
+          ctx.strokeStyle = 'rgba(255, 153, 0, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          // Draw label
+          const midX = (from.x + to.x) / 2;
+          const midY = (from.y + to.y) / 2;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.font = '12px sans-serif';
+          ctx.fillText(conn.label, midX, midY - 5);
+        }
+      });
+      // Draw services
+      services.forEach(service => {
+        ctx.save();
+        ctx.translate(service.x, service.y);
+        ctx.drawImage(service.img, -25, -25, 50, 50);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(service.name, 0, 40);
+        ctx.restore();
+      });
+    };
+
+    // Initialize
+    const init = async () => {
+      await loadIcons();
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      controls.init(services, connections, draw);
+      AWSDataFlow.init(canvas, services, connections);
+      AWSTooltip.init(canvas, services, tooltip);
+    };
+
+    init();
+
+    return {
+      stop: () => {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('resize', resizeCanvas);
+      }
+    };
   }
+};
 
-  // Connection class
-  class Connection {
-    constructor(from, to) {
-      this.from = from;
-      this.to = to;
-    }
-
-    draw() {
-      ctx.beginPath();
-      ctx.moveTo(this.from.x, this.from.y);
-      ctx.lineTo(this.to.x, this.to.y);
-      ctx.strokeStyle = `rgba(0, 229, 255, ${0.3 + Math.random() * 0.2})`; // Flickering cyan
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  }
-
-  // Initialize nodes (AWS services)
-  const nodeData = [
-    { name: 'Lambda', x: canvas.width * 0.3, y: canvas.height * 0.3, icon: 'https://cdn.svgporn.com/logos/aws-lambda.svg' },
-    { name: 'API Gateway', x: canvas.width * 0.5, y: canvas.height * 0.2, icon: 'https://cdn.svgporn.com/logos/aws-api-gateway.svg' },
-    { name: 'S3', x: canvas.width * 0.7, y: canvas.height * 0.4, icon: 'https://cdn.svgporn.com/logos/aws-s3.svg' },
-    { name: 'DynamoDB', x: canvas.width * 0.4, y: canvas.height * 0.5, icon: 'https://cdn.svgporn.com/logos/aws-dynamodb.svg' },
-  ];
-
-  nodes = nodeData.map((data) => new Node(data.name, data.x, data.y, data.icon));
-
-  // Initialize connections
-  connections = [
-    new Connection(nodes[0], nodes[1]), // Lambda -> API Gateway
-    new Connection(nodes[1], nodes[2]), // API Gateway -> S3
-    new Connection(nodes[0], nodes[3]), // Lambda -> DynamoDB
-    new Connection(nodes[2], nodes[3]), // S3 -> DynamoDB
-  ];
-
-  // Handle mouse movement
-  canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - rect.left;
-    mouse.y = e.clientY - rect.top;
-  });
-
-  // Animate
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    nodes.forEach((node) => {
-      node.update();
-      node.draw();
-    });
-    connections.forEach((conn) => conn.draw());
-    requestAnimationFrame(animate);
-  };
-  animate();
-});
+window.AWSArchitecture = AWSArchitecture;
