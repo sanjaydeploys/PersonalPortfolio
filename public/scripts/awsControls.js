@@ -23,11 +23,11 @@ try {
       const checkDependencies = (attempt = 1, maxAttempts = 10) => {
         console.log(`[AWSControls] Checking dependencies, attempt ${attempt}/${maxAttempts}`);
         if (window.AWSDataFlow && window.AWSArchitecture) {
-          return true;
+          return Promise.resolve();
         }
         if (attempt >= maxAttempts) {
           console.error('[AWSControls] Dependencies not available after 10 attempts');
-          return false;
+          return Promise.reject(new Error('Dependencies not found'));
         }
         return new Promise(resolve => setTimeout(() => resolve(checkDependencies(attempt + 1, maxAttempts)), 500));
       };
@@ -39,13 +39,12 @@ try {
 
           const { playBtn, pauseBtn, projectSelect } = elements;
 
-          if (!(await checkDependencies())) {
-            console.error('[AWSControls] Aborting: Dependencies not available');
+          await checkDependencies().catch(err => {
+            console.error('[AWSControls] Dependency check failed:', err);
             playBtn.disabled = true;
             pauseBtn.disabled = true;
             projectSelect.disabled = true;
-            return;
-          }
+          });
 
           playBtn.addEventListener('click', () => {
             console.log('[AWSControls] Play button clicked');
@@ -55,7 +54,10 @@ try {
               pauseBtn.disabled = false;
               console.log('[AWSControls] Animation started');
             } else {
-              console.error('[AWSControls] AWSDataFlow.start not available');
+              console.error('[AWSControls] AWSDataFlow.start not available, retrying initialization');
+              if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
+                window.AWSArchitecture.setProject(currentProject); // Force refresh
+              }
             }
           });
 
@@ -66,21 +68,18 @@ try {
               playBtn.disabled = false;
               pauseBtn.disabled = true;
               console.log('[AWSControls] Animation paused');
-            } else {
-              console.error('[AWSControls] AWSDataFlow.stop not available');
             }
           });
 
           projectSelect.addEventListener('change', (e) => {
-            console.log(`[AWSControls] Project selected: ${e.target.value}`);
+            const project = e.target.value;
+            console.log(`[AWSControls] Project selected: ${project}`);
             if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
-              window.AWSArchitecture.setProject(e.target.value);
+              window.AWSArchitecture.setProject(project);
               if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
-                window.AWSDataFlow.setProject(e.target.value);
+                window.AWSDataFlow.setProject(project);
               }
               console.log('[AWSControls] Architecture and data flow updated');
-            } else {
-              console.error('[AWSControls] Project switch failed');
             }
           });
 
