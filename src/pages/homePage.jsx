@@ -12,7 +12,6 @@ const Content = styled.div`
   margin: 0 auto;
   padding: 1rem;
 `;
-
 const LicHome = memo(() => {
   useEffect(() => {
     const scripts = [
