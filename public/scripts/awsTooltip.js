@@ -24,12 +24,18 @@ try {
         cognito: { title: 'Cognito', description: 'User auth.', useCases: ['Sign-in', 'Sync'] }
       };
 
-      canvas.addEventListener('mousemove', (e) => {
+      const checkControls = () => {
+        return window.AWSControls && typeof window.AWSControls.getCurrentProject === 'function';
+      };
+
+      const getCurrentProject = () => (checkControls() ? window.AWSControls.getCurrentProject() : 'lic');
+
+      const updateTooltip = (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         let foundService = null;
-        const { services } = window.AWSArchitecture.architectures[window.AWSControls.getCurrentProject() || 'lic'];
+        const { services } = window.AWSArchitecture.architectures[getCurrentProject()];
         services.forEach(service => {
           const dx = x - service.x;
           const dy = y - service.y;
@@ -50,12 +56,24 @@ try {
           tooltip.style.left = `${tooltipX}px`;
           tooltip.style.top = `${tooltipY}px`;
           tooltip.style.display = 'block';
+          if (window.AWSArchitecture.highlightService) window.AWSArchitecture.highlightService(foundService.id);
         } else {
           tooltip.style.display = 'none';
+          if (window.AWSArchitecture.highlightService) window.AWSArchitecture.highlightService(null);
         }
-      });
+      };
 
-      canvas.addEventListener('mouseout', () => tooltip.style.display = 'none');
+      const startTooltip = () => {
+        if (checkControls()) {
+          canvas.addEventListener('mousemove', updateTooltip);
+          canvas.addEventListener('mouseout', () => tooltip.style.display = 'none');
+          console.log('[AWSTooltip] Tooltip initialized');
+        } else {
+          setTimeout(startTooltip, 100);
+        }
+      };
+
+      startTooltip();
     }
   };
 
