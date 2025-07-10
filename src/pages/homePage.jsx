@@ -29,8 +29,7 @@ const LicHome = memo(() => {
                   { src: '/public/scripts/projectHover.js', defer: true },
                   { src: '/public/scripts/awsArchitecture.js', defer: true },
                   { src: '/public/scripts/awsDataFlow.js', defer: true },
-
-                        { src: '/public/scripts/awsTooltip.js', defer: true },
+                  { src: '/public/scripts/awsTooltip.js', defer: true },
                   { src: '/public/scripts/awsControls.js', defer: true },
 
 
