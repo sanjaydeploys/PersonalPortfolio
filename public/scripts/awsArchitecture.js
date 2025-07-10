@@ -19,13 +19,13 @@ try {
         console.log(`[AWSArchitecture] Checking for elements, attempt ${attempt}/${maxAttempts}`);
         canvas = document.getElementById(canvasId);
         tooltip = document.getElementById(tooltipId);
-        if (canvas && tooltip) {
+        if (canvas && tooltip && canvas.getContext) {
           return Promise.resolve();
         }
         if (attempt >= maxAttempts) {
-          console.error(`[AWSArchitecture] Failed to find canvas or tooltip after ${maxAttempts} attempts`);
+          console.error(`[AWSArchitecture] Failed to find or initialize canvas/tooltip after ${maxAttempts} attempts`);
           showFallback();
-          return Promise.reject(new Error('Elements not found'));
+          return Promise.reject(new Error('Elements not found or invalid'));
         }
         return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
       };
@@ -118,16 +118,18 @@ try {
           if (!ctx) throw new Error('Failed to get 2D context');
 
           const resizeCanvas = () => {
-            canvas.width = canvas.offsetWidth || 800;
-            canvas.height = canvas.offsetHeight || 400;
+            const width = canvas.offsetWidth || 800;
+            const height = canvas.offsetHeight || 400;
+            canvas.width = width;
+            canvas.height = height;
             architectures[currentProject].services.forEach(service => {
-              service.x = (service.x / 800) * canvas.width;
-              service.y = (service.y / 400) * canvas.height;
+              service.x = (service.x / 800) * width;
+              service.y = (service.y / 400) * height;
             });
-            console.log(`[AWSArchitecture] Canvas resized to ${canvas.width}x${canvas.height}`);
+            console.log(`[AWSArchitecture] Canvas resized to ${width}x${height}`);
           };
 
-          const draw = () => {
+          const draw = (transition = false) => {
             try {
               ctx.clearRect(0, 0, canvas.width, canvas.height);
               ctx.fillStyle = 'rgba(18, 18, 36, 1)';
@@ -173,7 +175,6 @@ try {
                 ctx.stroke();
                 ctx.fillStyle = 'white';
                 ctx.font = '12px "Segoe UI", sans-serif';
-                ctx.textAlign = 'center';
                 const lines = service.name.split(' ');
                 lines.forEach((line, i) => {
                   ctx.fillText(line, 0, -5 + i * 15);
@@ -197,6 +198,10 @@ try {
               if (!dataFlow && window.AWSDataFlow) {
                 dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
                 console.log('[AWSArchitecture] DataFlow initialized:', !!dataFlow);
+                if (dataFlow && typeof dataFlow.start === 'function') {
+                  dataFlow.start(); // Auto-start on successful init
+                  console.log('[AWSArchitecture] Animation auto-started');
+                }
               }
               animationFrameId = requestAnimationFrame(animate);
               console.log('[AWSArchitecture] Animation frame requested');
@@ -213,8 +218,8 @@ try {
               if (dataFlow && typeof dataFlow.setProject === 'function') {
                 dataFlow.setProject(project);
               }
+              draw(true); // Trigger with transition flag
               console.log(`[AWSArchitecture] Switched to project: ${project}`);
-              draw(); // Force immediate re-render
             } else {
               console.error(`[AWSArchitecture] Invalid project: ${project}`);
             }
