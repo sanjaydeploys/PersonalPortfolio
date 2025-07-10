@@ -4,6 +4,11 @@ const AWSControls = {
     const pauseBtn = document.querySelector('.control-btn[data-action="pause"]');
     const projectSelect = document.querySelector('.control-select[data-action="project"]');
 
+    if (!window.AWSDataFlow) {
+      console.error('AWSDataFlow not initialized');
+      return;
+    }
+
     playBtn.addEventListener('click', () => {
       window.AWSDataFlow.start();
       playBtn.disabled = true;
@@ -20,6 +25,9 @@ const AWSControls = {
       window.AWSDataFlow.setProject(e.target.value);
       draw();
     });
+
+    // Initialize with pause button disabled
+    pauseBtn.disabled = true;
   }
 };
 
