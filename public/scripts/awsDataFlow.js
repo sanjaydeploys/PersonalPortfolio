@@ -6,12 +6,12 @@ try {
       console.log('[AWSDataFlow] Initializing');
       if (!canvas || !canvas.getContext) {
         console.error('[AWSDataFlow] Canvas not available');
-        return;
+        return null;
       }
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         console.error('[AWSDataFlow] Failed to get canvas context');
-        return;
+        return null;
       }
       let particles = [];
       let isAnimating = false;
@@ -32,7 +32,7 @@ try {
           this.progress += this.speed;
           if (this.progress >= 1) this.progress = 0;
           this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
-          this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
+          this.y = this.from.y + (this.to.y - this.to.y) * this.progress;
         }
         draw() {
           ctx.beginPath();
