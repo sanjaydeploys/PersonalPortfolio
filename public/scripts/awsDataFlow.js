@@ -66,11 +66,13 @@ try {
       };
 
       const drawParticles = () => {
-        console.log('[AWSDataFlow] Drawing particles');
-        particles.forEach(particle => {
-          particle.update();
-          particle.draw();
-        });
+        if (isAnimating) {
+          console.log('[AWSDataFlow] Drawing particles');
+          particles.forEach(particle => {
+            particle.update();
+            particle.draw();
+          });
+        }
       };
 
       const startAnimation = () => {
