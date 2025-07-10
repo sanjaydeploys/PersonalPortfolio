@@ -7,7 +7,7 @@ try {
       const controls = document.getElementById(controlsId);
       if (!controls) {
         console.error('[AWSControls] Controls container not found');
-        return;
+        return null;
       }
 
       let currentProject = 'lic';
@@ -18,7 +18,7 @@ try {
 
       if (!playBtn || !pauseBtn || !projectSelect) {
         console.error('[AWSControls] Required control elements not found');
-        return;
+        return null;
       }
 
       const checkDependencies = () => {
@@ -72,11 +72,11 @@ try {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       console.log('[AWSControls] DOM loaded, initializing');
-      AWSControls.init();
+      window.AWSControls = AWSControls.init();
     });
   } else {
     console.log('[AWSControls] DOM already loaded, initializing');
-    AWSControls.init();
+    window.AWSControls = AWSControls.init();
   }
 } catch (error) {
   console.error('[AWSControls] Script-level error:', error);
