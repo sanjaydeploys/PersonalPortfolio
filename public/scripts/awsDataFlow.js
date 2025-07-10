@@ -21,31 +21,18 @@ try {
           this.progress = Math.random();
           this.speed = speed;
           this.color = 'rgba(255, 153, 0, 0.8)';
-          this.status = 'active';
         }
         update() {
           this.progress += this.speed;
-          if (this.progress >= 1) {
-            this.progress = 0;
-            this.status = Math.random() > 0.9 ? 'error' : 'active';
-          }
+          if (this.progress >= 1) this.progress = 0;
           this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
           this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
         }
         draw() {
           ctx.beginPath();
           ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = this.status === 'error' ? 'rgba(255, 0, 0, 0.8)' : this.color;
+          ctx.fillStyle = this.color;
           ctx.fill();
-          if (this.status === 'error') {
-            ctx.beginPath();
-            ctx.moveTo(this.x - 5, this.y - 5);
-            ctx.lineTo(this.x + 5, this.y + 5);
-            ctx.moveTo(this.x + 5, this.y - 5);
-            ctx.lineTo(this.x - 5, this.y + 5);
-            ctx.strokeStyle = 'red';
-            ctx.stroke();
-          }
         }
       }
 
@@ -92,6 +79,19 @@ try {
   };
 
   window.AWSDataFlow = AWSDataFlow;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.AWSArchitecture && window.AWSArchitecture.init) {
+        const { canvas } = window.AWSArchitecture.getElements().result || {};
+        if (canvas) AWSDataFlow.init(canvas);
+      }
+    });
+  } else {
+    if (window.AWSArchitecture && window.AWSArchitecture.init) {
+      const { canvas } = window.AWSArchitecture.getElements().result || {};
+      if (canvas) AWSDataFlow.init(canvas);
+    }
+  }
 } catch (error) {
   console.error('[AWSDataFlow] Script-level error:', error);
 }
