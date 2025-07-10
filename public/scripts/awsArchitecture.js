@@ -165,6 +165,14 @@ try {
             });
           };
 
+          const animate = () => {
+            draw();
+            if (window.AWSDataFlow && window.AWSDataFlow.drawParticles) {
+              window.AWSDataFlow.drawParticles();
+            }
+            animationFrameId = requestAnimationFrame(animate);
+          };
+
           const setProject = (project) => {
             if (architectures[project]) {
               currentProject = project;
