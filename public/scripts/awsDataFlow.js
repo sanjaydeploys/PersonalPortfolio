@@ -1,4 +1,4 @@
-const AWSDataFlow = {
+export default {
   init(canvas) {
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -26,6 +26,7 @@ const AWSDataFlow = {
       }
     }
 
+    let currentProject = 'lic';
     const createParticles = (services, connections) => {
       particles = [];
       const particleCount = { lic: 5, zedemy: 4, eventease: 6, connectnow: 3 }[currentProject] || 5;
@@ -39,8 +40,6 @@ const AWSDataFlow = {
         }
       });
     };
-
-    let currentProject = 'lic';
     createParticles(window.AWSArchitecture.architectures[currentProject].services, window.AWSArchitecture.architectures[currentProject].connections);
 
     const drawParticles = () => {
