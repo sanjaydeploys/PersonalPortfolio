@@ -5,6 +5,9 @@ try {
     init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
       console.log(`[AWSArchitecture] Attempting initialization with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
 
+      let canvas = null;
+      let tooltip = null;
+
       const showFallback = () => {
         const fallback = document.getElementById('aws-fallback');
         if (fallback) fallback.style.display = 'block';
@@ -12,23 +15,21 @@ try {
 
       const getElements = (attempt = 1, maxAttempts = 10) => {
         console.log(`[AWSArchitecture] Checking elements, attempt ${attempt}/${maxAttempts}`);
-        const canvas = document.getElementById(canvasId);
-        const tooltip = document.getElementById(tooltipId);
-        if (canvas && tooltip) return { canvas, tooltip };
+        canvas = document.getElementById(canvasId);
+        tooltip = document.getElementById(tooltipId);
+        if (canvas && tooltip) return true;
         if (attempt >= maxAttempts) {
           console.error('[AWSArchitecture] Elements not found after max attempts');
           showFallback();
-          return null;
+          return false;
         }
         return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1)), 500));
       };
 
       const start = async () => {
         try {
-          const elements = await getElements();
-          if (!elements) return;
+          if (!await getElements()) return;
 
-          const { canvas, tooltip } = elements;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
             console.error('[AWSArchitecture] No 2D context');
@@ -229,7 +230,7 @@ try {
           return { setProject, draw, highlightService: (id) => {
             const service = architectures[currentProject].services.find(s => s.id === id);
             if (service) drawService(service, true);
-          } };
+          }, getCanvas: () => canvas };
         } catch (error) {
           console.error('[AWSArchitecture] Initialization error:', error);
           showFallback();
