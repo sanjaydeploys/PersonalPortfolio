@@ -1,43 +1,49 @@
-const AWSControls = {
-  init(services, connections, draw) {
-    console.log('[AWSControls] Initializing');
-    const playBtn = document.querySelector('.control-btn[data-action="play"]');
-    const pauseBtn = document.querySelector('.control-btn[data-action="pause"]');
-    const projectSelect = document.querySelector('.control-select[data-action="project"]');
+try {
+  console.log('[AWSControls] Script loaded and parsed');
 
-    if (!playBtn || !pauseBtn || !projectSelect) {
-      console.error('[AWSControls] Control elements not found:', { playBtn, pauseBtn, projectSelect });
-      return;
-    }
+  const AWSControls = {
+    init(services, connections, draw) {
+      console.log('[AWSControls] Initializing');
+      const playBtn = document.querySelector('.control-btn[data-action="play"]');
+      const pauseBtn = document.querySelector('.control-btn[data-action="pause"]');
+      const projectSelect = document.querySelector('.control-select[data-action="project"]');
 
-    if (!window.AWSDataFlow) {
-      console.error('[AWSControls] AWSDataFlow not initialized');
-      return;
-    }
+      if (!playBtn || !pauseBtn || !projectSelect) {
+        console.error('[AWSControls] Control elements not found:', { playBtn, pauseBtn, projectSelect });
+        return;
+      }
 
-    playBtn.addEventListener('click', () => {
-      console.log('[AWSControls] Play button clicked');
-      window.AWSDataFlow.start();
-      playBtn.disabled = true;
-      pauseBtn.disabled = false;
-    });
+      if (!window.AWSDataFlow) {
+        console.error('[AWSControls] AWSDataFlow not initialized');
+        return;
+      }
 
-    pauseBtn.addEventListener('click', () => {
-      console.log('[AWSControls] Pause button clicked');
-      window.AWSDataFlow.stop();
-      playBtn.disabled = false;
+      playBtn.addEventListener('click', () => {
+        console.log('[AWSControls] Play button clicked');
+        window.AWSDataFlow.start();
+        playBtn.disabled = true;
+        pauseBtn.disabled = false;
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        console.log('[AWSControls] Pause button clicked');
+        window.AWSDataFlow.stop();
+        playBtn.disabled = false;
+        pauseBtn.disabled = true;
+      });
+
+      projectSelect.addEventListener('change', (e) => {
+        console.log(`[AWSControls] Project selected: ${e.target.value}`);
+        window.AWSDataFlow.setProject(e.target.value);
+        draw();
+      });
+
       pauseBtn.disabled = true;
-    });
+      console.log('[AWSControls] Initialized with pause button disabled');
+    }
+  };
 
-    projectSelect.addEventListener('change', (e) => {
-      console.log(`[AWSControls] Project selected: ${e.target.value}`);
-      window.AWSDataFlow.setProject(e.target.value);
-      draw();
-    });
-
-    pauseBtn.disabled = true;
-    console.log('[AWSControls] Initialized with pause button disabled');
-  }
-};
-
-window.AWSControls = AWSControls;
+  window.AWSControls = AWSControls;
+} catch (error) {
+  console.error('[AWSControls] Script-level error:', error);
+}
