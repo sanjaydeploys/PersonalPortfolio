@@ -33,13 +33,25 @@ const AWSArchitecture = {
       { from: 'cognito', to: 'apiGateway', project: 'all', label: 'Auth' }
     ];
 
-    // Load service icons
+    // Load service icons with error handling
     const loadIcons = async () => {
       for (const service of services) {
-        const img = new Image();
-        img.src = service.icon;
-        service.img = img;
-        await new Promise(resolve => img.onload = resolve);
+        try {
+          const img = new Image();
+          img.src = service.icon;
+          service.img = img;
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => {
+              console.error(`Failed to load icon for ${service.name}: ${service.icon}`);
+              service.img = null; // Fallback to text-only rendering
+              resolve();
+            };
+          });
+        } catch (error) {
+          console.error(`Error loading icon for ${service.name}:`, error);
+          service.img = null;
+        }
       }
     };
 
@@ -47,6 +59,11 @@ const AWSArchitecture = {
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
+      services.forEach(service => {
+        // Adjust service positions for responsiveness
+        service.x = (service.x / 1280) * canvas.width;
+        service.y = (service.y / 600) * canvas.height;
+      });
       draw();
     };
 
@@ -76,7 +93,13 @@ const AWSArchitecture = {
       services.forEach(service => {
         ctx.save();
         ctx.translate(service.x, service.y);
-        ctx.drawImage(service.img, -25, -25, 50, 50);
+        if (service.img) {
+          ctx.drawImage(service.img, -25, -25, 50, 50);
+        } else {
+          // Fallback rendering if image fails to load
+          ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
+          ctx.fillRect(-25, -25, 50, 50);
+        }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
@@ -85,14 +108,21 @@ const AWSArchitecture = {
       });
     };
 
+    // Animation loop to include base drawing
+    const animate = () => {
+      draw(); // Ensure base architecture is drawn
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
     // Initialize
     const init = async () => {
       await loadIcons();
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
       controls.init(services, connections, draw);
-      AWSDataFlow.init(canvas, services, connections);
+      AWSDataFlow.init(canvas, services, connections, draw); // Pass draw function
       AWSTooltip.init(canvas, services, tooltip);
+      animate(); // Start animation loop
     };
 
     init();
@@ -101,7 +131,8 @@ const AWSArchitecture = {
       stop: () => {
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
         window.removeEventListener('resize', resizeCanvas);
-      }
+      },
+      draw // Expose draw function for other scripts
     };
   }
 };
