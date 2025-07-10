@@ -3,34 +3,27 @@ try {
 
   const AWSDataFlow = {
     init(canvas, services, connections) {
-      console.log('[AWSDataFlow] Initializing with canvas:', !!canvas, 'services:', !!services, 'connections:', !!connections);
+      console.log('[AWSDataFlow] Initializing with canvas:', !!canvas, 'services:', Array.isArray(services), 'connections:', Array.isArray(connections));
       if (!canvas || !canvas.getContext) {
-        console.error('[AWSDataFlow] Canvas not available or invalid:', canvas);
-        return {
-          start: () => console.log('[AWSDataFlow] Start called but disabled due to canvas issue'),
-          stop: () => console.log('[AWSDataFlow] Stop called but disabled due to canvas issue'),
-          setProject: () => console.log('[AWSDataFlow] SetProject called but disabled due to canvas issue'),
-          drawParticles: () => {},
-          isAnimating: () => false
-        };
+        console.error('[AWSDataFlow] Invalid canvas:', canvas);
+        return { start: () => {}, stop: () => {}, setProject: () => {}, drawParticles: () => {}, isAnimating: () => false };
       }
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         console.error('[AWSDataFlow] Failed to get canvas context');
-        return {
-          start: () => console.log('[AWSDataFlow] Start called but disabled due to context issue'),
-          stop: () => console.log('[AWSDataFlow] Stop called but disabled due to context issue'),
-          setProject: () => console.log('[AWSDataFlow] SetProject called but disabled due to context issue'),
-          drawParticles: () => {},
-          isAnimating: () => false
-        };
+        return { start: () => {}, stop: () => {}, setProject: () => {}, drawParticles: () => {}, isAnimating: () => false };
       }
       console.log('[AWSDataFlow] Canvas context acquired');
+
+      if (!Array.isArray(services) || !Array.isArray(connections) || services.length === 0 || connections.length === 0) {
+        console.error('[AWSDataFlow] Invalid services or connections data:', { services, connections });
+        return { start: () => {}, stop: () => {}, setProject: () => {}, drawParticles: () => {}, isAnimating: () => false };
+      }
+
       let particles = [];
       let isAnimating = false;
       let selectedProject = 'all';
 
-      // Particle class
       class Particle {
         constructor(from, to, speed, project) {
           this.from = from;
@@ -55,14 +48,9 @@ try {
         }
       }
 
-      // Create particles
       const createParticles = () => {
         console.log(`[AWSDataFlow] Creating particles for project: ${selectedProject}`);
         particles = [];
-        if (!services || !connections) {
-          console.error('[AWSDataFlow] Invalid services or connections data');
-          return;
-        }
         connections.forEach(conn => {
           if (selectedProject === 'all' || conn.project === selectedProject) {
             const from = services.find(s => s.id === conn.from);
@@ -77,7 +65,6 @@ try {
         console.log(`[AWSDataFlow] Created ${particles.length} particles`);
       };
 
-      // Draw particles
       const drawParticles = () => {
         console.log('[AWSDataFlow] Drawing particles');
         particles.forEach(particle => {
@@ -86,7 +73,6 @@ try {
         });
       };
 
-      // Start/stop animation
       const startAnimation = () => {
         console.log('[AWSDataFlow] Starting animation');
         isAnimating = true;
@@ -96,21 +82,13 @@ try {
         console.log('[AWSDataFlow] Stopping animation');
         isAnimating = false;
       };
-
-      // Update project filter
       const setProject = (project) => {
         console.log(`[AWSDataFlow] Setting project filter to: ${project}`);
         selectedProject = project;
         createParticles();
       };
 
-      return {
-        start: startAnimation,
-        stop: stopAnimation,
-        setProject,
-        drawParticles,
-        isAnimating: () => isAnimating
-      };
+      return { start: startAnimation, stop: stopAnimation, setProject, drawParticles, isAnimating: () => isAnimating };
     }
   };
 
