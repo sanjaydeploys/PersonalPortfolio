@@ -22,7 +22,7 @@ try {
 
       const checkDependencies = (attempt = 1, maxAttempts = 10) => {
         console.log(`[AWSControls] Checking dependencies, attempt ${attempt}/${maxAttempts}`);
-        if (window.AWSDataFlow && window.AWSArchitecture) {
+        if (window.AWSDataFlow && window.AWSArchitecture && typeof window.AWSArchitecture.setProject === 'function') {
           return Promise.resolve();
         }
         if (attempt >= maxAttempts) {
@@ -53,11 +53,6 @@ try {
               playBtn.disabled = true;
               pauseBtn.disabled = false;
               console.log('[AWSControls] Animation started');
-            } else {
-              console.error('[AWSControls] AWSDataFlow.start not available, retrying');
-              if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
-                window.AWSArchitecture.setProject(projectSelect.value);
-              }
             }
           });
 
