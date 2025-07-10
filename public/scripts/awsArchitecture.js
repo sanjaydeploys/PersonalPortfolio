@@ -175,7 +175,7 @@ try {
           const animate = () => {
             try {
               draw();
-              if (dataFlow && dataFlow.isAnimating()) {
+              if (dataFlow && typeof dataFlow.isAnimating === 'function' && dataFlow.isAnimating()) {
                 dataFlow.drawParticles();
                 console.log('[AWSArchitecture] Particles drawn');
               } else {
@@ -186,6 +186,19 @@ try {
             } catch (error) {
               console.error('[AWSArchitecture] Animation error:', error);
               showFallback();
+            }
+          };
+
+          // Reinitialize dataFlow if null
+          const reinitializeDataFlow = async (attempt = 1, maxAttempts = 5) => {
+            if (!dataFlow && window.AWSDataFlow && attempt <= maxAttempts) {
+              console.log(`[AWSArchitecture] Reinitializing dataFlow, attempt ${attempt}/${maxAttempts}`);
+              dataFlow = window.AWSDataFlow.init(canvas, services, connections);
+              if (dataFlow) {
+                console.log('[AWSArchitecture] DataFlow reinitialized successfully');
+              } else {
+                await new Promise(resolve => setTimeout(() => resolve(reinitializeDataFlow(attempt + 1, maxAttempts)), 500));
+              }
             }
           };
 
@@ -200,6 +213,7 @@ try {
           if (window.AWSDataFlow) {
             dataFlow = window.AWSDataFlow.init(canvas, services, connections);
             console.log('[AWSArchitecture] AWSDataFlow initialized:', !!dataFlow);
+            await reinitializeDataFlow();
           } else {
             console.error('[AWSArchitecture] AWSDataFlow not available');
           }
