@@ -25,6 +25,8 @@ const LicHome = memo(() => {
       { src: '/public/scripts/audio.js', defer: true },
             { src: '/public/scripts/animations.js', defer: true },
                   { src: '/public/scripts/impactAnimations.js', defer: true },
+                  { src: '/public/scripts/progressBorder.js', defer: true },
+                  { src: '/public/scripts/projectHover.js', defer: true },
 
       
 
