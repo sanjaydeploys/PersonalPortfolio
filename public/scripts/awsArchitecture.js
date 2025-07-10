@@ -2,8 +2,17 @@ try {
   console.log('[AWSArchitecture] Script loaded and parsed');
 
   const AWSArchitecture = {
-    init(canvasId, tooltipId, controls) {
+    init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
       console.log(`[AWSArchitecture] Attempting initialization with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
+
+      // Show fallback message
+      const showFallback = () => {
+        const fallback = document.getElementById('aws-fallback');
+        if (fallback) {
+          fallback.style.display = 'block';
+          console.log('[AWSArchitecture] Displaying fallback message');
+        }
+      };
 
       // Retry mechanism for DOM elements
       const getElements = (attempt = 1, maxAttempts = 10) => {
@@ -16,9 +25,10 @@ try {
         }
         if (attempt >= maxAttempts) {
           console.error(`[AWSArchitecture] Failed to find canvas or tooltip after ${maxAttempts} attempts`);
+          showFallback();
           return null;
         }
-        return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 1000));
+        return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
       };
 
       // Main initialization
@@ -28,12 +38,14 @@ try {
           const elements = await getElements();
           if (!elements) {
             console.error('[AWSArchitecture] Aborting: Canvas or tooltip not found');
+            showFallback();
             return;
           }
           const { canvas, tooltip } = elements;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
             console.error('[AWSArchitecture] Failed to get 2D context for canvas');
+            showFallback();
             return;
           }
           console.log('[AWSArchitecture] Canvas context acquired');
@@ -79,7 +91,7 @@ try {
                 service.img = img;
                 await new Promise((resolve, reject) => {
                   img.onload = () => {
-                    console.log(`[AWSArchitecture] Loaded icon for ${service.name}: ${service.icon}`);
+                    console.log(`[AWSArchitecture] Loaded icon for ${service.name}`);
                     resolve();
                   };
                   img.onerror = () => {
@@ -99,8 +111,8 @@ try {
           // Resize canvas
           const resizeCanvas = () => {
             console.log('[AWSArchitecture] Resizing canvas...');
-            canvas.width = canvas.offsetWidth || 1280;
-            canvas.height = canvas.offsetHeight || 600;
+            canvas.width = canvas.offsetWidth || 800;
+            canvas.height = canvas.offsetHeight || 400;
             services.forEach(service => {
               service.x = (service.x / 1280) * canvas.width;
               service.y = (service.y / 600) * canvas.height;
@@ -112,54 +124,66 @@ try {
           // Draw services and connections
           const draw = () => {
             console.log('[AWSArchitecture] Drawing architecture...');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            connections.forEach(conn => {
-              const from = services.find(s => s.id === conn.from);
-              const to = services.find(s => s.id === conn.to);
-              if (from && to) {
-                ctx.beginPath();
-                ctx.moveTo(from.x, from.y);
-                ctx.lineTo(to.x, to.y);
-                ctx.strokeStyle = 'rgba(255, 153, 0, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                const midX = (from.x + to.x) / 2;
-                const midY = (from.y + to.y) / 2;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.font = '12px sans-serif';
-                ctx.fillText(conn.label, midX, midY - 5);
-              }
-            });
-            services.forEach(service => {
-              ctx.save();
-              ctx.translate(service.x, service.y);
-              if (service.img) {
-                ctx.drawImage(service.img, -25, -25, 50, 50);
-              } else {
-                ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
-                ctx.fillRect(-25, -25, 50, 50);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.font = '10px sans-serif';
-                ctx.fillText(service.name, 0, 0);
-              }
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-              ctx.font = '14px sans-serif';
-              ctx.textAlign = 'center';
-              ctx.fillText(service.name, 0, 40);
-              ctx.restore();
-            });
-            console.log('[AWSArchitecture] Architecture drawn');
+            try {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = 'rgba(26, 26, 46, 1)';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              connections.forEach(conn => {
+                const from = services.find(s => s.id === conn.from);
+                const to = services.find(s => s.id === conn.to);
+                if (from && to) {
+                  ctx.beginPath();
+                  ctx.moveTo(from.x, from.y);
+                  ctx.lineTo(to.x, to.y);
+                  ctx.strokeStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.lineWidth = 2;
+                  ctx.stroke();
+                  const midX = (from.x + to.x) / 2;
+                  const midY = (from.y + to.y) / 2;
+                  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                  ctx.font = '12px sans-serif';
+                  ctx.fillText(conn.label, midX, midY - 10);
+                }
+              });
+              services.forEach(service => {
+                ctx.save();
+                ctx.translate(service.x, service.y);
+                if (service.img) {
+                  ctx.drawImage(service.img, -25, -25, 50, 50);
+                } else {
+                  ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.fillRect(-25, -25, 50, 50);
+                  ctx.fillStyle = 'white';
+                  ctx.font = '10px sans-serif';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(service.name, 0, 0);
+                }
+                ctx.fillStyle = 'white';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(service.name, 0, 40);
+                ctx.restore();
+              });
+              console.log('[AWSArchitecture] Architecture drawn');
+            } catch (error) {
+              console.error('[AWSArchitecture] Draw error:', error);
+              showFallback();
+            }
           };
 
           // Animation loop
           const animate = () => {
-            draw();
-            if (dataFlow && dataFlow.isAnimating()) {
-              dataFlow.drawParticles();
+            try {
+              draw();
+              if (dataFlow && dataFlow.isAnimating()) {
+                dataFlow.drawParticles();
+              }
+              animationFrameId = requestAnimationFrame(animate);
+              console.log('[AWSArchitecture] Animation frame requested');
+            } catch (error) {
+              console.error('[AWSArchitecture] Animation error:', error);
+              showFallback();
             }
-            animationFrameId = requestAnimationFrame(animate);
           };
 
           // Initialize
@@ -170,8 +194,8 @@ try {
             console.log('[AWSArchitecture] Window resized, triggering canvas resize');
             resizeCanvas();
           });
-          dataFlow = window.AWSDataFlow ? window.AWSDataFlow.init(canvas, services, connections) : null;
-          if (dataFlow) {
+          if (window.AWSDataFlow) {
+            dataFlow = window.AWSDataFlow.init(canvas, services, connections);
             console.log('[AWSArchitecture] AWSDataFlow initialized');
           } else {
             console.error('[AWSArchitecture] AWSDataFlow not available');
@@ -182,23 +206,22 @@ try {
           } else {
             console.error('[AWSArchitecture] AWSTooltip not available');
           }
-          if (controls) {
-            controls.init(services, connections, draw);
-            console.log('[AWSArchitecture] AWSControls initialized');
-          } else {
-            console.error('[AWSArchitecture] AWSControls not available');
-          }
           animate();
           console.log('[AWSArchitecture] Animation loop started');
         } catch (error) {
           console.error('[AWSArchitecture] Initialization error:', error);
+          showFallback();
         }
       };
 
       // Start initialization
+      console.log('[AWSArchitecture] Checking document ready state');
       if (document.readyState === 'loading') {
         console.log('[AWSArchitecture] Waiting for DOMContentLoaded');
-        document.addEventListener('DOMContentLoaded', start);
+        document.addEventListener('DOMContentLoaded', () => {
+          console.log('[AWSArchitecture] DOMContentLoaded fired');
+          start();
+        });
       } else {
         console.log('[AWSArchitecture] DOM already loaded, starting immediately');
         start();
@@ -216,6 +239,10 @@ try {
   };
 
   window.AWSArchitecture = AWSArchitecture;
+  console.log('[AWSArchitecture] Initializing immediately');
+  AWSArchitecture.init(); // Call init immediately
 } catch (error) {
   console.error('[AWSArchitecture] Script-level error:', error);
+  const fallback = document.getElementById('aws-fallback');
+  if (fallback) fallback.style.display = 'block';
 }
