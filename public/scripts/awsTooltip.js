@@ -65,8 +65,14 @@ const AWSTooltip = {
           </ul>
         </div>
       `;
-      tooltipElement.style.left = `${x + 20}px`;
-      tooltipElement.style.top = `${y - 20}px`;
+      // Adjust tooltip position to stay within canvas bounds
+      const canvasRect = canvas.getBoundingClientRect();
+      let tooltipX = x + 20;
+      let tooltipY = y - 20;
+      if (tooltipX + 300 > canvasRect.width) tooltipX = x - 320; // Adjust if tooltip exceeds canvas width
+      if (tooltipY < 0) tooltipY = y + 20; // Adjust if tooltip is above canvas
+      tooltipElement.style.left = `${tooltipX}px`;
+      tooltipElement.style.top = `${tooltipY}px`;
       tooltipElement.classList.add('show');
     };
 
