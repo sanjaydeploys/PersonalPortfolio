@@ -237,9 +237,11 @@ try {
       };
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
+        document.addEventListener('DOMContentLoaded', () => {
+          start().catch(err => console.error('[AWSArchitecture] Start error:', err));
+        });
       } else {
-        start();
+        start().catch(err => console.error('[AWSArchitecture] Start error:', err));
       }
     }
   };
