@@ -22,10 +22,10 @@ try {
 
       let particles = [];
       let isAnimating = false;
-      let selectedProject = 'all';
+      let selectedProject = 'lic';
 
       class Particle {
-        constructor(from, to, speed, project) {
+        constructor(from, to, speed, project, direction) {
           this.from = from;
           this.to = to;
           this.project = project;
@@ -33,18 +33,33 @@ try {
           this.speed = speed;
           this.x = from.x;
           this.y = from.y;
+          this.direction = direction || 'right';
         }
         update() {
           this.progress += this.speed;
           if (this.progress >= 1) this.progress = 0;
-          this.x = this.from.x + (this.to.x - this.from.x) * this.progress;
-          this.y = this.from.y + (this.to.y - this.from.y) * this.progress;
+          const dx = this.to.x - this.from.x;
+          const dy = this.to.y - this.from.y;
+          this.x = this.from.x + dx * this.progress;
+          this.y = this.from.y + dy * this.progress;
         }
         draw() {
           ctx.beginPath();
           ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+          ctx.fillStyle = this.project === 'lic' ? 'rgba(0, 255, 0, 0.8)' : this.project === 'zedemy' ? 'rgba(255, 165, 0, 0.8)' : this.project === 'eventease' ? 'rgba(0, 0, 255, 0.8)' : 'rgba(255, 0, 0, 0.8)';
           ctx.fill();
+
+          // Draw directional tail
+          if (this.progress > 0 && this.progress < 0.9) {
+            const tailX = this.x - (this.to.x - this.from.x) * this.speed * 10;
+            const tailY = this.y - (this.to.y - this.from.y) * this.speed * 10;
+            ctx.beginPath();
+            ctx.moveTo(tailX, tailY);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
         }
       }
 
@@ -56,8 +71,9 @@ try {
             const from = services.find(s => s.id === conn.from);
             const to = services.find(s => s.id === conn.to);
             if (from && to) {
-              for (let i = 0; i < 3; i++) {
-                particles.push(new Particle(from, to, 0.01 + Math.random() * 0.02, conn.project));
+              const particleCount = selectedProject === 'connectnow' ? 5 : 3; // More particles for ConnectNow due to P2P
+              for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(from, to, 0.01 + Math.random() * 0.02, selectedProject, conn.direction));
               }
             }
           }
