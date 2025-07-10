@@ -15,7 +15,6 @@ const Content = styled.div`
 
 const LicHome = memo(() => {
   useEffect(() => {
-    // Load existing and new scripts dynamically
     const scripts = [
       { src: '/public/scripts/sidebarToggle.js', defer: true },
       { src: '/public/scripts/scrollToTop.js', defer: true },
