@@ -1,5 +1,5 @@
 const AWSDataFlow = {
-  init(canvas, services, connections) {
+  init(canvas, services, connections, draw) {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let isAnimating = false;
@@ -49,8 +49,7 @@ const AWSDataFlow = {
     // Animation loop
     const animate = () => {
       if (!isAnimating) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      window.AWSArchitecture.init('aws-canvas', 'aws-tooltip', window.AWSControls); // Redraw base architecture
+      draw(); // Draw base architecture
       particles.forEach(particle => {
         particle.update();
         particle.draw();
