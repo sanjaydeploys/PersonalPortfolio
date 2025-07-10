@@ -1,199 +1,258 @@
-const AWSArchitecture = {
-  init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
-    console.log(`[AWSArchitecture] Initializing with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
+try {
+  console.log('[AWSArchitecture] Script loaded and parsed');
 
-    const canvas = document.getElementById(canvasId);
-    const tooltip = document.getElementById(tooltipId);
-    if (!canvas || !tooltip || !canvas.getContext) {
-      console.error('[AWSArchitecture] Required elements or context not found');
-      document.getElementById('aws-fallback').style.display = 'block';
-      return;
+  const AWSArchitecture = {
+    init(canvasId = 'aws-canvas', tooltipId = 'aws-tooltip') {
+      console.log(`[AWSArchitecture] Attempting initialization with canvasId: ${canvasId}, tooltipId: ${tooltipId}`);
+
+      const showFallback = () => {
+        const fallback = document.getElementById('aws-fallback');
+        if (fallback) {
+          fallback.style.display = 'block';
+          console.log('[AWSArchitecture] Displaying fallback message');
+        }
+      };
+
+      const getElements = (attempt = 1, maxAttempts = 10) => {
+        console.log(`[AWSArchitecture] Checking for elements, attempt ${attempt}/${maxAttempts}`);
+        const canvas = document.getElementById(canvasId);
+        const tooltip = document.getElementById(tooltipId);
+        if (canvas && tooltip) {
+          return { canvas, tooltip };
+        }
+        if (attempt >= maxAttempts) {
+          console.error(`[AWSArchitecture] Failed to find canvas or tooltip after ${maxAttempts} attempts`);
+          showFallback();
+          return null;
+        }
+        return new Promise(resolve => setTimeout(() => resolve(getElements(attempt + 1, maxAttempts)), 500));
+      };
+
+      const start = async () => {
+        try {
+          console.log('[AWSArchitecture] Starting initialization');
+          const elements = await getElements();
+          if (!elements) return;
+
+          const { canvas, tooltip } = elements;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            console.error('[AWSArchitecture] Failed to get 2D context for canvas');
+            showFallback();
+            return;
+          }
+          console.log('[AWSArchitecture] Canvas context acquired');
+
+          let animationFrameId = null;
+          let dataFlow = null;
+          let currentProject = 'lic';
+
+          const architectures = {
+            lic: {
+              services: [
+                { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
+                { id: 'lambda1', name: 'Lambda (CRM)', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+                { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' },
+                { id: 's3', name: 'S3', x: 500, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-s3.svg', type: 'storage' },
+                { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudfront.svg', type: 'cdn' },
+                { id: 'sns', name: 'SNS', x: 300, y: 400, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-sns.svg', type: 'messaging' },
+                { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudwatch.svg', type: 'monitoring' }
+              ],
+              connections: [
+                { from: 'apiGateway', to: 'lambda1', label: 'HTTP Request' },
+                { from: 'lambda1', to: 'dynamodb', label: 'Read/Write' },
+                { from: 'lambda1', to: 's3', label: 'Store Assets' },
+                { from: 'cloudfront', to: 's3', label: 'Content Delivery' },
+                { from: 'lambda1', to: 'sns', label: 'Notifications' },
+                { from: 'lambda1', to: 'cloudwatch', label: 'Metrics' }
+              ]
+            },
+            zedemy: {
+              services: [
+                { id: 'cloudfront', name: 'CloudFront', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cloudfront.svg', type: 'cdn' },
+                { id: 's3', name: 'S3', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-s3.svg', type: 'storage' },
+                { id: 'lambda1', name: 'Lambda', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+                { id: 'apiGateway', name: 'API Gateway', x: 700, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
+                { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' }
+              ],
+              connections: [
+                { from: 'cloudfront', to: 's3', label: 'Content Delivery' },
+                { from: 's3', to: 'lambda1', label: 'Trigger' },
+                { from: 'lambda1', to: 'apiGateway', label: 'API Route' },
+                { from: 'apiGateway', to: 'dynamodb', label: 'Data Store' }
+              ]
+            },
+            eventease: {
+              services: [
+                { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
+                { id: 'lambda1', name: 'Lambda (Auth)', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+                { id: 'lambda2', name: 'Lambda (Event)', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+                { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' },
+                { id: 'cognito', name: 'Cognito', x: 100, y: 300, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-cognito.svg', type: 'auth' }
+              ],
+              connections: [
+                { from: 'apiGateway', to: 'lambda1', label: 'Auth' },
+                { from: 'apiGateway', to: 'lambda2', label: 'Event CRUD' },
+                { from: 'lambda2', to: 'dynamodb', label: 'Data Store' },
+                { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }
+              ]
+            },
+            connectnow: {
+              services: [
+                { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-api-gateway.svg', type: 'gateway' },
+                { id: 'lambda1', name: 'Lambda', x: 300, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-lambda.svg', type: 'compute' },
+                { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, icon: 'https://d12uvtgcxr5qif.cloudfront.net/images/aws-dynamodb.svg', type: 'database' }
+              ],
+              connections: [
+                { from: 'apiGateway', to: 'lambda1', label: 'WebSocket' },
+                { from: 'lambda1', to: 'dynamodb', label: 'Session Data' }
+              ]
+            }
+          };
+
+          const loadIcons = async (services) => {
+            console.log('[AWSArchitecture] Loading service icons...');
+            for (const service of services) {
+              try {
+                const img = new Image();
+                img.src = service.icon;
+                service.img = img;
+                await new Promise((resolve, reject) => {
+                  img.onload = () => resolve();
+                  img.onerror = () => { service.img = null; resolve(); };
+                });
+              } catch (error) {
+                console.error(`[AWSArchitecture] Error loading icon for ${service.name}:`, error);
+                service.img = null;
+              }
+            }
+            console.log('[AWSArchitecture] Icon loading complete');
+          };
+
+          const resizeCanvas = () => {
+            canvas.width = canvas.offsetWidth || 800;
+            canvas.height = canvas.offsetHeight || 400;
+            architectures[currentProject].services.forEach(service => {
+              service.x = (service.x / 800) * canvas.width;
+              service.y = (service.y / 400) * canvas.height;
+            });
+            console.log(`[AWSArchitecture] Canvas resized to ${canvas.width}x${canvas.height}`);
+            draw();
+          };
+
+          const draw = () => {
+            try {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = 'rgba(26, 26, 46, 1)';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              const { services, connections } = architectures[currentProject];
+              connections.forEach(conn => {
+                const from = services.find(s => s.id === conn.from);
+                const to = services.find(s => s.id === conn.to);
+                if (from && to) {
+                  ctx.beginPath();
+                  ctx.moveTo(from.x, from.y);
+                  ctx.lineTo(to.x, to.y);
+                  ctx.strokeStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.lineWidth = 2;
+                  ctx.stroke();
+                  const midX = (from.x + to.x) / 2;
+                  const midY = (from.y + to.y) / 2 - 10;
+                  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                  ctx.font = '12px sans-serif';
+                  ctx.fillText(conn.label, midX, midY);
+                }
+              });
+              services.forEach(service => {
+                ctx.save();
+                ctx.translate(service.x, service.y);
+                if (service.img) {
+                  ctx.drawImage(service.img, -25, -25, 50, 50);
+                } else {
+                  ctx.fillStyle = 'rgba(255, 153, 0, 0.8)';
+                  ctx.fillRect(-25, -25, 50, 50);
+                  ctx.fillStyle = 'white';
+                  ctx.font = '10px sans-serif';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(service.name, 0, 0);
+                }
+                ctx.fillStyle = 'white';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(service.name, 0, 40);
+                ctx.restore();
+              });
+              console.log('[AWSArchitecture] Architecture drawn');
+            } catch (error) {
+              console.error('[AWSArchitecture] Draw error:', error);
+              showFallback();
+            }
+          };
+
+          const animate = () => {
+            try {
+              draw();
+              if (dataFlow && typeof dataFlow.isAnimating === 'function' && dataFlow.isAnimating()) {
+                dataFlow.drawParticles();
+                console.log('[AWSArchitecture] Particles drawn');
+              } else if (!dataFlow && window.AWSDataFlow) {
+                dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
+                if (dataFlow && typeof dataFlow.start === 'function') {
+                  dataFlow.start();
+                  console.log('[AWSArchitecture] DataFlow initialized and started');
+                }
+              }
+              animationFrameId = requestAnimationFrame(animate);
+              console.log('[AWSArchitecture] Animation frame requested');
+            } catch (error) {
+              console.error('[AWSArchitecture] Animation error:', error);
+              showFallback();
+            }
+          };
+
+          const setProject = (project) => {
+            if (architectures[project]) {
+              currentProject = project;
+              loadIcons(architectures[project].services).then(() => {
+                resizeCanvas();
+                if (dataFlow && typeof dataFlow.setProject === 'function') {
+                  dataFlow.setProject(project);
+                }
+                draw();
+                console.log(`[AWSArchitecture] Switched to project: ${project}`);
+              });
+            } else {
+              console.error(`[AWSArchitecture] Invalid project: ${project}`);
+            }
+          };
+
+          await loadIcons(architectures[currentProject].services);
+          resizeCanvas();
+          window.addEventListener('resize', resizeCanvas);
+          if (window.AWSTooltip) {
+            window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
+          }
+          animate();
+          return { setProject, stop: () => { if (animationFrameId) cancelAnimationFrame(animationFrameId); } };
+        } catch (error) {
+          console.error('[AWSArchitecture] Initialization error:', error);
+          showFallback();
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+      } else {
+        start();
+      }
     }
+  };
 
-    const ctx = canvas.getContext('2d');
-    let animationFrameId, dataFlow, currentProject = 'lic';
-
-    const architectures = {
-      lic: {
-        services: [
-          { id: 'reactFrontend', name: 'React Frontend (S3)', x: 100, y: 100, type: 'frontend' },
-          { id: 'cloudFront', name: 'CDN (CloudFront)', x: 250, y: 100, type: 'cdn' },
-          { id: 'cloudflareDNS', name: 'DNS (Cloudflare)', x: 400, y: 100, type: 'dns' },
-          { id: 'lambda', name: 'Lambda', x: 100, y: 250, type: 'compute' },
-          { id: 'apiGateway', name: 'API Gateway', x: 250, y: 250, type: 'gateway' },
-          { id: 'mongoDB', name: 'MongoDB Atlas', x: 400, y: 250, type: 'database' },
-          { id: 'sslCert', name: 'SSL Certificate', x: 250, y: 175, type: 'security' },
-          { id: 'emailService', name: 'Email Service (SES)', x: 325, y: 325, type: 'messaging' },
-          { id: 'cloudWatch', name: 'CloudWatch', x: 175, y: 325, type: 'monitoring' }
-        ],
-        connections: [
-          { from: 'reactFrontend', to: 'cloudFront', label: 'Content Delivery', direction: 'right' },
-          { from: 'cloudFront', to: 'cloudflareDNS', label: 'DNS Routing', direction: 'right' },
-          { from: 'reactFrontend', to: 'lambda', label: 'Inquiry POST', direction: 'down' },
-          { from: 'lambda', to: 'apiGateway', label: 'API Route', direction: 'right' },
-          { from: 'apiGateway', to: 'mongoDB', label: 'Data Store', direction: 'right' },
-          { from: 'sslCert', to: 'cloudFront', label: 'TLS', direction: 'down' },
-          { from: 'lambda', to: 'emailService', label: 'Notification', direction: 'down-right' },
-          { from: 'lambda', to: 'cloudWatch', label: 'Logs', direction: 'down-left' }
-        ]
-      },
-      zedemy: {
-        services: [
-          { id: 'reactFrontend', name: 'React Frontend (Vercel)', x: 100, y: 100, type: 'frontend' },
-          { id: 'lambda', name: 'Lambda', x: 250, y: 100, type: 'compute' },
-          { id: 'apiGateway', name: 'API Gateway', x: 400, y: 100, type: 'gateway' },
-          { id: 'dynamodb', name: 'DynamoDB', x: 550, y: 100, type: 'database' },
-          { id: 'codeEditor', name: 'Code Editor', x: 100, y: 250, type: 'frontend' },
-          { id: 'certificateService', name: 'Certificate Service', x: 250, y: 250, type: 'service' },
-          { id: 'vercelRewrites', name: 'Vercel Rewrites', x: 400, y: 250, type: 'routing' }
-        ],
-        connections: [
-          { from: 'reactFrontend', to: 'lambda', label: 'API Calls', direction: 'right' },
-          { from: 'lambda', to: 'apiGateway', label: 'Trigger', direction: 'right' },
-          { from: 'apiGateway', to: 'dynamodb', label: 'Data Ops', direction: 'right' },
-          { from: 'reactFrontend', to: 'codeEditor', label: 'In-Browser', direction: 'down' },
-          { from: 'lambda', to: 'certificateService', label: 'Generate', direction: 'down' },
-          { from: 'certificateService', to: 'dynamodb', label: 'Store', direction: 'right' },
-          { from: 'vercelRewrites', to: 'apiGateway', label: 'Route', direction: 'up' }
-        ]
-      },
-      eventease: {
-        services: [
-          { id: 'reactApp', name: 'React App (Vercel)', x: 100, y: 100, type: 'frontend' },
-          { id: 'apiGateway', name: 'API Gateway', x: 250, y: 100, type: 'gateway' },
-          { id: 'lambdaAuth', name: 'Lambda (Auth)', x: 400, y: 100, type: 'compute' },
-          { id: 'lambdaEvent', name: 'Lambda (Event)', x: 550, y: 100, type: 'compute' },
-          { id: 'lambdaCalendar', name: 'Lambda (Calendar)', x: 700, y: 100, type: 'compute' },
-          { id: 'mongoDB', name: 'MongoDB Atlas', x: 400, y: 250, type: 'database' },
-          { id: 'googleCalendar', name: 'Google Calendar API', x: 700, y: 250, type: 'external' },
-          { id: 'githubCICD', name: 'GitHub → Vercel CI/CD', x: 100, y: 250, type: 'devops' }
-        ],
-        connections: [
-          { from: 'reactApp', to: 'apiGateway', label: 'API Requests', direction: 'right' },
-          { from: 'apiGateway', to: 'lambdaAuth', label: 'Auth', direction: 'right' },
-          { from: 'apiGateway', to: 'lambdaEvent', label: 'CRUD', direction: 'right' },
-          { from: 'apiGateway', to: 'lambdaCalendar', label: 'Sync', direction: 'right' },
-          { from: 'lambdaEvent', to: 'mongoDB', label: 'Data Store', direction: 'down' },
-          { from: 'lambdaCalendar', to: 'googleCalendar', label: 'Sync', direction: 'down' },
-          { from: 'githubCICD', to: 'reactApp', label: 'Deploy', direction: 'down-right' }
-        ]
-      },
-      connectnow: {
-        services: [
-          { id: 'reactFrontend', name: 'React Frontend (Vercel)', x: 100, y: 100, type: 'frontend' },
-          { id: 'socketServer', name: 'Socket.IO Server', x: 250, y: 100, type: 'backend' },
-          { id: 'webrtc', name: 'WebRTC (P2P)', x: 400, y: 100, type: 'communication' },
-          { id: 'mongoDB', name: 'MongoDB', x: 550, y: 100, type: 'database' }
-        ],
-        connections: [
-          { from: 'reactFrontend', to: 'socketServer', label: 'Signaling', direction: 'right' },
-          { from: 'socketServer', to: 'webrtc', label: 'Offer/Answer', direction: 'right' },
-          { from: 'webrtc', to: 'reactFrontend', label: 'P2P Stream', direction: 'left' },
-          { from: 'socketServer', to: 'mongoDB', label: 'User Data', direction: 'down-right' }
-        ]
-      }
-    };
-
-    const resizeCanvas = () => {
-      const width = canvas.offsetWidth || 800;
-      const height = canvas.offsetHeight || 400;
-      canvas.width = width;
-      canvas.height = height;
-      architectures[currentProject].services.forEach(service => {
-        service.x = (service.x / 800) * width;
-        service.y = (service.y / 400) * height;
-      });
-      console.log(`[AWSArchitecture] Canvas resized to ${width}x${height}`);
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(18, 18, 36, 1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const { services, connections } = architectures[currentProject];
-      connections.forEach(conn => {
-        const from = services.find(s => s.id === conn.from);
-        const to = services.find(s => s.id === conn.to);
-        if (from && to) {
-          ctx.beginPath();
-          ctx.moveTo(from.x, from.y);
-          ctx.lineTo(to.x, to.y);
-          ctx.strokeStyle = 'rgba(255, 204, 0, 0.9)';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-
-          const angle = Math.atan2(to.y - from.y, to.x - from.x);
-          const arrowSize = 12;
-          ctx.beginPath();
-          ctx.moveTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
-          ctx.lineTo(to.x, to.y);
-          ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
-          ctx.fillStyle = 'rgba(255, 204, 0, 0.9)';
-          ctx.fill();
-        }
-      });
-      services.forEach(service => {
-        ctx.save();
-        ctx.translate(service.x, service.y);
-        const radius = 30;
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, Math.PI * 2);
-        ctx.fillStyle = service.type === 'frontend' ? 'rgba(0, 150, 0, 0.7)' : service.type === 'database' ? 'rgba(0, 100, 150, 0.7)' : 'rgba(150, 0, 0, 0.7)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = 'white';
-        ctx.font = '12px "Segoe UI", sans-serif';
-        const lines = service.name.split(' ');
-        lines.forEach((line, i) => {
-          ctx.fillText(line, 0, -5 + i * 15);
-        });
-        ctx.restore();
-      });
-      if (dataFlow && dataFlow.isAnimating()) {
-        dataFlow.drawParticles();
-      }
-    };
-
-    const animate = () => {
-      draw();
-      if (!dataFlow && window.AWSDataFlow) {
-        dataFlow = window.AWSDataFlow.init(canvas, architectures[currentProject].services, architectures[currentProject].connections);
-        if (dataFlow && typeof dataFlow.start === 'function') {
-          dataFlow.start();
-        }
-      }
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    const setProject = (project) => {
-      if (architectures[project]) {
-        currentProject = project;
-        resizeCanvas();
-        if (dataFlow && typeof dataFlow.setProject === 'function') {
-          dataFlow.setProject(project);
-        }
-        draw();
-      }
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    if (window.AWSTooltip) {
-      window.AWSTooltip.init(canvas, architectures[currentProject].services, tooltip);
-    }
-    animate();
-    return { setProject };
-  }
-};
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.AWSArchitecture = AWSArchitecture;
-    AWSArchitecture.init();
-  });
-} else {
   window.AWSArchitecture = AWSArchitecture;
+  console.log('[AWSArchitecture] Initializing immediately');
   AWSArchitecture.init();
+} catch (error) {
+  console.error('[AWSArchitecture] Script-level error:', error);
+  const fallback = document.getElementById('aws-fallback');
+  if (fallback) fallback.style.display = 'block';
 }
