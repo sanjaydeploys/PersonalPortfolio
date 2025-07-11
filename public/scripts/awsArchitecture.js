@@ -62,37 +62,25 @@ const AWSArchitecture = {
     }
   },
 
-   canvas: null,
+  canvas: null,
   ctx: null,
   tooltip: null,
-  icons: {},
   currentProject: 'lic',
-  scale: 1,
+  scale: 1.0,
   offsetX: 0,
   offsetY: 0,
   isDragging: false,
   lastX: 0,
   lastY: 0,
-
-  init(canvasId, tooltipId) {
-    this.canvas = document.getElementById(canvasId);
-    this.tooltip = document.getElementById(tooltipId);
-    if (!this.canvas || !this.tooltip) {
-      console.error("Canvas or tooltip not found");
-      return;
-    }
-    this.ctx = this.canvas.getContext('2d');
-    this.loadIcons();
-    this.attachEvents();
-    this.resizeCanvas();
-    this.animate();
-    if (window.AWSFlow?.setProject) AWSFlow.setProject(this.currentProject);
-  },
+  animationId: null,
+  icons: {},
 
   loadIcons() {
-    const mapping = {
+    const iconMap = {
       apiGateway: 'ApiGateway.svg',
       lambda: 'Lambda.svg',
+      lambdaAuth: 'Lambda.svg',
+      lambdaEvent: 'Lambda.svg',
       dynamodb: 'DynamoDb.svg',
       s3: 'S3.svg',
       cloudfront: 'CloudFront.svg',
@@ -100,77 +88,78 @@ const AWSArchitecture = {
       cloudwatch: 'CloudWatch.svg',
       cognito: 'Cognito.svg'
     };
-    for (let id in mapping) {
+
+    for (const [key, file] of Object.entries(iconMap)) {
       const img = new Image();
-      img.src = `https://raw.githubusercontent.com/aws-icons/constructs/main/Icons/${mapping[id]}`;
-      this.icons[id] = img;
+      img.src = `https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v14.0/LIGHT/${file}`;
+      this.icons[key] = img;
     }
   },
 
+  init(canvasId, tooltipId) {
+    this.canvas = document.getElementById(canvasId);
+    this.tooltip = document.getElementById(tooltipId);
+    this.ctx = this.canvas.getContext('2d');
+    this.loadIcons();
+    this.attachEvents();
+    this.resizeCanvas();
+    this.animate();
+    window.AWSFlow?.setProject?.(this.currentProject);
+  },
+
   attachEvents() {
-    const c = this.canvas;
-    c.addEventListener('wheel', e => {
+    this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       this.scale *= e.deltaY < 0 ? 1.1 : 0.9;
       this.scale = Math.max(0.5, Math.min(2.5, this.scale));
       this.render();
     });
-    c.addEventListener('mousedown', e => {
+
+    this.canvas.addEventListener('mousedown', (e) => {
       this.isDragging = true;
       this.lastX = e.clientX;
       this.lastY = e.clientY;
     });
-    c.addEventListener('mousemove', e => {
+
+    this.canvas.addEventListener('mousemove', (e) => {
       if (this.isDragging) {
-        this.offsetX += e.clientX - this.lastX;
-        this.offsetY += e.clientY - this.lastY;
+        this.offsetX += (e.clientX - this.lastX);
+        this.offsetY += (e.clientY - this.lastY);
         this.lastX = e.clientX;
         this.lastY = e.clientY;
         this.render();
       }
       this.handleTooltip(e);
     });
-    c.addEventListener('mouseup', () => this.isDragging = false);
-    c.addEventListener('mouseleave', () => {
+
+    this.canvas.addEventListener('mouseup', () => (this.isDragging = false));
+    this.canvas.addEventListener('mouseleave', () => {
       this.isDragging = false;
       this.tooltip.style.display = 'none';
     });
   },
 
-  setProject(proj) {
-    if (!this.architectures[proj]) return console.warn("Unknown project", proj);
-    this.currentProject = proj;
-    this.scale = 1;
-    this.offsetX = this.offsetY = 0;
-    this.render();
-    if (window.AWSFlow?.setProject) AWSFlow.setProject(proj);
-  },
-
   renderService(service, highlight = false) {
     const x = service.x * this.scale + this.offsetX;
     const y = service.y * this.scale + this.offsetY;
-    const size = 50;
+    this.ctx.save();
+    this.ctx.translate(x, y);
 
-    const img = this.icons[service.id];
-    if (img && img.complete) {
-      this.ctx.drawImage(img, x - size/2, y - size/2, size, size);
-      if (highlight) {
-        this.ctx.strokeStyle = 'yellow';
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(x - size/2, y - size/2, size, size);
-      }
+    const icon = this.icons[service.id];
+    if (icon && icon.complete) {
+      this.ctx.drawImage(icon, -25, -25, 50, 50);
     } else {
-      // fallback circle
       this.ctx.beginPath();
-      this.ctx.arc(x, y, size/2, 0, 2*Math.PI);
-      this.ctx.fillStyle = highlight ? 'yellow' : this.getServiceColor(service.type);
+      this.ctx.arc(0, 0, 25, 0, Math.PI * 2);
+      this.ctx.fillStyle = highlight ? 'yellow' : '#666';
       this.ctx.fill();
     }
 
     this.ctx.fillStyle = '#fff';
     this.ctx.font = '12px sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(service.name, x, y + size/1.2);
+    this.ctx.fillText(service.name, 0, 40);
+    this.ctx.restore();
   },
 
   renderConnection(from, to, label) {
@@ -178,37 +167,34 @@ const AWSArchitecture = {
     const fy = from.y * this.scale + this.offsetY;
     const tx = to.x * this.scale + this.offsetX;
     const ty = to.y * this.scale + this.offsetY;
+
     this.ctx.beginPath();
     this.ctx.moveTo(fx, fy);
     this.ctx.lineTo(tx, ty);
-    this.ctx.strokeStyle = 'rgba(255,153,0,0.7)';
+    this.ctx.strokeStyle = 'rgba(255, 153, 0, 0.7)';
     this.ctx.lineWidth = 2;
     this.ctx.stroke();
-    const mx = (fx + tx)/2;
-    const my = (fy + ty)/2 - 10;
-    this.ctx.fillStyle = '#fff';
-    this.ctx.fillText(label, mx, my);
+
+    const midX = (fx + tx) / 2;
+    const midY = (fy + ty) / 2 - 10;
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '12px sans-serif';
+    this.ctx.fillText(label, midX, midY);
   },
 
   render() {
-    const { width, height } = this.canvas;
-    this.ctx.clearRect(0, 0, width, height);
-    this.ctx.fillStyle = '#111';
-    this.ctx.fillRect(0, 0, width, height);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = '#1a1a2e';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
     const { services, connections } = this.architectures[this.currentProject];
-
-    connections.forEach(c => {
-      const from = services.find(s => s.id === c.from);
-      const to = services.find(s => s.id === c.to);
-      if (from && to) this.renderConnection(from, to, c.label);
+    connections.forEach(conn => {
+      const from = services.find(s => s.id === conn.from);
+      const to = services.find(s => s.id === conn.to);
+      if (from && to) this.renderConnection(from, to, conn.label);
     });
-    services.forEach(s => this.renderService(s));
-  },
 
-  animate() {
-    this.render();
-    if (window.AWSFlow?.drawParticles) AWSFlow.drawParticles(this.ctx, this.scale, this.offsetX, this.offsetY);
-    requestAnimationFrame(() => this.animate());
+    services.forEach(service => this.renderService(service));
   },
 
   handleTooltip(e) {
@@ -216,39 +202,48 @@ const AWSArchitecture = {
     const x = (e.clientX - rect.left - this.offsetX) / this.scale;
     const y = (e.clientY - rect.top - this.offsetY) / this.scale;
     const { services } = this.architectures[this.currentProject];
-    const hovered = services.find(s => Math.hypot(s.x - x, s.y - y) < 30);
-    if (hovered) {
-      const html = AWSTooltip.getServiceDetails(hovered.id);
-      if (html) {
-        this.tooltip.innerHTML = html;
+    const hovered = services.find(s => Math.hypot(x - s.x, y - s.y) < 30);
+
+    if (hovered && window.AWSTooltip) {
+      const tooltipHTML = AWSTooltip.getServiceDetails(hovered.id);
+      if (tooltipHTML) {
+        this.tooltip.innerHTML = tooltipHTML;
         this.tooltip.style.display = 'block';
         this.tooltip.style.left = `${e.clientX + 10}px`;
         this.tooltip.style.top = `${e.clientY - 10}px`;
-        this.render();
-        this.renderService(hovered, true);
       }
     } else {
       this.tooltip.style.display = 'none';
-      this.render();
     }
-  },
-
-  getServiceColor(type) {
-    return {
-      gateway: '#1E90FF', compute: '#32CD32', database: '#FFD700',
-      storage: '#FF4500', cdn: '#BA55D3', messaging: '#FF69B4',
-      monitoring: '#4682B4', auth: '#6A5ACD'
-    }[type] || '#808080';
   },
 
   resizeCanvas() {
     this.canvas.width = this.canvas.offsetWidth || 800;
     this.canvas.height = this.canvas.offsetHeight || 400;
     this.render();
+  },
+
+  setProject(p) {
+    if (!this.architectures[p]) return;
+    this.currentProject = p;
+    this.scale = 1;
+    this.offsetX = this.offsetY = 0;
+    this.render();
+    window.AWSFlow?.setProject?.(p);
+  },
+
+  animate() {
+    this.render();
+    window.AWSFlow?.drawParticles?.();
+    this.animationId = requestAnimationFrame(() => this.animate());
   }
 };
 
 window.AWSArchitecture = AWSArchitecture;
-document.readyState === 'loading'
-  ? document.addEventListener('DOMContentLoaded', () => AWSArchitecture.init('aws-canvas','aws-tooltip'))
-  : AWSArchitecture.init('aws-canvas','aws-tooltip');
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    AWSArchitecture.init('aws-canvas', 'aws-tooltip');
+  });
+} else {
+  AWSArchitecture.init('aws-canvas', 'aws-tooltip');
+}
