@@ -121,10 +121,13 @@ const AWSArchitecture = {
       this.attachEvents();
       this.resizeCanvas();
       this.animate();
-      window.AWSFlow?.setProject(this.currentProject);
+      if (window.AWSFlow && typeof window.AWSFlow.setProject === 'function') {
+        window.AWSFlow.setProject(this.currentProject);
+      }
     } catch (error) {
       console.error('[AWSArchitecture] Initialization failed:', error);
-      document.getElementById('aws-fallback')?.style.display = 'block';
+      const fallback = document.getElementById('aws-fallback');
+      if (fallback) fallback.style.display = 'block';
     }
   },
 
@@ -149,15 +152,9 @@ const AWSArchitecture = {
       const y = (e.clientY - rect.top - this.offsetY) / this.scale;
       const { services } = this.architectures[this.currentProject];
       this.selectedService = services.find(s => Math.hypot(x - s.x, y - s.y) < 30);
-      if (this.selectedService) {
-        this.isDragging = true;
-        this.lastX = e.clientX;
-        this.lastY = e.clientY;
-      } else {
-        this.isDragging = true;
-        this.lastX = e.clientX;
-        this.lastY = e.clientY;
-      }
+      this.isDragging = true;
+      this.lastX = e.clientX;
+      this.lastY = e.clientY;
     });
 
     canvas.addEventListener('mousemove', (e) => {
@@ -166,15 +163,13 @@ const AWSArchitecture = {
           const rect = canvas.getBoundingClientRect();
           this.selectedService.x += (e.clientX - this.lastX) / this.scale;
           this.selectedService.y += (e.clientY - this.lastY) / this.scale;
-          this.lastX = e.clientX;
-          this.lastY = e.clientY;
-          window.AWSFlow?.setProject(this.currentProject);
+          if (window.AWSFlow) window.AWSFlow.setProject(this.currentProject);
         } else {
           this.offsetX += e.clientX - this.lastX;
           this.offsetY += e.clientY - this.lastY;
-          this.lastX = e.clientX;
-          this.lastY = e.clientY;
         }
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
         this.render();
       }
       this.handleTooltip(e);
@@ -221,7 +216,9 @@ const AWSArchitecture = {
     this.offsetY = 0;
     this.selectedService = null;
     this.render();
-    window.AWSFlow?.setProject(project);
+    if (window.AWSFlow && typeof window.AWSFlow.setProject === 'function') {
+      window.AWSFlow.setProject(project);
+    }
   },
 
   renderService(service, highlight = false) {
@@ -234,7 +231,7 @@ const AWSArchitecture = {
 
     this.ctx.save();
     if (highlight || service === this.selectedService) {
-      this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7)';
+      this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7')";
       this.ctx.shadowBlur = 10;
     }
 
@@ -246,6 +243,7 @@ const AWSArchitecture = {
       img.onload = () => {
         this.iconCache[iconUrl] = img;
         this.ctx.drawImage(img, x - iconSize / 2, y - iconSize / 2, iconSize, iconSize);
+        this.render();
       };
       img.onerror = () => console.error(`[AWSArchitecture] Failed to load icon: ${iconUrl}`);
     }
@@ -299,9 +297,10 @@ const AWSArchitecture = {
   },
 
   getConnectionWidth(bandwidth) {
-    const bandwidthValue = parseFloat(bandwidth);
+    const bandwidthValue = parseFloat(bandwidth) || 1;
     if (bandwidth.includes('Gbps')) return Math.min(8, bandwidthValue * 0.8);
     if (bandwidth.includes('Mbps')) return Math.min(6, bandwidthValue / 100);
+    if (bandwidth.includes('Kbps')) return Math.min(4, bandwidthValue / 1000);
     return 2;
   },
 
@@ -328,7 +327,9 @@ const AWSArchitecture = {
 
   animate() {
     this.render();
-    window.AWSFlow?.drawParticles(this.ctx, this.scale, this.offsetX, this.offsetY);
+    if (window.AWSFlow && typeof window.AWSFlow.drawParticles === 'function') {
+      window.AWSFlow.drawParticles(this.ctx, this.scale, this.offsetX, this.offsetY);
+    }
     this.animationId = requestAnimationFrame(() => this.animate());
   },
 
@@ -340,7 +341,7 @@ const AWSArchitecture = {
     const { services } = this.architectures[this.currentProject];
     const hovered = services.find(s => Math.hypot(x - s.x, y - s.y) < 30);
 
-    if (hovered && window.AWSTooltip) {
+    if (hovered && window.AWSTooltip && typeof window.AWSTooltip.getServiceDetails === 'function') {
       const tooltipHTML = window.AWSTooltip.getServiceDetails(hovered.id, this.currentProject);
       if (tooltipHTML) {
         this.tooltip.innerHTML = tooltipHTML;
@@ -348,6 +349,8 @@ const AWSArchitecture = {
         this.tooltip.style.left = `${e.clientX + 15}px`;
         this.tooltip.style.top = `${e.clientY - 15}px`;
         this.renderService(hovered, true);
+      } else {
+        this.tooltip.style.display = 'none';
       }
     } else {
       this.tooltip.style.display = 'none';
@@ -362,6 +365,3 @@ const AWSArchitecture = {
 };
 
 window.AWSArchitecture = AWSArchitecture;
-
-
-
