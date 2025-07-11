@@ -80,7 +80,7 @@ const AWSArchitecture = {
     ]
   }
 }
-
+,
 
   canvas: null,
   ctx: null,
