@@ -1,17 +1,18 @@
 {
   "version": 2,
   "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "public/**/*", "use": "@vercel/static" },
     { "src": "build/**/*", "use": "@vercel/static" }
   ],
   "rewrites": [
     {
       "source": "/robots.txt",
-      "destination": "/robots.txt"
+      "destination": "/api/robots"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/",
@@ -51,12 +52,6 @@
     },
     {
       "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "sanjay-patidar.vercel.app"
-        }
-      ],
       "destination": "/index.html"
     }
   ],
