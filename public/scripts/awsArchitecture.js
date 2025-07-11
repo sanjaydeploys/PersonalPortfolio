@@ -102,7 +102,7 @@ const AWSArchitecture = {
     messaging: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_09cbfca5-f254-4403-8ffa-5d3b1a9d7a39.webp',
     monitoring: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_dff0ff9b-3cad-43c3-82df-377cd96d6660.webp',
     auth: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_de4cafbc-3668-4b6c-8e92-99bb2f23912e.webp',
-    dns: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_Route-53_64.svg',
+    dns: 'https://d12uvtgcxr5qif.cloudfront.net/images/vs-code_2025-07-11_f3c1a809-75e8-408f-b65a-ba40855f9cb5.webp',
     ssl: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_aeee3ae8-3a08-4a6e-9188-8aaa3c218a34.webp',
     frontend: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_cd23834d-8deb-439c-8f65-b5e683672628.webp',
     api: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_04267240-bd4f-4196-98e0-e77aaecece3a.webp',
