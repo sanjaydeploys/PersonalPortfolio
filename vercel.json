@@ -7,6 +7,14 @@
   
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
