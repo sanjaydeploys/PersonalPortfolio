@@ -24,28 +24,29 @@ const AWSTooltip = {
 
   getServiceDetails(serviceId, project) {
     if (!window.AWSArchitecture || !window.AWSArchitecture.architectures[project]) {
-      console.warn('[AWSTooltip] AWSArchitecture or project not found.');
+      console.warn('[AWSTooltip] AWSArchitecture or project not found:', project);
       return null;
     }
     const service = window.AWSArchitecture.architectures[project].services.find(s => s.id === serviceId);
-    if (!service || !this.serviceDetails[serviceId]) return null;
+    if (!service || !this.serviceDetails[serviceId]) {
+      console.warn('[AWSTooltip] Service or details not found:', serviceId);
+      return null;
+    }
     const details = this.serviceDetails[serviceId];
     return `
-      <div style="background: rgba(0,0,0,0.9); color: white; padding: 10px; border-radius: 5px 5px 0 0;">
-        ${details.title}
-      </div>
-      <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 0 0 5px 5px; max-width: 300px;">
+      <div class="tooltip-title">${details.title}</div>
+      <div class="tooltip-content">
         <p><strong>Description:</strong> ${details.description}</p>
         <p><strong>Use Cases:</strong></p>
-        <ul style="margin: 0; padding-left: 20px;">
+        <ul>
           ${details.useCases.map(uc => `<li>${uc}</li>`).join('')}
         </ul>
         <p><strong>Metrics:</strong></p>
-        <ul style="margin: 0; padding-left: 20px;">
+        <ul>
           ${Object.entries(service.metrics || {}).map(([k, v]) => `<li>${k}: ${v}</li>`).join('')}
         </ul>
         <p><strong>Config:</strong></p>
-        <ul style="margin: 0; padding-left: 20px;">
+        <ul>
           ${Object.entries(service.config || {}).map(([k, v]) => `<li>${k}: ${v}</li>`).join('')}
         </ul>
       </div>
