@@ -1,4 +1,4 @@
-const AWSControls = {
+export default {
   init(controls) {
     let currentProject = 'lic';
 
