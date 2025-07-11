@@ -1,15 +1,24 @@
 {
   "version": 2,
   "builds": [
+    { "src": "public/**/*", "use": "@vercel/static" },
     { "src": "build/**/*", "use": "@vercel/static" }
   ],
   "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
     {
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
     {
-      "source": "/kileshwar-mahadev-ji-neemuch",
+      "source": "/kileshwar-mahadev-ji-neemuch",a
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
     },
     {
@@ -42,7 +51,24 @@
     },
     {
       "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "sanjay-patidar.vercel.app"
+        }
+      ],
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
+        }
+      ]
     }
   ]
 }
