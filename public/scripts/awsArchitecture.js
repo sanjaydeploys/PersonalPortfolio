@@ -94,7 +94,7 @@ const AWSArchitecture = {
   iconCache: {},
 
   awsIcons: {
-    gateway: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_e8c36c86-8791-4d61-a511-7315c120b47f.webp',
+    gateway: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_API-Gateway_64.svg',
     compute: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_Lambda_64.svg',
     database: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_DynamoDB_64.svg',
     storage: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_S3_64.svg',
@@ -167,6 +167,7 @@ const AWSArchitecture = {
 
       if (hovered !== this.hoveredService) {
         this.hoveredService = hovered;
+        console.log('[AWSArchitecture] Hover detected:', hovered ? hovered.id : 'none');
         if (hovered && window.AWSTooltip && typeof window.AWSTooltip.getServiceDetails === 'function') {
           const tooltipHTML = window.AWSTooltip.getServiceDetails(hovered.id, this.currentProject);
           if (tooltipHTML) {
@@ -177,12 +178,15 @@ const AWSArchitecture = {
             if (tooltipY < rect.top) tooltipY = e.clientY + 30;
             this.tooltip.style.left = `${tooltipX}px`;
             this.tooltip.style.top = `${tooltipY}px`;
-            this.tooltip.style.display = 'block';
+            this.tooltip.classList.add('show');
+            console.log('[AWSArchitecture] Tooltip displayed at:', tooltipX, tooltipY);
           } else {
-            this.tooltip.style.display = 'none';
+            this.tooltip.classList.remove('show');
+            console.warn('[AWSArchitecture] No tooltip content for:', hovered.id);
           }
         } else {
-          this.tooltip.style.display = 'none';
+          this.tooltip.classList.remove('show');
+          console.log('[AWSArchitecture] No tooltip or AWSTooltip not available.');
         }
         this.render();
       }
@@ -211,7 +215,7 @@ const AWSArchitecture = {
       this.isDragging = false;
       this.selectedService = null;
       this.hoveredService = null;
-      this.tooltip.style.display = 'none';
+      this.tooltip.classList.remove('show');
       this.render();
     });
 
@@ -245,7 +249,7 @@ const AWSArchitecture = {
     this.offsetY = 0;
     this.selectedService = null;
     this.hoveredService = null;
-    this.tooltip.style.display = 'none';
+    this.tooltip.classList.remove('show');
     this.render();
     if (window.AWSFlow && typeof window.AWSFlow.setProject === 'function') {
       window.AWSFlow.setProject(project);
@@ -264,7 +268,6 @@ const AWSArchitecture = {
     if (highlight || service === this.selectedService || service === this.hoveredService) {
       this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7)';
       this.ctx.shadowBlur = 10;
-      // Pulsating effect for hovered service
       const pulse = 1 + 0.05 * Math.sin(Date.now() / 200);
       this.ctx.scale(pulse, pulse);
       this.ctx.translate(x / pulse - x, y / pulse - y);
@@ -302,12 +305,10 @@ const AWSArchitecture = {
     this.ctx.lineTo(tx, ty);
     this.ctx.strokeStyle = this.getConnectionColor(dataType);
     this.ctx.lineWidth = this.getConnectionWidth(bandwidth);
-    // Glowing effect for connections
     this.ctx.shadowColor = this.getConnectionColor(dataType);
     this.ctx.shadowBlur = 5;
     this.ctx.stroke();
 
-    // Draw arrowhead
     const angle = Math.atan2(ty - fy, tx - fx);
     const arrowSize = 10;
     this.ctx.beginPath();
