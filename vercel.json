@@ -4,60 +4,61 @@
     { "src": "public/**/*", "use": "@vercel/static" },
     { "src": "build/**/*", "use": "@vercel/static" }
   ],
-  "rewrites": [
+  "routes": [
+    // ✅ Serve static robots.txt and sitemap.xml properly
     {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
+      "src": "/robots.txt",
+      "dest": "public/robots.txt"
     },
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
+      "src": "/sitemap.xml",
+      "dest": "public/sitemap.xml"
+    },
+
+    // ✅ Rewrite for server-rendered homepage
+    {
+      "src": "^/$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
+    },
+
+    // ✅ Rewrite for other server-rendered routes
+    {
+      "src": "^/kileshwar-mahadev-ji-neemuch$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
     },
     {
-      "source": "/",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
+      "src": "^/sanwaliya-ji-mandir-bhadsoda$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
     },
     {
-      "source": "/kileshwar-mahadev-ji-neemuch",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
+      "src": "^/sanjay-case-study$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanjay-case-study"
     },
     {
-      "source": "/sanwaliya-ji-mandir-bhadsoda",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanwaliya-ji-mandir-bhadsoda"
+      "src": "^/lic-case-study$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
     },
     {
-      "source": "/sanjay-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sanjay-case-study"
+      "src": "^/lic-neemuch-srs$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-neemuch-srs"
     },
     {
-      "source": "/lic-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-case-study"
+      "src": "^/zedemy-case-study$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
     },
     {
-      "source": "/lic-neemuch-srs",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lic-neemuch-srs"
+      "src": "^/eventease-case-study$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
     },
     {
-      "source": "/zedemy-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/zedemy-case-study"
+      "src": "^/connectnow-case-study$",
+      "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
+
+    // ✅ Catch-all for CSR fallback to /index.html
     {
-      "source": "/eventease-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/eventease-case-study"
-    },
-    {
-      "source": "/connectnow-case-study",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "sanjay-patidar.vercel.app"
-        }
-      ],
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
