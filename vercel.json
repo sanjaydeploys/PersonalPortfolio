@@ -17,6 +17,10 @@
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
+     {
+      "source": "/contact",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/contact"
+    },
     {
       "source": "/kileshwar-mahadev-ji-neemuch",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
