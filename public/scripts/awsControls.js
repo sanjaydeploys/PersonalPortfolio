@@ -4,13 +4,13 @@ const AWSControls = {
     const pauseBtn = controls.querySelector('#pause-simulation-btn');
     const projectSelect = controls.querySelector('#project-select');
 
-    if (!playBtn || !pauseBtn || !projectSelect) {
-      console.error('[AWSControls] Required control elements not found');
+    if (!playBtn || !pauseBtn || !projectSelect || !window.AWSArchitecture || !window.AWSDataFlow) {
+      console.error('[AWSControls] Required elements or dependencies not found');
       return null;
     }
 
     const startSimulation = () => {
-      if (window.AWSDataFlow && window.AWSDataFlow.start && !window.AWSDataFlow.isAnimating()) {
+      if (window.AWSDataFlow && !window.AWSDataFlow.isAnimating()) {
         window.AWSDataFlow.start();
         playBtn.disabled = true;
         pauseBtn.disabled = false;
@@ -18,7 +18,7 @@ const AWSControls = {
     };
 
     const stopSimulation = () => {
-      if (window.AWSDataFlow && window.AWSDataFlow.stop && window.AWSDataFlow.isAnimating()) {
+      if (window.AWSDataFlow && window.AWSDataFlow.isAnimating()) {
         window.AWSDataFlow.stop();
         playBtn.disabled = false;
         pauseBtn.disabled = true;
@@ -33,9 +33,6 @@ const AWSControls = {
       const project = e.target.value;
       if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
         window.AWSArchitecture.setProject(project);
-        if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
-          window.AWSDataFlow.setProject(project);
-        }
       }
     });
 
