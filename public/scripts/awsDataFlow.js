@@ -36,6 +36,7 @@ const AWSFlow = {
 
   startFlow() {
     this.running = true;
+    this.updateParticles();
   },
 
   stopFlow() {
@@ -52,19 +53,24 @@ const AWSFlow = {
       return;
     }
     this.currentProject = project;
-    const { services, connections } = window.AWSArchitecture.architectures[project];
+    this.updateParticles();
+  },
+
+  updateParticles() {
     this.particles = [];
+    const { services, connections } = window.AWSArchitecture.architectures[this.currentProject];
     connections.forEach(conn => {
       const from = services.find(s => s.id === conn.from);
       const to = services.find(s => s.id === conn.to);
       if (from && to) {
         const particleConfig = this.particleTypes[conn.dataType] || { size: 4, color: 'orange', speed: 0.01 };
+        // Create particles moving from 'from' to 'to'
         for (let i = 0; i < 8; i++) {
           this.particles.push({
             start: { x: from.x, y: from.y },
             end: { x: to.x, y: to.y },
-            progress: Math.random(),
-            speed: particleConfig.speed + Math.random() * 0.005,
+            progress: i / 8, // Staggered start for continuous flow
+            speed: particleConfig.speed,
             color: particleConfig.color,
             size: particleConfig.size
           });
