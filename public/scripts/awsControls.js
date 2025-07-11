@@ -1,7 +1,5 @@
-export default {
+const AWSControls = {
   init(controls) {
-    let currentProject = 'lic';
-
     const playBtn = controls.querySelector('#play-simulation-btn');
     const pauseBtn = controls.querySelector('#pause-simulation-btn');
     const projectSelect = controls.querySelector('#project-select');
@@ -12,7 +10,7 @@ export default {
     }
 
     const startSimulation = () => {
-      if (window.AWSDataFlow && window.AWSDataFlow.start) {
+      if (window.AWSDataFlow && window.AWSDataFlow.start && !window.AWSDataFlow.isAnimating()) {
         window.AWSDataFlow.start();
         playBtn.disabled = true;
         pauseBtn.disabled = false;
@@ -20,7 +18,7 @@ export default {
     };
 
     const stopSimulation = () => {
-      if (window.AWSDataFlow && window.AWSDataFlow.stop) {
+      if (window.AWSDataFlow && window.AWSDataFlow.stop && window.AWSDataFlow.isAnimating()) {
         window.AWSDataFlow.stop();
         playBtn.disabled = false;
         pauseBtn.disabled = true;
@@ -32,14 +30,24 @@ export default {
     pauseBtn.disabled = true;
 
     projectSelect.addEventListener('change', (e) => {
-      currentProject = e.target.value;
+      const project = e.target.value;
       if (window.AWSArchitecture && window.AWSArchitecture.setProject) {
-        window.AWSArchitecture.setProject(currentProject);
+        window.AWSArchitecture.setProject(project);
+        if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
+          window.AWSDataFlow.setProject(project);
+        }
       }
     });
 
-    const getCurrentProject = () => currentProject;
-
-    return { startSimulation, stopSimulation, getCurrentProject };
+    return { startSimulation, stopSimulation };
   }
 };
+
+window.AWSControls = AWSControls;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.AWSControls.init(document.getElementById('aws-controls'));
+  });
+} else {
+  window.AWSControls.init(document.getElementById('aws-controls'));
+}
