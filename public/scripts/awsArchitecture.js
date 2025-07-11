@@ -94,9 +94,9 @@ const AWSArchitecture = {
   iconCache: {},
 
   awsIcons: {
-    gateway: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_API-Gateway_64.svg',
-    compute: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_Lambda_64.svg',
-    database: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_DynamoDB_64.svg',
+    gateway: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_e8c36c86-8791-4d61-a511-7315c120b47f.webp',
+    compute: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_6801b651-c8c8-48af-af0b-feca1c9727ad.webp',
+    database: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_5497c6b5-7c07-418d-ba90-4ce526d7b2c6.webp',
     storage: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_S3_64.svg',
     cdn: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_CloudFront_64.svg',
     messaging: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_SNS_64.svg',
