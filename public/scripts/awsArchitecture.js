@@ -1,4 +1,4 @@
-export default {
+const AWSArchitecture = {
   init(canvas, tooltip) {
     let ctx = canvas.getContext('2d');
     let animationFrameId = null;
@@ -14,6 +14,7 @@ export default {
       eventease: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambdaAuth', name: 'Lambda Auth', x: 300, y: 100, type: 'compute' }, { id: 'lambdaEvent', name: 'Lambda Event', x: 500, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 100, type: 'database' }, { id: 'cognito', name: 'Cognito', x: 100, y: 300, type: 'auth' }], connections: [{ from: 'apiGateway', to: 'lambdaAuth', label: 'Auth' }, { from: 'apiGateway', to: 'lambdaEvent', label: 'Event' }, { from: 'lambdaEvent', to: 'dynamodb', label: 'Data' }, { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }] },
       connectnow: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'WebSocket' }, { from: 'lambda', to: 'dynamodb', label: 'Session' }] }
     };
+
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth || 800;
       canvas.height = canvas.offsetHeight || 400;
@@ -126,3 +127,6 @@ export default {
     } };
   }
 };
+
+window.AWSArchitecture = AWSArchitecture;
+AWSArchitecture.init(document.getElementById('aws-canvas'), document.getElementById('aws-tooltip'));
