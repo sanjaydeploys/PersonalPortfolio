@@ -7,11 +7,11 @@
   "rewrites": [
     {
       "source": "/robots.txt",
-      "destination": "/api/robots"
+      "destination": "https://sanjay-patidar.vercel.app/robots.txt"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "destination": "https://sanjay-patidar.vercel.app/sitemap.xml"
     },
     {
       "source": "/",
