@@ -90,6 +90,7 @@ const AWSArchitecture = {
   lastY: 0,
   animationId: null,
   selectedService: null,
+  hoveredService: null,
   iconCache: {},
 
   awsIcons: {
@@ -158,12 +159,39 @@ const AWSArchitecture = {
     });
 
     canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left - this.offsetX) / this.scale;
+      const y = (e.clientY - rect.top - this.offsetY) / this.scale;
+      const { services } = this.architectures[this.currentProject];
+      const hovered = services.find(s => Math.hypot(x - s.x, y - s.y) < 30);
+
+      if (hovered !== this.hoveredService) {
+        this.hoveredService = hovered;
+        if (hovered && window.AWSTooltip && typeof window.AWSTooltip.getServiceDetails === 'function') {
+          const tooltipHTML = window.AWSTooltip.getServiceDetails(hovered.id, this.currentProject);
+          if (tooltipHTML) {
+            this.tooltip.innerHTML = tooltipHTML;
+            let tooltipX = e.clientX + 15;
+            let tooltipY = e.clientY - 15;
+            if (tooltipX + 300 > rect.right) tooltipX = e.clientX - 330;
+            if (tooltipY < rect.top) tooltipY = e.clientY + 30;
+            this.tooltip.style.left = `${tooltipX}px`;
+            this.tooltip.style.top = `${tooltipY}px`;
+            this.tooltip.style.display = 'block';
+          } else {
+            this.tooltip.style.display = 'none';
+          }
+        } else {
+          this.tooltip.style.display = 'none';
+        }
+        this.render();
+      }
+
       if (this.isDragging) {
         if (this.selectedService) {
-          const rect = canvas.getBoundingClientRect();
           this.selectedService.x += (e.clientX - this.lastX) / this.scale;
           this.selectedService.y += (e.clientY - this.lastY) / this.scale;
-          if (window.AWSFlow) window.AWSFlow.setProject(this.currentProject);
+          if (window.AWSFlow) window.AWSFlow.updateParticles();
         } else {
           this.offsetX += e.clientX - this.lastX;
           this.offsetY += e.clientY - this.lastY;
@@ -171,9 +199,6 @@ const AWSArchitecture = {
         this.lastX = e.clientX;
         this.lastY = e.clientY;
         this.render();
-      }
-      if (window.AWSTooltip && typeof window.AWSTooltip.handleHover === 'function') {
-        window.AWSTooltip.handleHover(e, this.canvas, this.tooltip);
       }
     });
 
@@ -185,7 +210,9 @@ const AWSArchitecture = {
     canvas.addEventListener('mouseleave', () => {
       this.isDragging = false;
       this.selectedService = null;
+      this.hoveredService = null;
       this.tooltip.style.display = 'none';
+      this.render();
     });
 
     canvas.addEventListener('click', (e) => {
@@ -217,6 +244,8 @@ const AWSArchitecture = {
     this.offsetX = 0;
     this.offsetY = 0;
     this.selectedService = null;
+    this.hoveredService = null;
+    this.tooltip.style.display = 'none';
     this.render();
     if (window.AWSFlow && typeof window.AWSFlow.setProject === 'function') {
       window.AWSFlow.setProject(project);
@@ -232,9 +261,13 @@ const AWSArchitecture = {
     if (!iconUrl) return;
 
     this.ctx.save();
-    if (highlight || service === this.selectedService) {
+    if (highlight || service === this.selectedService || service === this.hoveredService) {
       this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7)';
       this.ctx.shadowBlur = 10;
+      // Pulsating effect for hovered service
+      const pulse = 1 + 0.05 * Math.sin(Date.now() / 200);
+      this.ctx.scale(pulse, pulse);
+      this.ctx.translate(x / pulse - x, y / pulse - y);
     }
 
     if (this.iconCache[iconUrl]) {
@@ -250,7 +283,7 @@ const AWSArchitecture = {
       img.onerror = () => console.error(`[AWSArchitecture] Failed to load icon: ${iconUrl}`);
     }
 
-    this.ctx.fillStyle = highlight || service === this.selectedService ? '#ff9900' : '#fff';
+    this.ctx.fillStyle = (highlight || service === this.selectedService || service === this.hoveredService) ? '#ff9900' : '#fff';
     this.ctx.font = '14px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.fillText(service.name, x, y + iconSize / 2 + 20);
@@ -269,9 +302,12 @@ const AWSArchitecture = {
     this.ctx.lineTo(tx, ty);
     this.ctx.strokeStyle = this.getConnectionColor(dataType);
     this.ctx.lineWidth = this.getConnectionWidth(bandwidth);
+    // Glowing effect for connections
+    this.ctx.shadowColor = this.getConnectionColor(dataType);
+    this.ctx.shadowBlur = 5;
     this.ctx.stroke();
 
-    // Draw arrowhead to indicate direction
+    // Draw arrowhead
     const angle = Math.atan2(ty - fy, tx - fx);
     const arrowSize = 10;
     this.ctx.beginPath();
@@ -331,7 +367,7 @@ const AWSArchitecture = {
         }
       });
 
-      services.forEach(service => this.renderService(service));
+      services.forEach(service => this.renderService(service, service === this.hoveredService));
     } catch (error) {
       console.error('[AWSArchitecture] Render failed:', error);
     }
