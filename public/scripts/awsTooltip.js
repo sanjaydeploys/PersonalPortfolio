@@ -27,46 +27,43 @@ const AWSTooltip = {
       console.error('[AWSTooltip] Canvas or tooltip element not found.');
       return;
     }
+    // Move event listeners to AWSArchitecture to avoid duplication
+    tooltip.style.position = 'absolute';
+    tooltip.style.zIndex = '1000';
+    tooltip.style.pointerEvents = 'none';
+  },
 
-    const checkAWSArchitecture = (callback) => {
-      if (window.AWSArchitecture && window.AWSArchitecture.architectures) {
-        callback();
-      } else {
-        console.warn('[AWSTooltip] Waiting for AWSArchitecture to be defined...');
-        setTimeout(() => checkAWSArchitecture(callback), 100);
-      }
-    };
+  handleHover(e, canvas, tooltip) {
+    if (!window.AWSArchitecture || !window.AWSArchitecture.architectures) {
+      console.warn('[AWSTooltip] AWSArchitecture not available.');
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - window.AWSArchitecture.offsetX) / window.AWSArchitecture.scale;
+    const y = (e.clientY - rect.top - window.AWSArchitecture.offsetY) / window.AWSArchitecture.scale;
+    const { services } = window.AWSArchitecture.architectures[window.AWSArchitecture.currentProject];
+    const foundService = services.find(service => Math.hypot(x - service.x, y - service.y) < 30);
 
-    const updateTooltip = (e) => {
-      checkAWSArchitecture(() => {
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left - window.AWSArchitecture.offsetX) / window.AWSArchitecture.scale;
-        const y = (e.clientY - rect.top - window.AWSArchitecture.offsetY) / window.AWSArchitecture.scale;
-        const { services } = window.AWSArchitecture.architectures[window.AWSArchitecture.currentProject];
-        const foundService = services.find(service => Math.hypot(x - service.x, y - service.y) < 30);
-
-        if (foundService && this.serviceDetails[foundService.id]) {
-          const tooltipHTML = this.getServiceDetails(foundService.id, window.AWSArchitecture.currentProject);
-          if (tooltipHTML) {
-            tooltip.innerHTML = tooltipHTML;
-            let tooltipX = e.clientX + 15;
-            let tooltipY = e.clientY - 15;
-            if (tooltipX + 300 > rect.width) tooltipX -= 330;
-            if (tooltipY < 0) tooltipY += 30;
-            tooltip.style.left = `${tooltipX}px`;
-            tooltip.style.top = `${tooltipY}px`;
-            tooltip.style.display = 'block';
-          }
-        } else {
-          tooltip.style.display = 'none';
+    if (foundService && this.serviceDetails[foundService.id]) {
+      const tooltipHTML = this.getServiceDetails(foundService.id, window.AWSArchitecture.currentProject);
+      if (tooltipHTML) {
+        tooltip.innerHTML = tooltipHTML;
+        let tooltipX = e.clientX + 15;
+        let tooltipY = e.clientY - 15;
+        if (tooltipX + 300 > rect.right) tooltipX = e.clientX - 330;
+        if (tooltipY < rect.top) tooltipY = e.clientY + 30;
+        tooltip.style.left = `${tooltipX}px`;
+        tooltip.style.top = `${tooltipY}px`;
+        tooltip.style.display = 'block';
+        if (window.AWSArchitecture && typeof window.AWSArchitecture.renderService === 'function') {
+          window.AWSArchitecture.renderService(foundService, true);
         }
-      });
-    };
-
-    canvas.addEventListener('mousemove', updateTooltip);
-    canvas.addEventListener('mouseout', () => {
+      } else {
+        tooltip.style.display = 'none';
+      }
+    } else {
       tooltip.style.display = 'none';
-    });
+    }
   },
 
   getServiceDetails(serviceId, project) {
@@ -81,7 +78,7 @@ const AWSTooltip = {
       <div style="background: rgba(0,0,0,0.9); color: white; padding: 10px; border-radius: 5px 5px 0 0;">
         ${details.title}
       </div>
-      <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 0 0 5px 5px;">
+      <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 0 0 5px 5px; max-width: 300px;">
         <p><strong>Description:</strong> ${details.description}</p>
         <p><strong>Use Cases:</strong></p>
         <ul style="margin: 0; padding-left: 20px;">
