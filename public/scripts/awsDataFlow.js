@@ -1,4 +1,3 @@
-// Updated awsDataFlow.js
 const AWSFlow = {
   particles: [],
   running: false,
@@ -48,8 +47,12 @@ const AWSFlow = {
   },
 
   setProject(project) {
+    if (!window.AWSArchitecture || !window.AWSArchitecture.architectures[project]) {
+      console.warn(`[AWSFlow] Project ${project} or AWSArchitecture not found.`);
+      return;
+    }
     this.currentProject = project;
-    const { services, connections } = AWSArchitecture.architectures[project];
+    const { services, connections } = window.AWSArchitecture.architectures[project];
     this.particles = [];
     connections.forEach(conn => {
       const from = services.find(s => s.id === conn.from);
