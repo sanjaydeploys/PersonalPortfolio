@@ -6,14 +6,6 @@
   ],
   "rewrites": [
     {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
@@ -50,7 +42,7 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
     {
-      "source": "/((?!robots\\.txt|sitemap\\.xml).*)",
+      "source": "/:path((?!robots\\.txt$|sitemap\\.xml$).*)",
       "destination": "/index.html"
     }
   ],
