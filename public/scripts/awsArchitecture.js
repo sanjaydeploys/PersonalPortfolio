@@ -72,6 +72,9 @@ const AWSArchitecture = {
 
     const animate = () => {
       draw();
+      if (window.AWSDataFlow && window.AWSDataFlow.drawParticles) {
+        window.AWSDataFlow.drawParticles();
+      }
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -83,7 +86,9 @@ const AWSArchitecture = {
         scale = 1.0;
         resizeCanvas();
         draw();
-        document.dispatchEvent(new CustomEvent('projectChanged', { detail: { project } }));
+        if (window.AWSDataFlow && window.AWSDataFlow.setProject) {
+          window.AWSDataFlow.setProject(project);
+        }
       } else {
         console.error('[AWSArchitecture] Invalid project');
       }
@@ -118,6 +123,11 @@ const AWSArchitecture = {
     canvas.addEventListener('mouseup', () => isDragging = false);
     canvas.addEventListener('mouseleave', () => isDragging = false);
 
+    if (!canvas || !ctx) {
+      console.error('[AWSArchitecture] Canvas or context unavailable');
+      return null;
+    }
+
     resizeCanvas();
     animate();
 
@@ -129,4 +139,10 @@ const AWSArchitecture = {
 };
 
 window.AWSArchitecture = AWSArchitecture;
-AWSArchitecture.init(document.getElementById('aws-canvas'), document.getElementById('aws-tooltip'));
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.AWSArchitecture.init(document.getElementById('aws-canvas'), document.getElementById('aws-tooltip'));
+  });
+} else {
+  window.AWSArchitecture.init(document.getElementById('aws-canvas'), document.getElementById('aws-tooltip'));
+}
