@@ -1,4 +1,10 @@
 const AWSArchitecture = {
+  architectures: {
+    lic: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }, { id: 's3', name: 'S3', x: 500, y: 300, type: 'storage' }, { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, type: 'cdn' }, { id: 'sns', name: 'SNS', x: 300, y: 400, type: 'messaging' }, { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, type: 'monitoring' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'Request' }, { from: 'lambda', to: 'dynamodb', label: 'Data' }, { from: 'lambda', to: 's3', label: 'Assets' }, { from: 'cloudfront', to: 's3', label: 'Delivery' }, { from: 'lambda', to: 'sns', label: 'Notify' }, { from: 'lambda', to: 'cloudwatch', label: 'Monitor' }] },
+    zedemy: { services: [{ id: 'cloudfront', name: 'CloudFront', x: 100, y: 100, type: 'cdn' }, { id: 's3', name: 'S3', x: 300, y: 100, type: 'storage' }, { id: 'lambda', name: 'Lambda', x: 500, y: 100, type: 'compute' }, { id: 'apiGateway', name: 'API Gateway', x: 700, y: 100, type: 'gateway' }, { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 300, type: 'database' }], connections: [{ from: 'cloudfront', to: 's3', label: 'Delivery' }, { from: 's3', to: 'lambda', label: 'Trigger' }, { from: 'lambda', to: 'apiGateway', label: 'Route' }, { from: 'apiGateway', to: 'dynamodb', label: 'Store' }] },
+    eventease: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambdaAuth', name: 'Lambda Auth', x: 300, y: 100, type: 'compute' }, { id: 'lambdaEvent', name: 'Lambda Event', x: 500, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 100, type: 'database' }, { id: 'cognito', name: 'Cognito', x: 100, y: 300, type: 'auth' }], connections: [{ from: 'apiGateway', to: 'lambdaAuth', label: 'Auth' }, { from: 'apiGateway', to: 'lambdaEvent', label: 'Event' }, { from: 'lambdaEvent', to: 'dynamodb', label: 'Data' }, { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }] },
+    connectnow: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'WebSocket' }, { from: 'lambda', to: 'dynamodb', label: 'Session' }] }
+  },
   init(canvas, tooltip) {
     let ctx = canvas.getContext('2d');
     let animationFrameId = null;
@@ -8,17 +14,10 @@ const AWSArchitecture = {
     let lastX = 0, lastY = 0;
     let offsetX = 0, offsetY = 0;
 
-    const architectures = {
-      lic: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }, { id: 's3', name: 'S3', x: 500, y: 300, type: 'storage' }, { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, type: 'cdn' }, { id: 'sns', name: 'SNS', x: 300, y: 400, type: 'messaging' }, { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, type: 'monitoring' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'Request' }, { from: 'lambda', to: 'dynamodb', label: 'Data' }, { from: 'lambda', to: 's3', label: 'Assets' }, { from: 'cloudfront', to: 's3', label: 'Delivery' }, { from: 'lambda', to: 'sns', label: 'Notify' }, { from: 'lambda', to: 'cloudwatch', label: 'Monitor' }] },
-      zedemy: { services: [{ id: 'cloudfront', name: 'CloudFront', x: 100, y: 100, type: 'cdn' }, { id: 's3', name: 'S3', x: 300, y: 100, type: 'storage' }, { id: 'lambda', name: 'Lambda', x: 500, y: 100, type: 'compute' }, { id: 'apiGateway', name: 'API Gateway', x: 700, y: 100, type: 'gateway' }, { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 300, type: 'database' }], connections: [{ from: 'cloudfront', to: 's3', label: 'Delivery' }, { from: 's3', to: 'lambda', label: 'Trigger' }, { from: 'lambda', to: 'apiGateway', label: 'Route' }, { from: 'apiGateway', to: 'dynamodb', label: 'Store' }] },
-      eventease: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambdaAuth', name: 'Lambda Auth', x: 300, y: 100, type: 'compute' }, { id: 'lambdaEvent', name: 'Lambda Event', x: 500, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 100, type: 'database' }, { id: 'cognito', name: 'Cognito', x: 100, y: 300, type: 'auth' }], connections: [{ from: 'apiGateway', to: 'lambdaAuth', label: 'Auth' }, { from: 'apiGateway', to: 'lambdaEvent', label: 'Event' }, { from: 'lambdaEvent', to: 'dynamodb', label: 'Data' }, { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }] },
-      connectnow: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'WebSocket' }, { from: 'lambda', to: 'dynamodb', label: 'Session' }] }
-    };
-
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth || 800;
       canvas.height = canvas.offsetHeight || 400;
-      architectures[currentProject].services.forEach(service => {
+      this.architectures[currentProject].services.forEach(service => {
         service.x = (service.x / 800) * canvas.width + offsetX;
         service.y = (service.y / 400) * canvas.height + offsetY;
       });
@@ -61,7 +60,7 @@ const AWSArchitecture = {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'rgba(26, 26, 46, 1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const { services, connections } = architectures[currentProject];
+      const { services, connections } = this.architectures[currentProject];
       services.forEach(s => drawService(s));
       connections.forEach(conn => {
         const from = services.find(s => s.id === conn.from);
@@ -79,7 +78,7 @@ const AWSArchitecture = {
     };
 
     const setProject = (project) => {
-      if (architectures[project]) {
+      if (this.architectures[project]) {
         currentProject = project;
         offsetX = 0;
         offsetY = 0;
@@ -90,7 +89,7 @@ const AWSArchitecture = {
           window.AWSDataFlow.setProject(project);
         }
       } else {
-        console.error('[AWSArchitecture] Invalid project');
+        console.error('[AWSArchitecture] Invalid project:', project);
       }
     };
 
@@ -132,7 +131,7 @@ const AWSArchitecture = {
     animate();
 
     return { setProject, highlightService: (id) => {
-      const service = architectures[currentProject].services.find(s => s.id === id);
+      const service = this.architectures[currentProject].services.find(s => s.id === id);
       if (service) drawService(service, true);
     } };
   }
