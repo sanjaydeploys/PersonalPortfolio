@@ -1,66 +1,86 @@
 const AWSArchitecture = {
-  architectures: {
-    lic: {
-      services: [
-        { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' },
-        { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' },
-        { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' },
-        { id: 's3', name: 'S3', x: 500, y: 300, type: 'storage' },
-        { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, type: 'cdn' },
-        { id: 'sns', name: 'SNS', x: 300, y: 400, type: 'messaging' },
-        { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, type: 'monitoring' }
-      ],
-      connections: [
-        { from: 'apiGateway', to: 'lambda', label: 'Request' },
-        { from: 'lambda', to: 'dynamodb', label: 'Data' },
-        { from: 'lambda', to: 's3', label: 'Assets' },
-        { from: 'cloudfront', to: 's3', label: 'Delivery' },
-        { from: 'lambda', to: 'sns', label: 'Notify' },
-        { from: 'lambda', to: 'cloudwatch', label: 'Monitor' }
-      ]
-    },
-    zedemy: {
-      services: [
-        { id: 'cloudfront', name: 'CloudFront', x: 100, y: 100, type: 'cdn' },
-        { id: 's3', name: 'S3', x: 300, y: 100, type: 'storage' },
-        { id: 'lambda', name: 'Lambda', x: 500, y: 100, type: 'compute' },
-        { id: 'apiGateway', name: 'API Gateway', x: 700, y: 100, type: 'gateway' },
-        { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 300, type: 'database' }
-      ],
-      connections: [
-        { from: 'cloudfront', to: 's3', label: 'Delivery' },
-        { from: 's3', to: 'lambda', label: 'Trigger' },
-        { from: 'lambda', to: 'apiGateway', label: 'Route' },
-        { from: 'apiGateway', to: 'dynamodb', label: 'Store' }
-      ]
-    },
-    eventease: {
-      services: [
-        { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' },
-        { id: 'lambdaAuth', name: 'Lambda Auth', x: 300, y: 100, type: 'compute' },
-        { id: 'lambdaEvent', name: 'Lambda Event', x: 500, y: 100, type: 'compute' },
-        { id: 'dynamodb', name: 'DynamoDB', x: 700, y: 100, type: 'database' },
-        { id: 'cognito', name: 'Cognito', x: 100, y: 300, type: 'auth' }
-      ],
-      connections: [
-        { from: 'apiGateway', to: 'lambdaAuth', label: 'Auth' },
-        { from: 'apiGateway', to: 'lambdaEvent', label: 'Event' },
-        { from: 'lambdaEvent', to: 'dynamodb', label: 'Data' },
-        { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }
-      ]
-    },
-    connectnow: {
-      services: [
-        { id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' },
-        { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' },
-        { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }
-      ],
-      connections: [
-        { from: 'apiGateway', to: 'lambda', label: 'WebSocket' },
-        { from: 'lambda', to: 'dynamodb', label: 'Session' }
-      ]
-    }
+ architectures: {
+  lic: {
+    services: [
+      { id: 'cloudflareDNS', name: 'Cloudflare DNS', x: 50, y: 150, type: 'dns' },
+      { id: 'cloudFront', name: 'CloudFront', x: 150, y: 150, type: 'cdn' },
+      { id: 's3', name: 'S3 (React App)', x: 250, y: 150, type: 'storage' },
+      { id: 'apiGateway', name: 'API Gateway', x: 350, y: 150, type: 'gateway' },
+      { id: 'lambda', name: 'Lambda', x: 450, y: 150, type: 'compute' },
+      { id: 'mongodb', name: 'MongoDB Atlas', x: 550, y: 150, type: 'database' },
+      { id: 'cloudwatch', name: 'CloudWatch', x: 450, y: 300, type: 'monitoring' },
+      { id: 'certManager', name: 'AWS Cert Manager', x: 150, y: 50, type: 'ssl' },
+      { id: 'emailService', name: 'Email Service', x: 550, y: 300, type: 'messaging' }
+    ],
+    connections: [
+      { from: 'cloudflareDNS', to: 'cloudFront', label: 'Route' },
+      { from: 'cloudFront', to: 's3', label: 'Serve HTML/JS' },
+      { from: 'cloudFront', to: 'certManager', label: 'TLS Cert' },
+      { from: 's3', to: 'apiGateway', label: 'Form Submit' },
+      { from: 'apiGateway', to: 'lambda', label: 'Invoke' },
+      { from: 'lambda', to: 'mongodb', label: 'Store Inquiry' },
+      { from: 'lambda', to: 'cloudwatch', label: 'Log Event' },
+      { from: 'lambda', to: 'emailService', label: 'Send Email' }
+    ]
   },
+
+  zedemy: {
+    services: [
+      { id: 'vercel', name: 'Vercel (React App)', x: 100, y: 150, type: 'cdn' },
+      { id: 'apiGateway', name: 'API Gateway', x: 250, y: 150, type: 'gateway' },
+      { id: 'lambda', name: 'Lambda Functions', x: 400, y: 150, type: 'compute' },
+      { id: 'dynamoDB', name: 'DynamoDB', x: 550, y: 150, type: 'database' },
+      { id: 'codeEditor', name: 'Code Editor Module', x: 100, y: 300, type: 'frontend' },
+      { id: 'certService', name: 'Certificate Service', x: 250, y: 300, type: 'messaging' }
+    ],
+    connections: [
+      { from: 'vercel', to: 'apiGateway', label: 'API Call' },
+      { from: 'apiGateway', to: 'lambda', label: 'Invoke' },
+      { from: 'lambda', to: 'dynamoDB', label: 'Read/Write' },
+      { from: 'vercel', to: 'codeEditor', label: 'In-browser Editor' },
+      { from: 'lambda', to: 'certService', label: 'Issue Certificate' }
+    ]
+  },
+
+  eventease: {
+    services: [
+      { id: 'vercel', name: 'Vercel (React App)', x: 100, y: 100, type: 'cdn' },
+      { id: 'apiGateway', name: 'API Gateway', x: 250, y: 100, type: 'gateway' },
+      { id: 'lambdaEvent', name: 'Lambda - Events', x: 400, y: 100, type: 'compute' },
+      { id: 'lambdaAuth', name: 'Lambda - Auth', x: 400, y: 200, type: 'compute' },
+      { id: 'lambdaCalendar', name: 'Lambda - Calendar', x: 400, y: 300, type: 'compute' },
+      { id: 'mongoDB', name: 'MongoDB Atlas', x: 550, y: 200, type: 'database' },
+      { id: 'googleCalendar', name: 'Google Calendar API', x: 550, y: 300, type: 'api' },
+      { id: 'github', name: 'GitHub CI/CD', x: 100, y: 250, type: 'frontend' }
+    ],
+    connections: [
+      { from: 'vercel', to: 'apiGateway', label: 'API Calls' },
+      { from: 'apiGateway', to: 'lambdaEvent', label: 'Event CRUD' },
+      { from: 'apiGateway', to: 'lambdaAuth', label: 'JWT Auth' },
+      { from: 'apiGateway', to: 'lambdaCalendar', label: 'Sync Events' },
+      { from: 'lambdaEvent', to: 'mongoDB', label: 'Store Data' },
+      { from: 'lambdaAuth', to: 'mongoDB', label: 'Session/User' },
+      { from: 'lambdaCalendar', to: 'googleCalendar', label: 'Sync Calendar' },
+      { from: 'github', to: 'vercel', label: 'CI/CD Deploy' }
+    ]
+  },
+
+  connectnow: {
+    services: [
+      { id: 'vercel', name: 'Vercel (React + WebRTC)', x: 100, y: 150, type: 'cdn' },
+      { id: 'socketServer', name: 'Socket.IO Server', x: 300, y: 150, type: 'compute' },
+      { id: 'mongoDB', name: 'MongoDB Atlas', x: 500, y: 150, type: 'database' },
+      { id: 'webrtcP2P', name: 'WebRTC P2P Layer', x: 300, y: 300, type: 'p2p' }
+    ],
+    connections: [
+      { from: 'vercel', to: 'socketServer', label: 'Signaling' },
+      { from: 'socketServer', to: 'webrtcP2P', label: 'Offer/Answer/ICE' },
+      { from: 'webrtcP2P', to: 'webrtcP2P', label: 'Media Stream' },
+      { from: 'socketServer', to: 'mongoDB', label: 'User Auth/Data' }
+    ]
+  }
+}
+
 
   canvas: null,
   ctx: null,
