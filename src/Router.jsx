@@ -8,6 +8,9 @@ import LicCaseStudy from './pages/LicCaseStudy';
 import SanjayCaseStudy from './pages/SanjayCaseStudy';
 import homePage from "./pages/homePage";
 
+import ContactMe from "./pages/ContactMe";
+
+
 import LicNeemuchSRS from "./pages/LicNeemuchSRS";
 
 import BlogPage from "./components/BlogPage";
@@ -30,6 +33,7 @@ import Contact from "./components/Contact";
 import Career from './components/Career';
 import About from'./components/About';
 import  Founder from './components/Founder';
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -50,6 +54,7 @@ const AppRouter = () => {
       <Route path="/founder-eduxcel" element={<Founder/>} />
 
                   <Route path="/" element={<homePage />} />
+                  <Route path="/contact" element={<ContactMe />} />
 
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
           <Route path="/kileshwar-mahadev-ji-neemuch" element={<KileshwarMahadevPage />} />
