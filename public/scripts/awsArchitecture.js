@@ -93,7 +93,7 @@ const AWSArchitecture = {
   iconCache: {},
 
   awsIcons: {
-    gateway: 'https://d12uvtgcxr5qif.cloudfront.net/images/html_2025-07-11_e8c36c86-8791-4d61-a511-7315c120b47f.webp',
+    gateway: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_API-Gateway_64.svg',
     compute: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_Lambda_64.svg',
     database: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_DynamoDB_64.svg',
     storage: 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_S3_64.svg',
@@ -172,7 +172,9 @@ const AWSArchitecture = {
         this.lastY = e.clientY;
         this.render();
       }
-      this.handleTooltip(e);
+      if (window.AWSTooltip && typeof window.AWSTooltip.handleHover === 'function') {
+        window.AWSTooltip.handleHover(e, this.canvas, this.tooltip);
+      }
     });
 
     canvas.addEventListener('mouseup', () => {
@@ -269,6 +271,16 @@ const AWSArchitecture = {
     this.ctx.lineWidth = this.getConnectionWidth(bandwidth);
     this.ctx.stroke();
 
+    // Draw arrowhead to indicate direction
+    const angle = Math.atan2(ty - fy, tx - fx);
+    const arrowSize = 10;
+    this.ctx.beginPath();
+    this.ctx.moveTo(tx - arrowSize * Math.cos(angle - Math.PI / 6), ty - arrowSize * Math.sin(angle - Math.PI / 6));
+    this.ctx.lineTo(tx, ty);
+    this.ctx.lineTo(tx - arrowSize * Math.cos(angle + Math.PI / 6), ty - arrowSize * Math.sin(angle + Math.PI / 6));
+    this.ctx.fillStyle = this.getConnectionColor(dataType);
+    this.ctx.fill();
+
     const midX = (fx + tx) / 2;
     const midY = (fy + ty) / 2 - 15;
     this.ctx.fillStyle = 'white';
@@ -331,30 +343,6 @@ const AWSArchitecture = {
       window.AWSFlow.drawParticles(this.ctx, this.scale, this.offsetX, this.offsetY);
     }
     this.animationId = requestAnimationFrame(() => this.animate());
-  },
-
-  handleTooltip(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - this.offsetX) / this.scale;
-    const y = (e.clientY - rect.top - this.offsetY) / this.scale;
-
-    const { services } = this.architectures[this.currentProject];
-    const hovered = services.find(s => Math.hypot(x - s.x, y - s.y) < 30);
-
-    if (hovered && window.AWSTooltip && typeof window.AWSTooltip.getServiceDetails === 'function') {
-      const tooltipHTML = window.AWSTooltip.getServiceDetails(hovered.id, this.currentProject);
-      if (tooltipHTML) {
-        this.tooltip.innerHTML = tooltipHTML;
-        this.tooltip.style.display = 'block';
-        this.tooltip.style.left = `${e.clientX + 15}px`;
-        this.tooltip.style.top = `${e.clientY - 15}px`;
-        this.renderService(hovered, true);
-      } else {
-        this.tooltip.style.display = 'none';
-      }
-    } else {
-      this.tooltip.style.display = 'none';
-    }
   },
 
   resizeCanvas() {
