@@ -231,7 +231,7 @@ const AWSArchitecture = {
 
     this.ctx.save();
     if (highlight || service === this.selectedService) {
-      this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7')";
+      this.ctx.shadowColor = 'rgba(255, 153, 0, 0.7)';
       this.ctx.shadowBlur = 10;
     }
 
@@ -365,3 +365,11 @@ const AWSArchitecture = {
 };
 
 window.AWSArchitecture = AWSArchitecture;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    AWSArchitecture.init('aws-canvas', 'aws-tooltip');
+  });
+} else {
+  AWSArchitecture.init('aws-canvas', 'aws-tooltip');
+}
