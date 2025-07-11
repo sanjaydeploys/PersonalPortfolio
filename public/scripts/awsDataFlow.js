@@ -3,7 +3,6 @@ const AWSDataFlow = {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let isAnimating = false;
-
     class Particle {
       constructor(from, to, speed) {
         this.from = { x: from.x, y: from.y };
