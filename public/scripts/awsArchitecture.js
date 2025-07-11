@@ -1,4 +1,4 @@
-const AWSCanvas = {
+const AWSArchitecture = {
 
     const architectures = {
       lic: { services: [{ id: 'apiGateway', name: 'API Gateway', x: 100, y: 100, type: 'gateway' }, { id: 'lambda', name: 'Lambda', x: 300, y: 100, type: 'compute' }, { id: 'dynamodb', name: 'DynamoDB', x: 500, y: 100, type: 'database' }, { id: 's3', name: 'S3', x: 500, y: 300, type: 'storage' }, { id: 'cloudfront', name: 'CloudFront', x: 100, y: 300, type: 'cdn' }, { id: 'sns', name: 'SNS', x: 300, y: 400, type: 'messaging' }, { id: 'cloudwatch', name: 'CloudWatch', x: 300, y: 200, type: 'monitoring' }], connections: [{ from: 'apiGateway', to: 'lambda', label: 'Request' }, { from: 'lambda', to: 'dynamodb', label: 'Data' }, { from: 'lambda', to: 's3', label: 'Assets' }, { from: 'cloudfront', to: 's3', label: 'Delivery' }, { from: 'lambda', to: 'sns', label: 'Notify' }, { from: 'lambda', to: 'cloudwatch', label: 'Monitor' }] },
