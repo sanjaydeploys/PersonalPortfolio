@@ -5,7 +5,6 @@
     { "src": "build/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    // ✅ Serve static robots.txt and sitemap.xml properly
     {
       "src": "/robots.txt",
       "dest": "public/robots.txt"
@@ -14,14 +13,10 @@
       "src": "/sitemap.xml",
       "dest": "public/sitemap.xml"
     },
-
-    // ✅ Rewrite for server-rendered homepage
     {
       "src": "^/$",
       "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
-
-    // ✅ Rewrite for other server-rendered routes
     {
       "src": "^/kileshwar-mahadev-ji-neemuch$",
       "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
@@ -54,8 +49,6 @@
       "src": "^/connectnow-case-study$",
       "dest": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
-
-    // ✅ Catch-all for CSR fallback to /index.html
     {
       "src": "/(.*)",
       "dest": "/index.html"
