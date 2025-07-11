@@ -1,8 +1,9 @@
-export default {
+const AWSDataFlow = {
   init(canvas) {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let isAnimating = false;
+
     class Particle {
       constructor(from, to, speed) {
         this.from = { x: from.x, y: from.y };
@@ -65,3 +66,6 @@ export default {
     return { start, stop, drawParticles, isAnimating: () => isAnimating };
   }
 };
+
+window.AWSDataFlow = AWSDataFlow;
+AWSDataFlow.init(document.getElementById('aws-canvas'));
