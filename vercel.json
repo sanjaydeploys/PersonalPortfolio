@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "public/**/*", "use": "@vercel/static" },
-    { "src": "build/**/*", "use": "@vercel/static" }
-  ],
   "rewrites": [
     {
       "source": "/robots.txt",
@@ -51,12 +47,6 @@
     },
     {
       "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "sanjay-patidar.vercel.app"
-        }
-      ],
       "destination": "/index.html"
     }
   ],
