@@ -77,7 +77,9 @@ const AWSDataFlow = {
       }
     };
 
-    return { start, stop, drawParticles, setProject, isAnimating: () => isAnimating };
+    const isAnimatingFunc = () => isAnimating;
+
+    return { start, stop, drawParticles, setProject, isAnimating: isAnimatingFunc };
   }
 };
 
