@@ -43,7 +43,9 @@ const AWSDataFlow = {
     createParticles(window.AWSArchitecture.architectures[currentProject].services, window.AWSArchitecture.architectures[currentProject].connections);
 
     const drawParticles = () => {
-      if (isAnimating) particles.forEach(particle => particle.update() && particle.draw());
+      if (isAnimating && window.AWSArchitecture && window.AWSArchitecture.architectures) {
+        particles.forEach(particle => particle.update() && particle.draw());
+      }
     };
 
     const start = () => {
@@ -57,15 +59,21 @@ const AWSDataFlow = {
     };
 
     const setProject = (project) => {
-      currentProject = project;
-      createParticles(window.AWSArchitecture.architectures[project].services, window.AWSArchitecture.architectures[project].connections);
+      if (window.AWSArchitecture && window.AWSArchitecture.architectures[project]) {
+        currentProject = project;
+        createParticles(window.AWSArchitecture.architectures[project].services, window.AWSArchitecture.architectures[project].connections);
+      }
     };
 
-    document.addEventListener('projectChanged', (e) => setProject(e.detail.project));
-
-    return { start, stop, drawParticles, isAnimating: () => isAnimating };
+    return { start, stop, drawParticles, setProject, isAnimating: () => isAnimating };
   }
 };
 
 window.AWSDataFlow = AWSDataFlow;
-AWSDataFlow.init(document.getElementById('aws-canvas'));
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.AWSDataFlow.init(document.getElementById('aws-canvas'));
+  });
+} else {
+  window.AWSDataFlow.init(document.getElementById('aws-canvas'));
+}
