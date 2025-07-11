@@ -3,6 +3,7 @@ const AWSDataFlow = {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let isAnimating = false;
+
     class Particle {
       constructor(from, to, speed) {
         this.from = { x: from.x, y: from.y };
@@ -39,7 +40,13 @@ const AWSDataFlow = {
         }
       });
     };
-    createParticles(window.AWSArchitecture.architectures[currentProject].services, window.AWSArchitecture.architectures[currentProject].connections);
+
+    if (window.AWSArchitecture && window.AWSArchitecture.architectures) {
+      createParticles(window.AWSArchitecture.architectures[currentProject].services, window.AWSArchitecture.architectures[currentProject].connections);
+    } else {
+      console.error('[AWSDataFlow] AWSArchitecture not initialized');
+      return null;
+    }
 
     const drawParticles = () => {
       if (isAnimating && window.AWSArchitecture && window.AWSArchitecture.architectures) {
@@ -48,19 +55,25 @@ const AWSDataFlow = {
     };
 
     const start = () => {
-      isAnimating = true;
-      console.log('[AWSDataFlow] Simulation started');
+      if (!isAnimating) {
+        isAnimating = true;
+        console.log('[AWSDataFlow] Simulation started');
+      }
     };
 
     const stop = () => {
-      isAnimating = false;
-      console.log('[AWSDataFlow] Simulation paused');
+      if (isAnimating) {
+        isAnimating = false;
+        console.log('[AWSDataFlow] Simulation paused');
+      }
     };
 
     const setProject = (project) => {
       if (window.AWSArchitecture && window.AWSArchitecture.architectures[project]) {
         currentProject = project;
         createParticles(window.AWSArchitecture.architectures[project].services, window.AWSArchitecture.architectures[project].connections);
+      } else {
+        console.error('[AWSDataFlow] Invalid project or AWSArchitecture not ready:', project);
       }
     };
 
