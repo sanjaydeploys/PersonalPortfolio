@@ -1,64 +1,45 @@
-const AWSArchitecture = {
-  icons: {},
-  architectures: {},
-  canvas: null,
-  ctx: null,
-  tooltip: null,
-  scale: 1,
-  offsetX: 0,
-  offsetY: 0,
-  currentProject: 'lic',
-  isDragging: false,
-  lastX: 0,
-  lastY: 0,
-  animationId: null,
+const AWSArchitecture = (() => {
+  let canvas, ctx, tooltip;
+  let scale = 1, offsetX = 0, offsetY = 0;
+  let isDragging = false, lastX = 0, lastY = 0;
+  let currentProject = 'lic';
+  let icons = {};
+  let architectures = {};
+  let animationId = null;
 
-  async init(canvasId, tooltipId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.tooltip = document.getElementById(tooltipId);
-    if (!this.canvas || !this.ctx || !this.tooltip) {
-      console.error('Missing DOM elements.');
-      return;
-    }
+  const AWS_SVG_BASE = 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_';
 
-    await this.loadIcons();
-    this.defineArchitectures();
-    this.attachEvents();
-    this.resizeCanvas();
-    this.animate();
+  const serviceMap = {
+    apiGateway: 'API-Gateway',
+    lambda: 'Lambda',
+    lambdaAuth: 'Lambda',
+    lambdaEvent: 'Lambda',
+    dynamodb: 'DynamoDB',
+    s3: 'S3',
+    cloudfront: 'CloudFront',
+    sns: 'SNS',
+    cloudwatch: 'CloudWatch',
+    cognito: 'Cognito'
+  };
 
-    if (window.AWSFlow?.setProject) window.AWSFlow.setProject(this.currentProject);
-    window.AWSArchitecture = this;
-  },
+  const loadIcons = async () => {
+    const promises = Object.entries(serviceMap).map(([key, name]) => {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.src = `${AWS_SVG_BASE}${name}_64.svg`;
+        img.onload = () => {
+          icons[key] = img;
+          resolve();
+        };
+      });
+    });
+    return Promise.all(promises);
+  };
 
-  async loadIcons() {
-    const types = {
-      apiGateway: 'API-Gateway',
-      lambda: 'Lambda',
-      lambdaAuth: 'Lambda',
-      lambdaEvent: 'Lambda',
-      dynamodb: 'DynamoDB',
-      s3: 'S3',
-      cloudfront: 'CloudFront',
-      sns: 'SNS',
-      cloudwatch: 'CloudWatch',
-      cognito: 'Cognito'
-    };
-    const base = 'https://d1.awsstatic.com/webteam/architecture-icons/q1-2022/Arch_';
-    for (const [key, name] of Object.entries(types)) {
-      const img = new Image();
-      img.src = `${base}${name}_64.svg`;
-      await new Promise(r => (img.onload = r));
-      this.icons[key] = img;
-    }
-  },
-
-  defineArchitectures() {
-    const make = (services, connections) => ({ services, connections });
-    this.architectures = {
-      lic: make(
-        [
+  const defineArchitectures = () => {
+    architectures = {
+      lic: {
+        services: [
           { id: 'apiGateway', x: 100, y: 100, type: 'apiGateway' },
           { id: 'lambda', x: 300, y: 100, type: 'lambda' },
           { id: 'dynamodb', x: 500, y: 100, type: 'dynamodb' },
@@ -67,7 +48,7 @@ const AWSArchitecture = {
           { id: 'sns', x: 300, y: 400, type: 'sns' },
           { id: 'cloudwatch', x: 300, y: 200, type: 'cloudwatch' }
         ],
-        [
+        connections: [
           { from: 'apiGateway', to: 'lambda', label: 'Request' },
           { from: 'lambda', to: 'dynamodb', label: 'Data' },
           { from: 'lambda', to: 's3', label: 'Assets' },
@@ -75,171 +56,167 @@ const AWSArchitecture = {
           { from: 'lambda', to: 'sns', label: 'Notify' },
           { from: 'lambda', to: 'cloudwatch', label: 'Monitor' }
         ]
-      ),
-      zedemy: make(
-        [
+      },
+      zedemy: {
+        services: [
           { id: 'cloudfront', x: 100, y: 100, type: 'cloudfront' },
           { id: 's3', x: 300, y: 100, type: 's3' },
           { id: 'lambda', x: 500, y: 100, type: 'lambda' },
           { id: 'apiGateway', x: 700, y: 100, type: 'apiGateway' },
           { id: 'dynamodb', x: 700, y: 300, type: 'dynamodb' }
         ],
-        [
+        connections: [
           { from: 'cloudfront', to: 's3', label: 'Delivery' },
           { from: 's3', to: 'lambda', label: 'Trigger' },
           { from: 'lambda', to: 'apiGateway', label: 'Route' },
           { from: 'apiGateway', to: 'dynamodb', label: 'Store' }
         ]
-      ),
-      eventease: make(
-        [
+      },
+      eventease: {
+        services: [
           { id: 'apiGateway', x: 100, y: 100, type: 'apiGateway' },
           { id: 'lambdaAuth', x: 300, y: 100, type: 'lambdaAuth' },
           { id: 'lambdaEvent', x: 500, y: 100, type: 'lambdaEvent' },
           { id: 'dynamodb', x: 700, y: 100, type: 'dynamodb' },
           { id: 'cognito', x: 100, y: 300, type: 'cognito' }
         ],
-        [
+        connections: [
           { from: 'apiGateway', to: 'lambdaAuth', label: 'Auth' },
           { from: 'apiGateway', to: 'lambdaEvent', label: 'Event' },
           { from: 'lambdaEvent', to: 'dynamodb', label: 'Data' },
           { from: 'cognito', to: 'apiGateway', label: 'Auth Flow' }
         ]
-      ),
-      connectnow: make(
-        [
+      },
+      connectnow: {
+        services: [
           { id: 'apiGateway', x: 100, y: 100, type: 'apiGateway' },
           { id: 'lambda', x: 300, y: 100, type: 'lambda' },
           { id: 'dynamodb', x: 500, y: 100, type: 'dynamodb' }
         ],
-        [
+        connections: [
           { from: 'apiGateway', to: 'lambda', label: 'WebSocket' },
           { from: 'lambda', to: 'dynamodb', label: 'Session' }
         ]
-      )
-    };
-  },
-
-  attachEvents() {
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.canvas.addEventListener('wheel', e => {
-      e.preventDefault();
-      this.scale *= e.deltaY < 0 ? 1.1 : 0.9;
-      this.scale = Math.max(0.5, Math.min(2.5, this.scale));
-      this.render();
-    });
-
-    this.canvas.addEventListener('mousedown', e => {
-      this.isDragging = true;
-      this.lastX = e.clientX;
-      this.lastY = e.clientY;
-    });
-
-    this.canvas.addEventListener('mouseup', () => this.isDragging = false);
-    this.canvas.addEventListener('mouseleave', () => {
-      this.isDragging = false;
-      this.tooltip.style.display = 'none';
-    });
-
-    this.canvas.addEventListener('mousemove', e => {
-      if (this.isDragging) {
-        this.offsetX += (e.clientX - this.lastX) / this.scale;
-        this.offsetY += (e.clientY - this.lastY) / this.scale;
-        this.lastX = e.clientX;
-        this.lastY = e.clientY;
-        this.render();
-      } else {
-        this.handleTooltip(e);
       }
-    });
-  },
+    };
+  };
 
-  resizeCanvas() {
-    this.canvas.width = this.canvas.offsetWidth;
-    this.canvas.height = this.canvas.offsetHeight;
-    this.render();
-  },
+  const render = () => {
+    const { services, connections } = architectures[currentProject];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  setProject(project) {
-    if (this.architectures[project]) {
-      this.currentProject = project;
-      this.offsetX = 0;
-      this.offsetY = 0;
-      this.scale = 1;
-      this.render();
-      if (window.AWSFlow?.setProject) window.AWSFlow.setProject(project);
-    }
-  },
-
-  render() {
-    const { services, connections } = this.architectures[this.currentProject];
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = '#1a1a2e';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
+    // Connections
     connections.forEach(conn => {
       const from = services.find(s => s.id === conn.from);
       const to = services.find(s => s.id === conn.to);
       if (from && to) {
-        this.ctx.strokeStyle = 'rgba(255,153,0,0.7)';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(from.x * this.scale + this.offsetX, from.y * this.scale + this.offsetY);
-        this.ctx.lineTo(to.x * this.scale + this.offsetX, to.y * this.scale + this.offsetY);
-        this.ctx.stroke();
+        ctx.strokeStyle = 'orange';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(from.x * scale + offsetX, from.y * scale + offsetY);
+        ctx.lineTo(to.x * scale + offsetX, to.y * scale + offsetY);
+        ctx.stroke();
 
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '12px sans-serif';
-        this.ctx.fillText(
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(
           conn.label,
-          ((from.x + to.x) / 2) * this.scale + this.offsetX,
-          ((from.y + to.y) / 2) * this.scale + this.offsetY - 10
+          ((from.x + to.x) / 2) * scale + offsetX,
+          ((from.y + to.y) / 2) * scale + offsetY - 10
         );
       }
     });
 
+    // Services
     services.forEach(s => {
-      const img = this.icons[s.type];
+      const img = icons[s.type];
       if (img) {
-        this.ctx.drawImage(img, s.x * this.scale + this.offsetX - 32, s.y * this.scale + this.offsetY - 32, 64, 64);
+        ctx.drawImage(img, s.x * scale + offsetX - 32, s.y * scale + offsetY - 32, 64, 64);
       }
     });
-  },
+  };
 
-  handleTooltip(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - this.offsetX) / this.scale;
-    const y = (e.clientY - rect.top - this.offsetY) / this.scale;
+  const resizeCanvas = () => {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    render();
+  };
 
-    const services = this.architectures[this.currentProject].services;
-    const service = services.find(s => {
-      const dx = x - s.x;
-      const dy = y - s.y;
-      return dx * dx + dy * dy <= 30 * 30;
+  const attachEvents = () => {
+    window.addEventListener('resize', resizeCanvas);
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      scale *= e.deltaY < 0 ? 1.1 : 0.9;
+      scale = Math.max(0.5, Math.min(2.5, scale));
+      render();
     });
 
-    if (service && this.icons[service.type]) {
-      this.tooltip.style.display = 'block';
-      this.tooltip.innerHTML = `<strong>${service.type}</strong>`;
-      this.tooltip.style.left = `${e.clientX + 15}px`;
-      this.tooltip.style.top = `${e.clientY + 15}px`;
-    } else {
-      this.tooltip.style.display = 'none';
-    }
-  },
+    canvas.addEventListener('mousedown', e => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
 
-  animate() {
-    this.render();
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+    canvas.addEventListener('mousemove', e => {
+      if (isDragging) {
+        offsetX += (e.clientX - lastX);
+        offsetY += (e.clientY - lastY);
+        lastX = e.clientX;
+        lastY = e.clientY;
+        render();
+      }
+    });
+  };
+
+  const animate = () => {
+    render();
     if (window.AWSFlow?.drawParticles) {
       window.AWSFlow.drawParticles();
     }
-    this.animationId = requestAnimationFrame(() => this.animate());
-  }
-};
+    animationId = requestAnimationFrame(animate);
+  };
 
-// Initialize on DOM ready
+  const setProject = (project) => {
+    if (architectures[project]) {
+      currentProject = project;
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      render();
+      if (window.AWSFlow?.setProject) window.AWSFlow.setProject(project);
+    }
+  };
+
+  return {
+    init: async (canvasId, tooltipId) => {
+      canvas = document.getElementById(canvasId);
+      ctx = canvas.getContext('2d');
+      tooltip = document.getElementById(tooltipId);
+      if (!canvas || !ctx) {
+        console.error('[AWSArchitecture] Canvas or context not found.');
+        return;
+      }
+
+      await loadIcons();
+      defineArchitectures();
+      attachEvents();
+      resizeCanvas();
+      animate();
+
+      window.AWSArchitecture = { setProject };
+    }
+  };
+})();
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => AWSArchitecture.init('aws-canvas', 'aws-tooltip'));
+  document.addEventListener('DOMContentLoaded', () => {
+    AWSArchitecture.init('aws-canvas', 'aws-tooltip');
+  });
 } else {
   AWSArchitecture.init('aws-canvas', 'aws-tooltip');
 }
