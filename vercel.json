@@ -7,11 +7,11 @@
   "rewrites": [
     {
       "source": "/robots.txt",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/robots.txt"
+      "destination": "/robots.txt"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sitemap.xml"
+      "destination": "/sitemap.xml"
     },
     {
       "source": "/",
