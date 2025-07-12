@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const cards = document.querySelectorAll('.card');
+  const cards = document.querySelectorAll('.card, .impact-item');
 
   cards.forEach((card) => {
     const canvas = card.querySelector('.card-particles');
