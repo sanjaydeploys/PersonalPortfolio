@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize 3D tilt animation on impact cards
+const tiltCards = document.querySelectorAll('.impact-item.animate-3d-tilt');
+if (tiltCards.length > 0 && window.VanillaTilt) {
+  VanillaTilt.init(tiltCards, {
+    max: 10,
+    speed: 400,
+    glare: true,
+    'max-glare': 0.2,
+    scale: 1.05,
+    perspective: 1000
+  });
+}
+
   // Matrix background animation
   const canvas = document.getElementById('matrix-bg');
   const ctx = canvas.getContext('2d');
