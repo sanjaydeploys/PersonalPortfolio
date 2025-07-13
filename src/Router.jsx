@@ -7,6 +7,7 @@ import KileshwarMahadevPage from './pages/KileshwarMahadevPage';
 import LicCaseStudy from './pages/LicCaseStudy';
 import SanjayCaseStudy from './pages/SanjayCaseStudy';
 import homePage from "./pages/homePage";
+import MyStory from "./pages/MyStory";
 
 import ContactMe from "./pages/ContactMe";
 
@@ -54,6 +55,8 @@ const AppRouter = () => {
       <Route path="/founder-eduxcel" element={<Founder/>} />
 
                   <Route path="/" element={<homePage />} />
+                          <Route path="/story" element={<MyStory/>} />
+
                   <Route path="/contact" element={<ContactMe />} />
 
           <Route path="/lic-neemuch" element={<LicNeemuchPage />} />
