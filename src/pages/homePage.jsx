@@ -26,6 +26,7 @@ const LicHome = memo(() => {
                   { src: '/public/scripts/progressBorder.js', defer: true },
                   { src: '/public/scripts/projectHover.js', defer: true },
                         { src: '/public/scripts/awsManager.js', defer: true },
+                        { src: '/public/scripts/glitchEffect.js', defer: true },
 
                   { src: '/public/scripts/awsArchitecture.js', defer: true },
                   { src: '/public/scripts/awsDataFlow.js', defer: true },
