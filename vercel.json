@@ -58,9 +58,9 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
+  "destination": "/index.html"
+}
   ],
   "headers": [
     {
