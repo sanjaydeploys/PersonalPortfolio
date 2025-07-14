@@ -17,7 +17,6 @@
       "source": "/public/:path*",
       "destination": "/:path*"
     },
-     "rewrites": [
     {
       "source": "/sanjay-portfolio-heroImage.webp",
       "destination": "/public/sanjay-portfolio-heroImage.webp"
