@@ -17,9 +17,10 @@
       "source": "/public/:path*",
       "destination": "/:path*"
     },
+     "rewrites": [
     {
-      "source": "/:staticFile((?:.*)\\.(?:webp|jpg|jpeg|png|gif|svg|ico|css|js|ttf|woff2?|eot|otf|mp3|mp4|txt|xml|json))",
-      "destination": "/:staticFile"
+      "source": "/sanjay-portfolio-heroImage.webp",
+      "destination": "/public/sanjay-portfolio-heroImage.webp"
     },
     {
       "source": "/",
