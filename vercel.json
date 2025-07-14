@@ -18,6 +18,10 @@
       "destination": "/:path*"
     },
     {
+      "source": "/:staticFile((?:.*)\\.(?:webp|jpg|jpeg|png|gif|svg|ico|css|js|ttf|woff2?|eot|otf|mp3|mp4|txt|xml|json))",
+      "destination": "/:staticFile"
+    },
+    {
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
