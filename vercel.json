@@ -14,14 +14,18 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sitemap.xml"
     },
     {
+      "source": "/public/:path*",
+      "destination": "/:path*"
+    },
+    {
       "source": "/",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod"
     },
-     {
+    {
       "source": "/story",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/story"
     },
-     {
+    {
       "source": "/contact",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/contact"
     },
@@ -58,9 +62,9 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
     {
-  "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
-  "destination": "/index.html"
-}
+      "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -68,7 +72,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-    "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
+          "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
         }
       ]
     }
