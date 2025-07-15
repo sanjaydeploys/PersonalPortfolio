@@ -45,12 +45,12 @@ const KileshwarMahadevPage = memo(() => {
   useEffect(() => {
     // Load existing and new scripts dynamically
     const scripts = [
-      { src: '/scripts/sidebarToggle.js', defer: true },
-      { src: '/scripts/scrollToTop.js', defer: true },
-      { src: '/scripts/faqToggle.js', defer: true },
-      { src: '/scripts/search.js', defer: true },
-      { src: '/scripts/languageToggle.js', defer: true },
-      { src: '/scripts/audio.js', defer: true },
+      { src: '/public/scripts/sidebarToggle.js', defer: true },
+      { src: '/public/scripts/scrollToTop.js', defer: true },
+      { src: '/public/scripts/faqToggle.js', defer: true },
+      { src: '/public/scripts/search.js', defer: true },
+      { src: '/public/scripts/languageToggle.js', defer: true },
+      { src: '/public/scripts/audio.js', defer: true },
     ];
 
     scripts.forEach(({ src, defer }) => {
