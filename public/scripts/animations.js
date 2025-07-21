@@ -52,24 +52,29 @@ document.addEventListener('DOMContentLoaded', () => {
           const el = entry.target;
           el.classList.add('animate');
 
-          // Custom animation enhancements
-          if (el.classList.contains('card')) el.classList.add('slide-left');
-          else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
-          else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
-          else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
-          else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
-          else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
-        else if (el.classList.contains('hero-cta')) {
+       if (el.classList.contains('card')) {
+  el.classList.add('slide-left');
+} else if (el.classList.contains('faq-item')) {
+  el.classList.add('fade-zoom');
+} else if (el.classList.contains('tech-item')) {
+  el.classList.add('flip-in');
+} else if (el.classList.contains('hero-section')) {
+  el.classList.add('fade-parallax');
+} else if (el.classList.contains('hero-title')) {
+  el.classList.add('fade-glitch');
+} else if (el.classList.contains('hero-img')) {
+  el.classList.add('zoom-rotate');
+} else if (el.classList.contains('hero-cta')) {
   const buttons = el.querySelectorAll('.cta-button');
   buttons.forEach((btn, i) => {
-    btn.classList.add('drop-init'); // apply initial position instantly
+    btn.classList.add('drop-init'); // initial position
     setTimeout(() => {
-      btn.classList.add('drop-in');
-    }, i * 150); // slightly more delay for dramatic effect
+      btn.classList.add('drop-in'); // actual drop animation
+    }, i * 150);
   });
-
-
-          } else if (el.id === 'who-i-am') el.classList.add('fade-left');
+} else if (el.id === 'who-i-am') {
+  el.classList.add('fade-left');
+}
 
           observer.unobserve(el);
         }
