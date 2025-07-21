@@ -1,18 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize 3D tilt animation on impact cards
-const tiltCards = document.querySelectorAll('.impact-item.animate-3d-tilt');
-if (tiltCards.length > 0 && window.VanillaTilt) {
-  VanillaTilt.init(tiltCards, {
-    max: 10,
-    speed: 400,
-    glare: true,
-    'max-glare': 0.2,
-    scale: 1.05,
-    perspective: 1000
-  });
-}
+  // --- Tilt animation remains unchanged ---
+  const tiltCards = document.querySelectorAll('.impact-item.animate-3d-tilt');
+  if (tiltCards.length > 0 && window.VanillaTilt) {
+    VanillaTilt.init(tiltCards, {
+      max: 10,
+      speed: 400,
+      glare: true,
+      'max-glare': 0.2,
+      scale: 1.05,
+      perspective: 1000
+    });
+  }
 
-  // Matrix background animation
+  // --- Matrix Background Animation ---
   const canvas = document.getElementById('matrix-bg');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
@@ -49,13 +49,30 @@ if (tiltCards.length > 0 && window.VanillaTilt) {
     drops.fill(1);
   });
 
-  // Intersection Observer for scroll animations
+  // --- Improved Intersection Observer ---
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
+      entries.forEach((entry, index) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate');
-          observer.unobserve(entry.target);
+          const el = entry.target;
+
+          // Delay animation for stagger effect
+          setTimeout(() => {
+            el.classList.add('animate');
+
+            // Optional: Add extra class for different effects
+            if (el.classList.contains('card')) {
+              el.classList.add('slide-left');
+            } else if (el.classList.contains('faq-item')) {
+              el.classList.add('fade-zoom');
+            } else if (el.classList.contains('tech-item')) {
+              el.classList.add('flip-in');
+            } else {
+              el.classList.add('fade-up');
+            }
+          }, index * 100); // stagger delay
+
+          observer.unobserve(el);
         }
       });
     },
