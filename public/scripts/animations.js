@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drops.fill(1);
   });
 
-  // --- IntersectionObserver for Sections ---
+  // --- General IntersectionObserver (No CTA logic) ---
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -62,12 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
         else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
         else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
-        else if (el.classList.contains('hero-cta')) {
-          const buttons = el.querySelectorAll('.cta-button');
-          buttons.forEach((btn, i) => {
-            setTimeout(() => btn.classList.add('stagger-up'), i * 100);
-          });
-        } else if (el.id === 'who-i-am') el.classList.add('fade-left');
+        else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
         observer.unobserve(el);
       });
@@ -75,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { threshold: 0.25 }
   );
 
-  // Observe all animatable elements
+  // Observe key sections only (no .cta-button, no .hero-cta)
   document.querySelectorAll(
-    '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, .hero-cta, #who-i-am'
+    '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, #who-i-am'
   ).forEach((el) => observer.observe(el));
 });
