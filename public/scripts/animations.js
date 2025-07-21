@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
       glare: true,
       'max-glare': 0.2,
       scale: 1.05,
-      perspective: 1000
+      perspective: 1000,
     });
   }
 
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     drops.fill(1);
   });
 
-  // --- IntersectionObserver for Animations ---
-  const observer = new IntersectionObserver(
+  // --- General IntersectionObserver ---
+  const generalObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
@@ -56,37 +56,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = entry.target;
         el.classList.add('animate');
 
-        if (el.classList.contains('card')) {
-          el.classList.add('slide-left');
-        } else if (el.classList.contains('faq-item')) {
-          el.classList.add('fade-zoom');
-        } else if (el.classList.contains('tech-item')) {
-          el.classList.add('flip-in');
-        } else if (el.classList.contains('hero-section')) {
-          el.classList.add('fade-parallax');
-        } else if (el.classList.contains('hero-title')) {
-          el.classList.add('fade-glitch');
-        } else if (el.classList.contains('hero-img')) {
-          el.classList.add('zoom-rotate');
-        } else if (el.classList.contains('hero-cta')) {
-          const buttons = el.querySelectorAll('.cta-button');
-          buttons.forEach((btn, i) => {
-            btn.classList.add('drop-init');
-            setTimeout(() => {
-              btn.classList.add('drop-in');
-            }, i * 150);
-          });
-        } else if (el.id === 'who-i-am') {
-          el.classList.add('fade-left');
-        }
+        if (el.classList.contains('card')) el.classList.add('slide-left');
+        else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
+        else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
+        else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
+        else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
+        else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
+        else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
-        observer.unobserve(el);
+        generalObserver.unobserve(el);
       });
     },
     { threshold: 0.25 }
   );
 
   document.querySelectorAll(
-    '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, .hero-cta, #who-i-am'
-  ).forEach((el) => observer.observe(el));
+    '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, #who-i-am'
+  ).forEach((el) => generalObserver.observe(el));
+
+  // --- Separate CTA Button Observer (Robust, No Parent Dependency) ---
+  const ctaObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const button = entry.target;
+        button.classList.add('drop-init');
+
+        // Trigger drop-in after slight delay
+        setTimeout(() => {
+          button.classList.add('drop-in');
+        }, 100); // Slight delay after init
+
+        ctaObserver.unobserve(button);
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  document.querySelectorAll('.cta-button').forEach((btn) => {
+    ctaObserver.observe(btn);
+  });
 });
