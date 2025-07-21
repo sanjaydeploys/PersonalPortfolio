@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('drop-in');
     }, i * 150); // slightly more delay for dramatic effect
   });
-}
+
 
           } else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
