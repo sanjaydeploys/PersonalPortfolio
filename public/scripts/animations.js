@@ -59,11 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
           else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
           else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
           else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
-          else if (el.classList.contains('hero-cta')) {
-            const buttons = el.querySelectorAll('.cta-button');
-            buttons.forEach((btn, i) => {
-              setTimeout(() => btn.classList.add('stagger-up'), i * 100);
-            });
+        else if (el.classList.contains('hero-cta')) {
+  const buttons = el.querySelectorAll('.cta-button');
+  buttons.forEach((btn, i) => {
+    btn.classList.add('drop-init'); // apply initial position instantly
+    setTimeout(() => {
+      btn.classList.add('drop-in');
+    }, i * 150); // slightly more delay for dramatic effect
+  });
+}
+
           } else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
           observer.unobserve(el);
