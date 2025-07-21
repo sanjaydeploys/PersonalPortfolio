@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
       glare: true,
       'max-glare': 0.2,
       scale: 1.05,
-      perspective: 1000
+      perspective: 1000,
     });
   }
 
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     drops.fill(1);
   });
 
-  // --- General IntersectionObserver (No CTA logic) ---
-  const observer = new IntersectionObserver(
+  // --- General IntersectionObserver ---
+  const generalObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
@@ -64,14 +64,37 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
         else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
-        observer.unobserve(el);
+        generalObserver.unobserve(el);
       });
     },
     { threshold: 0.25 }
   );
 
-  // Observe key sections only (no .cta-button, no .hero-cta)
   document.querySelectorAll(
     '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, #who-i-am'
-  ).forEach((el) => observer.observe(el));
+  ).forEach((el) => generalObserver.observe(el));
+
+  // --- Separate CTA Button Observer (Robust, No Parent Dependency) ---
+  const ctaObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const button = entry.target;
+        button.classList.add('drop-init');
+
+        // Trigger drop-in after slight delay
+        setTimeout(() => {
+          button.classList.add('drop-in');
+        }, 100); // Slight delay after init
+
+        ctaObserver.unobserve(button);
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  document.querySelectorAll('.cta-button').forEach((btn) => {
+    ctaObserver.observe(btn);
+  });
 });
