@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fontSize = 14;
   const columns = Math.floor(canvas.width / fontSize);
   const drops = Array(columns).fill(1);
+
   function drawMatrix() {
     ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -36,7 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
       drops[i]++;
     });
   }
+
   setInterval(drawMatrix, 50);
+
   window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -44,36 +47,35 @@ document.addEventListener('DOMContentLoaded', () => {
     drops.fill(1);
   });
 
-  // --- Advanced Intersection Animations ---
+  // --- IntersectionObserver for Sections ---
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          el.classList.add('animate');
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
 
-          // Custom animation enhancements
-          if (el.classList.contains('card')) el.classList.add('slide-left');
-          else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
-          else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
-          else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
-          else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
-          else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
-          else if (el.classList.contains('hero-cta')) {
-            const buttons = el.querySelectorAll('.cta-button');
-            buttons.forEach((btn, i) => {
-              setTimeout(() => btn.classList.add('stagger-up'), i * 100);
-            });
-          } else if (el.id === 'who-i-am') el.classList.add('fade-left');
+        const el = entry.target;
+        el.classList.add('animate');
 
-          observer.unobserve(el);
-        }
+        if (el.classList.contains('card')) el.classList.add('slide-left');
+        else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
+        else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
+        else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
+        else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
+        else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
+        else if (el.classList.contains('hero-cta')) {
+          const buttons = el.querySelectorAll('.cta-button');
+          buttons.forEach((btn, i) => {
+            setTimeout(() => btn.classList.add('stagger-up'), i * 100);
+          });
+        } else if (el.id === 'who-i-am') el.classList.add('fade-left');
+
+        observer.unobserve(el);
       });
     },
     { threshold: 0.25 }
   );
 
-  // Target sections
+  // Observe all animatable elements
   document.querySelectorAll(
     '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, .hero-cta, #who-i-am'
   ).forEach((el) => observer.observe(el));
