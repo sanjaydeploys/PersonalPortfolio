@@ -11,6 +11,51 @@ document.addEventListener('DOMContentLoaded', () => {
       perspective: 1000
     });
   }
+  // Hero animations
+  const heroText = document.querySelector('.hero-text');
+  const heroImage = document.querySelector('.hero-image');
+  const ctaButtons = document.querySelectorAll('.cta-button');
+
+  const heroObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        heroText.classList.add('fade-zoom-up');
+        heroImage.classList.add('fade-zoom-up');
+        ctaButtons.forEach((btn, i) => {
+          setTimeout(() => {
+            btn.classList.add('cta-slide-up');
+          }, i * 150);
+        });
+        heroObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  if (heroText && heroImage) {
+    heroObserver.observe(heroText);
+  }
+
+  // About Section Animation
+  const aboutHeading = document.querySelector('#who-i-am-title');
+  const aboutParas = document.querySelectorAll('#who-i-am p');
+
+  const aboutObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        aboutHeading.classList.add('slide-left');
+        aboutParas.forEach((p, i) => {
+          setTimeout(() => {
+            p.classList.add('fade-up');
+          }, i * 200);
+        });
+        aboutObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  if (aboutHeading) {
+    aboutObserver.observe(aboutHeading);
+  }
 
   // --- Matrix Background Animation ---
   const canvas = document.getElementById('matrix-bg');
