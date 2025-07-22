@@ -80,7 +80,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-    "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-eval'; script-src-elem 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
+    "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-eval'; script-src-elem 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; script-src-attr 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
         }
       ]
     }
