@@ -78,11 +78,10 @@
     {
       "source": "/(.*)",
       "headers": [
-        {
+       {
           "key": "Content-Security-Policy",
-  "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'sha384-jxN+FLFCKBSuU1HZQZjETehD/f1toJXyokjY7M7CQCqlkfnDMQ3WcRjDJdyDmnha'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
-
-      }
+          "value": "default-src 'self'; connect-src 'self' https://gj48940cgb.execute-api.ap-south-1.amazonaws.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://sanjay-patidar.vercel.app https://streetviewpixels-pa.googleapis.com https://d12uvtgcxr5qif.cloudfront.net https://maps.googleapis.com https://cdn.svgporn.com https://raw.githubusercontent.com https://d1.awsstatic.com; font-src 'self' data:; frame-src 'self' https://*.google.com https://streetviewpixels-pa.googleapis.com;"
+        }
       ]
     }
   ]
