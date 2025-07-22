@@ -1,66 +1,77 @@
+// /scripts/downloadpdf.js
 document.addEventListener('DOMContentLoaded', () => {
-  const downloadButton = document.querySelector('.download-pdf');
-  if (!downloadButton || !window.pdfLib) return;
+  const button = document.querySelector('.download-pdf');
+  if (!button) return;
 
-  downloadButton.addEventListener('click', async (e) => {
-    e.preventDefault();
+  // Wait until pdf-lib is ready
+  const waitForPdfLib = () => {
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        if (window.PDFLib) resolve(window.PDFLib);
+        else setTimeout(check, 50);
+      };
+      check();
+    });
+  };
 
-    const { PDFDocument, rgb, StandardFonts } = window.pdfLib;
+  button.addEventListener('click', async () => {
+    const PDFLib = await waitForPdfLib();
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
 
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage();
+    const doc = await PDFDocument.create();
+    let page = doc.addPage();
     const { width, height } = page.getSize();
-
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontSize = 12;
+    const font = await doc.embedFont(StandardFonts.Helvetica);
     let y = height - 50;
 
-    const addText = (text) => {
-      const lineHeight = 18;
+    const drawText = (text) => {
       page.drawText(text, {
         x: 50,
         y,
-        size: fontSize,
+        size: 12,
         font,
-        color: rgb(0, 0, 0),
+        color: rgb(0, 0, 0)
       });
-      y -= lineHeight;
+      y -= 20;
       if (y < 50) {
-        page = pdfDoc.addPage();
+        page = doc.addPage();
         y = height - 50;
       }
     };
 
-    const extractText = (el) => {
-      if (!el) return '';
-      const visibleSpan = el.querySelector('.lang-visible') || el;
-      return visibleSpan.textContent.trim() || '';
+    // ✨ Collect text from .hero and .main-content
+    const addSection = (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      const text = el.textContent?.trim();
+      if (text) {
+        drawText(text);
+      }
     };
 
-    // Title & Subtitle
-    addText(extractText(document.querySelector('.hero-title')));
-    addText(extractText(document.querySelector('.hero-subtitle')));
+    addSection('.hero-title');
+    addSection('.hero-subtitle');
 
-    // Content
     document.querySelectorAll('.main-content .section').forEach((section) => {
       const h2 = section.querySelector('h2');
-      if (h2) addText(extractText(h2));
+      if (h2) drawText(h2.textContent.trim());
 
-      section.querySelectorAll('p, li, blockquote').forEach((el) => {
-        const text = extractText(el);
-        if (text) {
-          const prefix = el.tagName === 'LI' ? '• ' : el.tagName === 'BLOCKQUOTE' ? '"': '';
-          const suffix = el.tagName === 'BLOCKQUOTE' ? '"' : '';
-          addText(`${prefix}${text}${suffix}`);
-        }
+      section.querySelectorAll('p, li').forEach((el) => {
+        const line = el.textContent.trim();
+        if (line) drawText(line);
       });
     });
 
-    const pdfBytes = await pdfDoc.save();
+    const pdfBytes = await doc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.download = 'Sanjay_Patidar_Case_Study.pdf';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   });
 });
