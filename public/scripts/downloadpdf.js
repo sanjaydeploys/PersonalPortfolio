@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+"script-src": "'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'sha256-06gLGoZsTVUL2reD93S00Uy9YPlv73QHp2C8NxdlppQ='"
   script.async = true;
   script.onload = function () {
     const downloadButton = document.querySelector('.download-pdf');
