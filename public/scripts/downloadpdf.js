@@ -1,8 +1,8 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const downloadButton = document.querySelector('.download-pdf');
-  if (!downloadButton) return;
+  if (!downloadButton || !window.pdfLib) return;
 
-  downloadButton.addEventListener('click', async function (e) {
+  downloadButton.addEventListener('click', async (e) => {
     e.preventDefault();
 
     const { PDFDocument, rgb, StandardFonts } = window.pdfLib;
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const fontSize = 12;
     let y = height - 50;
 
-    const addText = (text, bold = false) => {
+    const addText = (text) => {
       const lineHeight = 18;
       page.drawText(text, {
         x: 50,
@@ -31,22 +31,28 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     };
 
-    const extractText = (selector) => {
-      const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
-      const visibleSpan = el?.querySelector('.lang-visible') || el;
-      return visibleSpan?.textContent.trim() || '';
+    const extractText = (el) => {
+      if (!el) return '';
+      const visibleSpan = el.querySelector('.lang-visible') || el;
+      return visibleSpan.textContent.trim() || '';
     };
 
-    addText(extractText('.hero-title'));
-    addText(extractText('.hero-subtitle'));
+    // Title & Subtitle
+    addText(extractText(document.querySelector('.hero-title')));
+    addText(extractText(document.querySelector('.hero-subtitle')));
 
+    // Content
     document.querySelectorAll('.main-content .section').forEach((section) => {
       const h2 = section.querySelector('h2');
       if (h2) addText(extractText(h2));
 
       section.querySelectorAll('p, li, blockquote').forEach((el) => {
-        const txt = extractText(el);
-        if (txt) addText(el.tagName === 'LI' ? `• ${txt}` : txt);
+        const text = extractText(el);
+        if (text) {
+          const prefix = el.tagName === 'LI' ? '• ' : el.tagName === 'BLOCKQUOTE' ? '"': '';
+          const suffix = el.tagName === 'BLOCKQUOTE' ? '"' : '';
+          addText(`${prefix}${text}${suffix}`);
+        }
       });
     });
 
