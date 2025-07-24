@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-const cards = document.querySelectorAll('.card, .impact-item, .hero-section');
+  const cards = document.querySelectorAll('.card, .impact-item, .hero-section');
 
   cards.forEach((card) => {
     const canvas = card.querySelector('.card-particles');
+    if (!canvas) return; // 💡 Skip if canvas doesn't exist
+
     const ctx = canvas.getContext('2d');
     let particles = [];
     let mouse = { x: null, y: null };
