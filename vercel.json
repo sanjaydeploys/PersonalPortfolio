@@ -73,6 +73,10 @@
       "source": "/cuims-chandigarh-university",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-chandigarh-university"
     },
+       {
+      "source": "/vit-info",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/vit-info"
+    },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
