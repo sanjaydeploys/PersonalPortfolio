@@ -69,6 +69,10 @@
       "source": "/connectnow-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/connectnow-case-study"
     },
+          {
+      "source": "/institutions",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/institutions"
+    },
     {
       "source": "/cuims-chandigarh-university",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-chandigarh-university"
