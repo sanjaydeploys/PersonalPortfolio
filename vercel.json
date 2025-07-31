@@ -94,8 +94,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/manipal-university"
     },
        {
-      "source": "/cold-emailing",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cold-emailing"
+      "source": "/cold-email-guide",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cold-email-guide"
     },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
