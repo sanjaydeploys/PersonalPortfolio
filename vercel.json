@@ -98,8 +98,12 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cold-email-guide"
     },
     {
-      "source": "/blog-platform",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/blog-platform"
+      "source": "/seo-ssr-case-study-part1",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/seo-ssr-case-study-part1"
+    },
+     {
+      "source": "/seo-ssr-case-study-part2",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/seo-ssr-case-study-part2"
     },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
