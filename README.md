@@ -1,4 +1,3 @@
-# Sanjay Patidar | Web Developer & UI/UX Designer | Educated at Jawahar Navodaya Vidyalaya and Chandigarh University | Crafting Scalable Digital Solutions for Global Innovation
 
 Welcome to my portfolio! This repository showcases my skills, projects, and experiences as a Web Developer and UI/UX Designer. Feel free to explore and learn more about my work.
 
@@ -71,3 +70,4 @@ I also share tech insights and tutorials through my careers blogs. You can read 
 ## Contact Me
 
 If you have any inquiries or project proposals, don't hesitate to get in touch. You can contact me [here](sanjay.workrework@gmail.com).
+
