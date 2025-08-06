@@ -106,6 +106,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/seo-ssr-case-study-part2"
     },
     {
+      "source": "/indian-education-crisis",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/indian-education-crisis"
+    },
+    {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
     }
