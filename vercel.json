@@ -121,7 +121,10 @@
       "source": "/what-is-cibil-best-score",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/what-is-cibil-best-score"
     },
-    
+    {
+      "source": "/what-is-pan-card",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/what-is-pan-card"
+    },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
