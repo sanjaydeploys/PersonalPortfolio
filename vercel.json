@@ -117,6 +117,11 @@
       "source": "/prompt-engineering-guide-2025",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/prompt-engineering-guide-2025"
     },
+{
+      "source": "/what-is-cibil-best-score",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/what-is-cibil-best-score"
+    },
+    
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
