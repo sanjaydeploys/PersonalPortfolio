@@ -208,7 +208,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     let aiResponse;
     const lowerMessage = message.toLowerCase();
     if (lowerMessage.includes('who is sanjay patidar')) {
-      aiResponse = 'Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft for building production-grade platforms. He’s delivered 12+ real-world applications across insurance, education, communication, and event management, with a focus on performance, SEO, and scalability, achieving impact in 127 countries.';
+      aiResponse = 'Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft manager's for building production-grade platforms. He’s delivered 12+ real-world applications across insurance, education, communication, and event management, with a focus on performance, SEO, and scalability, achieving impact in 127 countries.';
     } else if (lowerMessage.includes('sanjay patidar’s key projects')) {
       aiResponse = 'Sanjay’s key projects include LIC Neemuch (a lead-gen portal with 80% conversion increase), Zedemy LMS (scalable e-learning platform), ConnectNow (low-latency video chat), EventEase (event management SaaS), and EduXcel (ed-tech platform with 500K+ global impressions).';
     } else if (lowerMessage.includes('lic neemuch')) {
