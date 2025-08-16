@@ -30,25 +30,25 @@
   function renderMessages() {
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
-    messages.forEach(function(msg) {
+    messages.forEach(function(message) {
       const messageDiv = document.createElement('div');
-      messageDiv.className = 'chat-message ' + (msg.sender === 'user' ? 'user-message' : 'ai-message');
-      messageDiv.dataset.messageId = msg.id;
-      let formattedText = formatMarkdown(msg.text);
+      messageDiv.className = 'chat-message ' + (message.sender === 'user' ? 'user-message' : 'ai-message');
+      messageDiv.dataset.messageId = message.id;
+      let formattedText = formatMarkdown(message.text);
       messageDiv.innerHTML = '<div class="message-content">' +
-        (editingMessageId === msg.id ?
+        (editingMessageId === message.id ?
           '<div class="edit-message">' +
-            '<input type="text" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + msg.id + '\')">' +
-            '<button onclick="saveEditedMessage(\'' + msg.id + '\')">Save</button>' +
+            '<input type="text" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
+            '<button onclick="saveEditedMessage(\'' + message.id + '\')">Save</button>' +
             '<button onclick="cancelEdit()">Cancel</button>' +
           '</div>' :
-          formattedText + '<span class="message-timestamp">' + msg.timestamp + '</span>' +
-          (msg.sender === 'ai' ? '<button class="speak-btn" onclick="speakMessage(\'' + msg.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">🔊 Speak</button>' : '')) +
+          formattedText + '<span class="message-timestamp">' + message.timestamp + '</span>' +
+          (message.sender === 'ai' ? '<button class="speak-btn" onclick="speakMessage(\'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">🔊 Speak</button>' : '')) +
         '</div>' +
         '<div class="message-actions">' +
-          (msg.sender === 'user' ? '<button class="edit-btn" onclick="startEditing(\'' + msg.id + '\', \'' + msg.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Edit</button>' : '') +
-          '<button class="delete-btn" onclick="deleteMessage(\'' + msg.id + '\')">Delete</button>' +
-          '<button class="copy-btn" onclick="copyMessage(\'' + msg.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Copy</button>' +
+          (message.sender === 'user' ? '<button class="edit-btn" onclick="startEditing(\'' + message.id + '\', \'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Edit</button>' : '') +
+          '<button class="delete-btn" onclick="deleteMessage(\'' + message.id + '\')">Delete</button>' +
+          '<button class="copy-btn" onclick="copyMessage(\'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Copy</button>' +
         '</div>';
       chatMessages.appendChild(messageDiv);
     });
@@ -82,8 +82,8 @@
     const timestamps = document.querySelectorAll('.message-timestamp');
     timestamps.forEach(function(timestamp) {
       const messageId = timestamp.parentElement.parentElement.dataset.messageId;
-      const message = messages.find(function(msg) { return msg.id === messageId; });
-      if (message) timestamp.textContent = msg.timestamp;
+      const message = messages.find(function(message) { return message.id === messageId; });
+      if (message) timestamp.textContent = message.timestamp;
     });
   }
 
@@ -169,7 +169,7 @@
 
   function saveEditedMessage(id) {
     if (editedText.trim()) {
-      messages = messages.map(function(msg) { return msg.id === id ? { ...msg, text: editedText, timestamp: new Date().toLocaleTimeString() } : msg; });
+      messages = messages.map(function(message) { return message.id === id ? { ...message, text: editedText, timestamp: new Date().toLocaleTimeString() } : message; });
       editingMessageId = null;
       editedText = '';
       renderMessages();
@@ -187,7 +187,7 @@
   }
 
   function deleteMessage(id) {
-    messages = messages.filter(function(msg) { return msg.id !== id; });
+    messages = messages.filter(function(message) { return message.id !== id; });
     renderMessages();
   }
 
@@ -215,6 +215,17 @@
     }];
     localStorage.removeItem('portfolio-chat');
     renderMessages();
+  }
+
+  function exportChat() {
+    const chatText = messages.map(function(message) { return message.timestamp + ' [' + (message.sender === 'user' ? 'You' : 'Chatbot') + ']: ' + message.text; }).join('\n');
+    const blob = new Blob([chatText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio-chat.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function toggleAutoReply() {
