@@ -43,7 +43,7 @@
   let filteredSuggestions = [];
   const apiKey = 'AIzaSyBTD9ltLvYEDK9MWgTR-71nXt1SsfRzGXI';
   const context = `
-Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
+Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft manager's for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
 ### Projects
 - **LIC Neemuch**: A modern portal built with SSR React, AWS Lambda, and CloudFront, achieving a 100/100 PageSpeed score, 70% faster load times, and 80% higher inquiry conversions.
