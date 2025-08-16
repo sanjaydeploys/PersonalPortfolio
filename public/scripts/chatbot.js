@@ -15,6 +15,7 @@
   let editedText = '';
   let isRecording = false;
   let isAutoReplyEnabled = true;
+  let isAutoSpeakEnabled = false;
   const suggestedPrompts = [
     'What are Sanjay Patidar’s key projects?',
     'What skills does Sanjay specialize in?',
@@ -82,7 +83,7 @@
     timestamps.forEach(function(timestamp) {
       const messageId = timestamp.parentElement.parentElement.dataset.messageId;
       const message = messages.find(function(msg) { return msg.id === messageId; });
-      if (message) timestamp.textContent = message.timestamp;
+      if (message) timestamp.textContent = msg.timestamp;
     });
   }
 
@@ -118,6 +119,9 @@
       const aiResponse = data.candidates[0].content.parts[0].text;
 
       messages.push({ sender: 'ai', text: aiResponse, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
+      if (isAutoSpeakEnabled) {
+        setTimeout(function() { speakMessage(aiResponse); }, 1000);
+      }
 
       if (isAutoReplyEnabled) {
         setTimeout(function() {
@@ -166,12 +170,9 @@
   function saveEditedMessage(id) {
     if (editedText.trim()) {
       messages = messages.map(function(msg) { return msg.id === id ? { ...msg, text: editedText, timestamp: new Date().toLocaleTimeString() } : msg; });
-      sendMessageToBackend(editedText).then(function(response) {
-        messages.push({ sender: 'ai', text: response, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
-        editingMessageId = null;
-        editedText = '';
-        renderMessages();
-      });
+      editingMessageId = null;
+      editedText = '';
+      renderMessages();
     } else {
       editingMessageId = null;
       editedText = '';
@@ -221,15 +222,9 @@
     document.querySelector('.auto-reply-btn').textContent = 'Auto-Reply: ' + (isAutoReplyEnabled ? 'On' : 'Off');
   }
 
-  function exportChat() {
-    const chatText = messages.map(function(msg) { return msg.timestamp + ' [' + (msg.sender === 'user' ? 'You' : 'Chatbot') + ']: ' + msg.text; }).join('\n');
-    const blob = new Blob([chatText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'portfolio-chat.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+  function toggleAutoSpeak() {
+    isAutoSpeakEnabled = !isAutoSpeakEnabled;
+    document.querySelector('.auto-speak-btn').textContent = 'Auto-Speak: ' + (isAutoSpeakEnabled ? 'On' : 'Off');
   }
 
   function toggleTheme() {
@@ -307,7 +302,7 @@
     handleInputChange('');
   });
 
-  // Expose necessary functions globally for HTML event handlers
+  // Expose functions to global scope for HTML event handlers
   window.handlePromptClick = handlePromptClick;
   window.sendMessage = sendMessage;
   window.toggleTheme = toggleTheme;
@@ -315,6 +310,8 @@
   window.adjustFontSize = adjustFontSize;
   window.toggleRecording = toggleRecording;
   window.confirmClearChat = confirmClearChat;
+  window.clearChat = clearChat;
   window.exportChat = exportChat;
   window.toggleAutoReply = toggleAutoReply;
+  window.toggleAutoSpeak = toggleAutoSpeak;
 })();
