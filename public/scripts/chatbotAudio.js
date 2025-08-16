@@ -109,8 +109,10 @@
       const speakBtn = messageDiv.querySelector('.speak-btn');
       if (speakBtn) {
         speakBtn.textContent = isSpeaking ? '⏸ Pause' : '🔊 Play';
-        const message = messages.find(m => m.id === messageId);
-        if (message) message.isSpeaking = isSpeaking;
+        if (window.messages) {
+          const message = window.messages.find(m => m.id === messageId);
+          if (message) message.isSpeaking = isSpeaking;
+        }
       }
     }
   }
