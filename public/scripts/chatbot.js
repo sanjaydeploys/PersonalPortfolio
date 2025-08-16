@@ -2,7 +2,7 @@
   let messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
     {
       sender: 'ai',
-      text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask about Zedemy LMS, ConnectNow, or his AWS serverless expertise.',
+      text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask "Who is Sanjay Patidar?", or about Zedemy LMS, ConnectNow, or his AWS expertise.',
       id: 'welcome',
       timestamp: new Date().toLocaleTimeString()
     }
@@ -15,18 +15,52 @@
   let editedText = '';
   let isRecording = false;
   let isAutoReplyEnabled = true;
-  let isAutoSpeakEnabled = true; // Start enabled for auto-speak
+  let isAutoSpeakEnabled = true;
   let showTimestamps = true;
   let searchQuery = '';
   const suggestedPrompts = [
+    // Projects
+    'Who is Sanjay Patidar?',
     'What are Sanjay Patidar’s key projects?',
-    'What skills does Sanjay specialize in?',
+    'Tell me about Zedemy LMS.',
+    'How does ConnectNow work?',
+    'What is EventEase?',
+    // Skills
+    'What frontend skills does Sanjay specialize in?',
+    'What backend skills does Sanjay have?',
+    'What are Sanjay’s cloud computing skills?',
     'How does Sanjay optimize SaaS apps for SEO?',
+    // Achievements
+    'What are Sanjay’s key achievements?',
+    'How has Sanjay impacted page load times?',
+    // Contact
     'How can I contact Sanjay for collaboration?'
   ];
   let filteredSuggestions = [];
   const apiKey = 'AIzaSyBTD9ltLvYEDK9MWgTR-71nXt1SsfRzGXI';
-  const context = 'Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lambda, React, and SEO-first applications. His key projects include:\n- **Zedemy LMS**: A learning management system with real-time analytics, scalable infrastructure, and SEO optimization, achieving high user engagement.\n- **ConnectNow**: A communication platform with serverless backend, optimized for low latency and global accessibility.\n- **EventEase**: An event management SaaS app with dynamic content delivery and edge-optimized performance.\nSanjay’s skills include AWS (Lambda, API Gateway, DynamoDB), React, Node.js, MongoDB, and advanced SEO techniques (JSON-LD schemas, SSR, structured data). He has improved page load times by 40% and search rankings for clients. For collaboration, contact Sanjay via email (sanjay@example.com) or LinkedIn (linkedin.com/in/sanjay-patidar).';
+  const context = `
+Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lambda, React, and SEO-first applications. His expertise spans multiple domains:
+
+### Projects
+- **Zedemy LMS**: A learning management system with real-time analytics, scalable infrastructure, and SEO optimization, achieving high user engagement across 127 countries.
+- **ConnectNow**: A communication platform with a serverless backend, optimized for low latency and global accessibility.
+- **EventEase**: An event management SaaS app with dynamic content delivery and edge-optimized performance.
+
+### Skills
+- **Frontend**: Proficient in React, Next.js, TypeScript, and Tailwind CSS. Builds responsive, accessible UIs with a focus on performance (e.g., lazy loading, code splitting).
+- **Backend**: Expertise in Node.js, Express, MongoDB, and serverless architectures (AWS Lambda, API Gateway, DynamoDB). Designs scalable APIs with REST and GraphQL.
+- **Cloud**: AWS Certified, specializing in serverless (Lambda, Step Functions, SQS) and infrastructure as code (CloudFormation, CDK). Implements CI/CD pipelines with GitHub Actions.
+- **SEO**: Advanced skills in JSON-LD schemas, server-side rendering (SSR), structured data, and mobile-first optimization. Improved page load times by 40% and search rankings for clients.
+
+### Achievements
+- Delivered 12+ real-world applications across insurance, education, communication, and event management.
+- Recognized by Amazon and Microsoft hiring managers for production-grade platforms and tech content.
+- Improved client search rankings through SEO-first architectures.
+
+### Contact
+- Email: sanjay@example.com
+- LinkedIn: linkedin.com/in/sanjay-patidar
+`;
   const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
 
   function renderMessages() {
@@ -52,13 +86,13 @@
         if (showTimestamps) {
           messageContent.innerHTML += '<span class="message-timestamp">' + message.timestamp + '</span>';
         }
-        if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
-          const speakBtn = document.createElement('button');
-          speakBtn.className = 'speak-btn';
-          speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
-          speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
-          messageContent.appendChild(speakBtn);
-        }
+      }
+      if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
+        const speakBtn = document.createElement('button');
+        speakBtn.className = 'speak-btn';
+        speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
+        speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
+        messageDiv.appendChild(speakBtn);
       }
       const messageActions = document.createElement('div');
       messageActions.className = 'message-actions';
@@ -131,14 +165,19 @@
     const message = messages.find(m => m.id === messageId);
     if (!message) return;
     message.text = '';
-    renderMessages();
-    for (let i = 0; i < text.length; i++) {
-      message.text += text[i];
-      renderMessages();
-      await new Promise(resolve => setTimeout(resolve, 30)); // Typing speed
-    }
-    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
-      window.speakMessage(messageId, text);
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    let currentIndex = 0;
+
+    for (const sentence of sentences) {
+      if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+        window.speakMessage(messageId, sentence, currentIndex);
+      }
+      for (let i = 0; i < sentence.length; i++) {
+        message.text += sentence[i];
+        renderMessages();
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      currentIndex++;
     }
   }
 
@@ -152,44 +191,60 @@
     input.value = '';
     renderMessages();
 
-    try {
-      const fullPrompt = context + '\n\nUser question: ' + message;
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
-      });
+    let aiResponse;
+    if (message.toLowerCase().includes('who is sanjay patidar')) {
+      aiResponse = 'Sanjay Patidar is a Full-Stack Engineer recognized by hiring managers from Amazon and Microsoft for building production-grade, serverless platforms and actionable tech content that merge engineering precision with business impact. With a strong product mindset, he has delivered 12+ real-world applications across serverless, cloud-native, and SEO-first architectures, spanning domains like insurance, education, communication, and event management, with global reach across 127 countries.';
+    } else {
+      try {
+        const fullPrompt = context + '\n\nUser question: ' + message;
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+        });
 
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      const aiResponse = data.candidates[0].content.parts[0].text;
-      const messageId = Date.now();
-      messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString() });
-      await typeMessage(aiResponse, messageId);
+        if (!response.ok) throw new Error('API request failed');
+        const data = await response.json();
+        aiResponse = data.candidates[0].content.parts[0].text;
 
-      if (isAutoReplyEnabled) {
-        setTimeout(function() {
-          const followUpId = Date.now() + 1;
-          messages.push({
-            sender: 'ai',
-            text: '',
-            id: followUpId,
-            timestamp: new Date().toLocaleTimeString()
-          });
-          typeMessage('Do you have any more questions about Sanjay’s work or projects?', followUpId);
-        }, 2000);
+        // Universal search fallback (simulated for now, as API integration requires server-side handling)
+        if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
+          const searchResults = await performWebSearch(message);
+          aiResponse = searchResults || 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects or skills!';
+        }
+      } catch (error) {
+        aiResponse = 'Something went wrong. Please try again!';
       }
-    } catch (error) {
-      messages.push({
-        sender: 'ai',
-        text: 'Something went wrong. Please try again!',
-        id: Date.now(),
-        timestamp: new Date().toLocaleTimeString()
-      });
-    } finally {
-      isLoading = false;
-      renderMessages();
     }
+
+    const messageId = Date.now();
+    messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString() });
+    await typeMessage(aiResponse, messageId);
+
+    if (isAutoReplyEnabled) {
+      setTimeout(function() {
+        const followUpId = Date.now() + 1;
+        messages.push({
+          sender: 'ai',
+          text: '',
+          id: followUpId,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        typeMessage('Do you have any more questions about Sanjay’s work or projects?', followUpId);
+      }, 2000);
+    }
+
+    isLoading = false;
+    renderMessages();
+  }
+
+  async function performWebSearch(query) {
+    // Simulated web search (actual implementation requires server-side API)
+    // This is a placeholder for fetching from Google/LinkedIn via my search capabilities
+    if (query.toLowerCase().includes('sanjay patidar')) {
+      return `Sanjay Patidar is a Full-Stack Engineer with expertise in serverless architectures, recognized by industry leaders. Check his LinkedIn (linkedin.com/in/sanjay-patidar) for more details.`;
+    }
+    return null;
   }
 
   function handlePromptClick(prompt) {
@@ -254,7 +309,7 @@
   function clearChat() {
     messages = [{
       sender: 'ai',
-      text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask about Zedemy LMS, ConnectNow, or his AWS serverless expertise.',
+      text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask "Who is Sanjay Patidar?", or about Zedemy LMS, ConnectNow, or his AWS expertise.',
       id: 'welcome',
       timestamp: new Date().toLocaleTimeString()
     }];
@@ -370,14 +425,12 @@
   document.addEventListener('DOMContentLoaded', function() {
     renderMessages();
     handleInputChange('');
-    // Initialize control states
     document.querySelector('.auto-speak-btn').textContent = 'Auto-Speak: ' + (isAutoSpeakEnabled ? 'On' : 'Off');
     document.querySelector('.timestamp-btn').textContent = showTimestamps ? 'Hide Timestamps' : 'Show Timestamps';
     document.getElementById('volume-control').value = window.getSpeechVolume ? window.getSpeechVolume() : 1;
     document.getElementById('rate-control').value = window.getSpeechRate ? window.getSpeechRate() : 1;
   });
 
-  // Expose functions to global scope for HTML event handlers
   window.handlePromptClick = handlePromptClick;
   window.sendMessage = sendMessage;
   window.toggleTheme = toggleTheme;
