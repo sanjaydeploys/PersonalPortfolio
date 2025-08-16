@@ -35,21 +35,46 @@
       messageDiv.className = 'chat-message ' + (message.sender === 'user' ? 'user-message' : 'ai-message');
       messageDiv.dataset.messageId = message.id;
       let formattedText = formatMarkdown(message.text);
-      messageDiv.innerHTML = '<div class="message-content">' +
-        (editingMessageId === message.id ?
+      const messageContent = document.createElement('div');
+      messageContent.className = 'message-content';
+      if (editingMessageId === message.id) {
+        messageContent.innerHTML =
           '<div class="edit-message">' +
             '<input type="text" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
             '<button onclick="saveEditedMessage(\'' + message.id + '\')">Save</button>' +
             '<button onclick="cancelEdit()">Cancel</button>' +
-          '</div>' :
-          formattedText + '<span class="message-timestamp">' + message.timestamp + '</span>' +
-          (message.sender === 'ai' ? '<button class="speak-btn" onclick="speakMessage(\'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">🔊 Speak</button>' : '')) +
-        '</div>' +
-        '<div class="message-actions">' +
-          (message.sender === 'user' ? '<button class="edit-btn" onclick="startEditing(\'' + message.id + '\', \'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Edit</button>' : '') +
-          '<button class="delete-btn" onclick="deleteMessage(\'' + message.id + '\')">Delete</button>' +
-          '<button class="copy-btn" onclick="copyMessage(\'' + message.text.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">Copy</button>' +
-        '</div>';
+          '</div>';
+      } else {
+        messageContent.innerHTML = formattedText + '<span class="message-timestamp">' + message.timestamp + '</span>';
+        if (message.sender === 'ai') {
+          const speakBtn = document.createElement('button');
+          speakBtn.className = 'speak-btn';
+          speakBtn.textContent = '🔊 Speak';
+          speakBtn.addEventListener('click', function() { speakMessage(message.text); });
+          messageContent.appendChild(speakBtn);
+        }
+      }
+      const messageActions = document.createElement('div');
+      messageActions.className = 'message-actions';
+      if (message.sender === 'user') {
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function() { startEditing(message.id, message.text); });
+        messageActions.appendChild(editBtn);
+      }
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', function() { deleteMessage(message.id); });
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', function() { copyMessage(message.text); });
+      messageActions.appendChild(deleteBtn);
+      messageActions.appendChild(copyBtn);
+      messageDiv.appendChild(messageContent);
+      messageDiv.appendChild(messageActions);
       chatMessages.appendChild(messageDiv);
     });
     if (isLoading) {
@@ -108,7 +133,7 @@
 
     try {
       const fullPrompt = context + '\n\nUser question: ' + message;
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBTD9ltLvYEDK9MWgTR-71nXt1SsfRzGXI', {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
@@ -325,4 +350,10 @@
   window.exportChat = exportChat;
   window.toggleAutoReply = toggleAutoReply;
   window.toggleAutoSpeak = toggleAutoSpeak;
+  window.startEditing = startEditing;
+  window.saveEditedMessage = saveEditedMessage;
+  window.cancelEdit = cancelEdit;
+  window.deleteMessage = deleteMessage;
+  window.copyMessage = copyMessage;
+  window.speakMessage = speakMessage;
 })();
