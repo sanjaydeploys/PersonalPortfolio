@@ -1,5 +1,5 @@
 (function() {
-  let messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
+  window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
     {
       sender: 'ai',
       text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask "Who is Sanjay Patidar?", or about Zedemy LMS, ConnectNow, or his AWS expertise.',
@@ -19,21 +19,17 @@
   let showTimestamps = true;
   let searchQuery = '';
   const suggestedPrompts = [
-    // Projects
     'Who is Sanjay Patidar?',
     'What are Sanjay Patidar’s key projects?',
     'Tell me about Zedemy LMS.',
     'How does ConnectNow work?',
     'What is EventEase?',
-    // Skills
     'What frontend skills does Sanjay specialize in?',
     'What backend skills does Sanjay have?',
     'What are Sanjay’s cloud computing skills?',
     'How does Sanjay optimize SaaS apps for SEO?',
-    // Achievements
     'What are Sanjay’s key achievements?',
     'How has Sanjay impacted page load times?',
-    // Contact
     'How can I contact Sanjay for collaboration?'
   ];
   let filteredSuggestions = [];
@@ -66,7 +62,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   function renderMessages() {
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
-    const filteredMessages = searchQuery ? messages.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase())) : messages;
+    const filteredMessages = searchQuery ? window.messages.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase())) : window.messages;
     filteredMessages.forEach(function(message) {
       const messageDiv = document.createElement('div');
       messageDiv.className = 'chat-message ' + (message.sender === 'user' ? 'user-message' : 'ai-message');
@@ -88,11 +84,14 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
         }
       }
       if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
-        const speakBtn = document.createElement('button');
-        speakBtn.className = 'speak-btn';
-        speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
-        speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
-        messageDiv.appendChild(speakBtn);
+        let speakBtn = messageDiv.querySelector('.speak-btn');
+        if (!speakBtn) {
+          speakBtn = document.createElement('button');
+          speakBtn.className = 'speak-btn';
+          speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
+          speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
+          messageDiv.appendChild(speakBtn);
+        }
       }
       const messageActions = document.createElement('div');
       messageActions.className = 'message-actions';
@@ -126,7 +125,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
     updateTimestamps();
     scrollToBottom();
     updateButtonStates();
-    localStorage.setItem('portfolio-chat', JSON.stringify(messages));
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
   }
 
   function formatMarkdown(text) {
@@ -147,14 +146,14 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
     const timestamps = document.querySelectorAll('.message-timestamp');
     timestamps.forEach(function(timestamp) {
       const messageId = timestamp.parentElement.parentElement.dataset.messageId;
-      const message = messages.find(function(message) { return message.id === messageId; });
+      const message = window.messages.find(function(message) { return message.id === messageId; });
       if (message) timestamp.textContent = message.timestamp;
     });
   }
 
   function updateButtonStates() {
-    document.querySelector('.clear-btn').disabled = messages.length === 1 && messages[0].id === 'welcome';
-    document.querySelector('.export-btn').disabled = messages.length === 1 && messages[0].id === 'welcome';
+    document.querySelector('.clear-btn').disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
+    document.querySelector('.export-btn').disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
     document.querySelector('.chat-input-area button:not(.voice-btn)').disabled = isLoading;
     document.querySelectorAll('.suggestion-btn').forEach(function(btn) { btn.disabled = isLoading; });
     const voiceBtn = document.querySelector('.voice-btn');
@@ -162,7 +161,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   }
 
   async function typeMessage(text, messageId) {
-    const message = messages.find(m => m.id === messageId);
+    const message = window.messages.find(m => m.id === messageId);
     if (!message) return;
     message.text = '';
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
@@ -187,7 +186,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
     if (!message || isLoading) return;
 
     isLoading = true;
-    messages.push({ sender: 'user', text: message, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
+    window.messages.push({ sender: 'user', text: message, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
     input.value = '';
     renderMessages();
 
@@ -207,7 +206,6 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
         const data = await response.json();
         aiResponse = data.candidates[0].content.parts[0].text;
 
-        // Universal search fallback (simulated for now, as API integration requires server-side handling)
         if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
           const searchResults = await performWebSearch(message);
           aiResponse = searchResults || 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects or skills!';
@@ -218,13 +216,13 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
     }
 
     const messageId = Date.now();
-    messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString() });
+    window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString() });
     await typeMessage(aiResponse, messageId);
 
     if (isAutoReplyEnabled) {
       setTimeout(function() {
         const followUpId = Date.now() + 1;
-        messages.push({
+        window.messages.push({
           sender: 'ai',
           text: '',
           id: followUpId,
@@ -239,8 +237,6 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   }
 
   async function performWebSearch(query) {
-    // Simulated web search (actual implementation requires server-side API)
-    // This is a placeholder for fetching from Google/LinkedIn via my search capabilities
     if (query.toLowerCase().includes('sanjay patidar')) {
       return `Sanjay Patidar is a Full-Stack Engineer with expertise in serverless architectures, recognized by industry leaders. Check his LinkedIn (linkedin.com/in/sanjay-patidar) for more details.`;
     }
@@ -269,7 +265,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
 
   function saveEditedMessage(id) {
     if (window.editedText.trim()) {
-      messages = messages.map(function(message) { return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toLocaleTimeString() } : message; });
+      window.messages = window.messages.map(function(message) { return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toLocaleTimeString() } : message; });
       editingMessageId = null;
       window.editedText = '';
       renderMessages();
@@ -287,13 +283,13 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   }
 
   function deleteMessage(id) {
-    messages = messages.filter(function(message) { return message.id !== id; });
+    window.messages = window.messages.filter(function(message) { return message.id !== id; });
     renderMessages();
   }
 
   function copyMessage(text) {
     navigator.clipboard.writeText(text);
-    messages.push({ sender: 'ai', text: 'Message copied!', id: Date.now(), timestamp: new Date().toLocaleTimeString() });
+    window.messages.push({ sender: 'ai', text: 'Message copied!', id: Date.now(), timestamp: new Date().toLocaleTimeString() });
     renderMessages();
   }
 
@@ -307,7 +303,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   }
 
   function clearChat() {
-    messages = [{
+    window.messages = [{
       sender: 'ai',
       text: 'Hello! I\'m your portfolio chatbot. Ask me about Sanjay Patidar\'s projects, skills, or achievements! For example, you can ask "Who is Sanjay Patidar?", or about Zedemy LMS, ConnectNow, or his AWS expertise.',
       id: 'welcome',
@@ -318,7 +314,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
   }
 
   function exportChat() {
-    const chatText = messages.map(function(message) { return message.timestamp + ' [' + (message.sender === 'user' ? 'You' : 'Chatbot') + ']: ' + message.text; }).join('\n');
+    const chatText = window.messages.map(function(message) { return message.timestamp + ' [' + (message.sender === 'user' ? 'You' : 'Chatbot') + ']: ' + message.text; }).join('\n');
     const blob = new Blob([chatText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -371,7 +367,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
 
   function toggleRecording() {
     if (!recognition) {
-      messages.push({
+      window.messages.push({
         sender: 'ai',
         text: 'Speech recognition is not supported in this browser.',
         id: Date.now(),
@@ -402,7 +398,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
       recognition.onerror = function(event) {
         isRecording = false;
         voiceBtn.textContent = '🎤 Speak';
-        messages.push({
+        window.messages.push({
           sender: 'ai',
           text: 'Speech recognition error: ' + event.error,
           id: Date.now(),
