@@ -16,28 +16,41 @@
         voices = window.speechSynthesis.getVoices();
         resolve(voices);
       };
+      // Retry if voices aren't loaded after 1 second
+      setTimeout(() => {
+        if (voices.length === 0) {
+          voices = window.speechSynthesis.getVoices();
+          resolve(voices);
+        }
+      }, 1000);
     });
   }
 
   async function speakMessage(messageId, text) {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported in this browser.');
+      if (window.messages) {
+        window.messages.push({
+          sender: 'ai',
+          text: 'Speech synthesis is not supported in this browser.',
+          id: Date.now(),
+          timestamp: new Date().toLocaleTimeString()
+        });
+        window.renderMessages?.();
+      }
       return;
     }
 
     const synth = window.speechSynthesis;
     let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0 };
 
-    // If already speaking, pause
     if (state.isSpeaking && !state.isPaused) {
       synth.pause();
       state.isPaused = true;
       speechStates.set(messageId, state);
       updateSpeakButton(messageId, false);
       return;
-    }
-    // If paused, resume
-    else if (state.isPaused) {
+    } else if (state.isPaused) {
       synth.resume();
       state.isPaused = false;
       speechStates.set(messageId, state);
@@ -45,7 +58,6 @@
       return;
     }
 
-    // Initialize new speech
     state.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     state.currentChunk = 0;
     speechStates.set(messageId, state);
@@ -66,7 +78,11 @@
 
       try {
         voices = await loadVoices();
-        const voice = voices.find(v => v.lang.includes(utterance.lang));
+        let voice = voices.find(v => v.lang.includes(utterance.lang));
+        if (!voice && utterance.lang === 'en-IN') {
+          // Fallback to en-US or en if en-IN is unavailable
+          voice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en'));
+        }
         if (voice) {
           utterance.voice = voice;
           state.utterance = utterance;
@@ -84,6 +100,15 @@
 
           utterance.onerror = function(event) {
             console.warn('Speech synthesis error: ' + event.error);
+            if (window.messages) {
+              window.messages.push({
+                sender: 'ai',
+                text: 'Speech synthesis failed: ' + event.error,
+                id: Date.now(),
+                timestamp: new Date().toLocaleTimeString()
+              });
+              window.renderMessages?.();
+            }
             if (speechStates.has(messageId)) {
               speechStates.delete(messageId);
               updateSpeakButton(messageId, false);
@@ -93,18 +118,35 @@
           synth.speak(utterance);
           updateSpeakButton(messageId, true);
         } else {
-          console.warn('Voice for ' + utterance.lang + ' not available.');
+          console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
+          if (window.messages) {
+            window.messages.push({
+              sender: 'ai',
+              text: 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
+              id: Date.now(),
+              timestamp: new Date().toLocaleTimeString()
+            });
+            window.renderMessages?.();
+          }
           speechStates.delete(messageId);
           updateSpeakButton(messageId, false);
         }
       } catch (error) {
         console.warn('Failed to load voices: ' + error.message);
+        if (window.messages) {
+          window.messages.push({
+            sender: 'ai',
+            text: 'Failed to load voices: ' + error.message,
+            id: Date.now(),
+            timestamp: new Date().toLocaleTimeString()
+          });
+          window.renderMessages?.();
+        }
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
       }
     }
 
-    // Only cancel previous utterances for this messageId
     if (speechStates.has(messageId)) {
       synth.cancel();
     }
@@ -160,7 +202,7 @@
       button.addEventListener('click', function() {
         document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-        currentLang = button.dataset.lang;
+        currentLang = button.dataset.lang || 'en';
         stopAllSpeech();
       });
     });
