@@ -34,23 +34,23 @@
       const messageDiv = document.createElement('div');
       messageDiv.className = 'chat-message ' + (message.sender === 'user' ? 'user-message' : 'ai-message');
       messageDiv.dataset.messageId = message.id;
-      let formattedText = formatMarkdown(message.text);
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
+      let formattedText = formatMarkdown(message.text);
       if (editingMessageId === message.id) {
         messageContent.innerHTML =
           '<div class="edit-message">' +
-            '<input type="text" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
+            '<input type="text" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="window.editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
             '<button onclick="saveEditedMessage(\'' + message.id + '\')">Save</button>' +
             '<button onclick="cancelEdit()">Cancel</button>' +
           '</div>';
       } else {
         messageContent.innerHTML = formattedText + '<span class="message-timestamp">' + message.timestamp + '</span>';
-        if (message.sender === 'ai') {
+        if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
           const speakBtn = document.createElement('button');
           speakBtn.className = 'speak-btn';
           speakBtn.textContent = '🔊 Speak';
-          speakBtn.addEventListener('click', function() { speakMessage(message.text); });
+          speakBtn.addEventListener('click', function() { window.speakMessage(message.text); });
           messageContent.appendChild(speakBtn);
         }
       }
@@ -144,8 +144,8 @@
       const aiResponse = data.candidates[0].content.parts[0].text;
 
       messages.push({ sender: 'ai', text: aiResponse, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
-      if (isAutoSpeakEnabled) {
-        setTimeout(function() { speakMessage(aiResponse); }, 1000);
+      if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+        setTimeout(function() { window.speakMessage(aiResponse); }, 1000);
       }
 
       if (isAutoReplyEnabled) {
@@ -188,26 +188,26 @@
 
   function startEditing(id, text) {
     editingMessageId = id;
-    editedText = text;
+    window.editedText = text;
     renderMessages();
   }
 
   function saveEditedMessage(id) {
-    if (editedText.trim()) {
-      messages = messages.map(function(message) { return message.id === id ? { ...message, text: editedText, timestamp: new Date().toLocaleTimeString() } : message; });
+    if (window.editedText.trim()) {
+      messages = messages.map(function(message) { return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toLocaleTimeString() } : message; });
       editingMessageId = null;
-      editedText = '';
+      window.editedText = '';
       renderMessages();
     } else {
       editingMessageId = null;
-      editedText = '';
+      window.editedText = '';
       renderMessages();
     }
   }
 
   function cancelEdit() {
     editingMessageId = null;
-    editedText = '';
+    window.editedText = '';
     renderMessages();
   }
 
@@ -355,5 +355,5 @@
   window.cancelEdit = cancelEdit;
   window.deleteMessage = deleteMessage;
   window.copyMessage = copyMessage;
-  window.speakMessage = speakMessage;
+  window.editedText = editedText; // Expose for edit input
 })();
