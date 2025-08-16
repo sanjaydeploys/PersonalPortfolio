@@ -15,7 +15,9 @@
   let editedText = '';
   let isRecording = false;
   let isAutoReplyEnabled = true;
-  let isAutoSpeakEnabled = false;
+  let isAutoSpeakEnabled = true; // Start enabled for auto-speak
+  let showTimestamps = true;
+  let searchQuery = '';
   const suggestedPrompts = [
     'What are Sanjay Patidar’s key projects?',
     'What skills does Sanjay specialize in?',
@@ -30,7 +32,8 @@
   function renderMessages() {
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
-    messages.forEach(function(message) {
+    const filteredMessages = searchQuery ? messages.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase())) : messages;
+    filteredMessages.forEach(function(message) {
       const messageDiv = document.createElement('div');
       messageDiv.className = 'chat-message ' + (message.sender === 'user' ? 'user-message' : 'ai-message');
       messageDiv.dataset.messageId = message.id;
@@ -45,12 +48,15 @@
             '<button onclick="cancelEdit()">Cancel</button>' +
           '</div>';
       } else {
-        messageContent.innerHTML = formattedText + '<span class="message-timestamp">' + message.timestamp + '</span>';
+        messageContent.innerHTML = formattedText;
+        if (showTimestamps) {
+          messageContent.innerHTML += '<span class="message-timestamp">' + message.timestamp + '</span>';
+        }
         if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
           const speakBtn = document.createElement('button');
           speakBtn.className = 'speak-btn';
-          speakBtn.textContent = '🔊 Speak';
-          speakBtn.addEventListener('click', function() { window.speakMessage(message.text); });
+          speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
+          speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
           messageContent.appendChild(speakBtn);
         }
       }
@@ -121,6 +127,21 @@
     if (voiceBtn) voiceBtn.disabled = isLoading || !recognition;
   }
 
+  async function typeMessage(text, messageId) {
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+    message.text = '';
+    renderMessages();
+    for (let i = 0; i < text.length; i++) {
+      message.text += text[i];
+      renderMessages();
+      await new Promise(resolve => setTimeout(resolve, 30)); // Typing speed
+    }
+    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+      window.speakMessage(messageId, text);
+    }
+  }
+
   async function sendMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
@@ -142,21 +163,20 @@
       if (!response.ok) throw new Error('API request failed');
       const data = await response.json();
       const aiResponse = data.candidates[0].content.parts[0].text;
-
-      messages.push({ sender: 'ai', text: aiResponse, id: Date.now(), timestamp: new Date().toLocaleTimeString() });
-      if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
-        setTimeout(function() { window.speakMessage(aiResponse); }, 1000);
-      }
+      const messageId = Date.now();
+      messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString() });
+      await typeMessage(aiResponse, messageId);
 
       if (isAutoReplyEnabled) {
         setTimeout(function() {
+          const followUpId = Date.now() + 1;
           messages.push({
             sender: 'ai',
-            text: 'Do you have any more questions about Sanjay’s work or projects?',
-            id: Date.now() + 1,
+            text: '',
+            id: followUpId,
             timestamp: new Date().toLocaleTimeString()
           });
-          renderMessages();
+          typeMessage('Do you have any more questions about Sanjay’s work or projects?', followUpId);
         }, 2000);
       }
     } catch (error) {
@@ -261,6 +281,20 @@
   function toggleAutoSpeak() {
     isAutoSpeakEnabled = !isAutoSpeakEnabled;
     document.querySelector('.auto-speak-btn').textContent = 'Auto-Speak: ' + (isAutoSpeakEnabled ? 'On' : 'Off');
+    if (!isAutoSpeakEnabled && typeof window.stopAllSpeech === 'function') {
+      window.stopAllSpeech();
+    }
+  }
+
+  function toggleTimestamps() {
+    showTimestamps = !showTimestamps;
+    document.querySelector('.timestamp-btn').textContent = showTimestamps ? 'Hide Timestamps' : 'Show Timestamps';
+    renderMessages();
+  }
+
+  function searchMessages(query) {
+    searchQuery = query;
+    renderMessages();
   }
 
   function toggleTheme() {
@@ -336,6 +370,11 @@
   document.addEventListener('DOMContentLoaded', function() {
     renderMessages();
     handleInputChange('');
+    // Initialize control states
+    document.querySelector('.auto-speak-btn').textContent = 'Auto-Speak: ' + (isAutoSpeakEnabled ? 'On' : 'Off');
+    document.querySelector('.timestamp-btn').textContent = showTimestamps ? 'Hide Timestamps' : 'Show Timestamps';
+    document.getElementById('volume-control').value = window.getSpeechVolume ? window.getSpeechVolume() : 1;
+    document.getElementById('rate-control').value = window.getSpeechRate ? window.getSpeechRate() : 1;
   });
 
   // Expose functions to global scope for HTML event handlers
@@ -350,10 +389,12 @@
   window.exportChat = exportChat;
   window.toggleAutoReply = toggleAutoReply;
   window.toggleAutoSpeak = toggleAutoSpeak;
+  window.toggleTimestamps = toggleTimestamps;
+  window.searchMessages = searchMessages;
   window.startEditing = startEditing;
   window.saveEditedMessage = saveEditedMessage;
   window.cancelEdit = cancelEdit;
   window.deleteMessage = deleteMessage;
   window.copyMessage = copyMessage;
-  window.editedText = editedText; // Expose for edit input
+  window.editedText = editedText;
 })();
