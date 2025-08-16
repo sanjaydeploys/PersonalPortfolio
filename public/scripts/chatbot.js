@@ -165,18 +165,19 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer specializing in AWS Lamb
     if (!message) return;
     message.text = '';
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    let currentIndex = 0;
 
+    // Start speaking the full response if auto-speak is enabled
+    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+      window.speakMessage(messageId, text);
+    }
+
+    // Type out the response character by character
     for (const sentence of sentences) {
-      if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
-        window.speakMessage(messageId, sentence, currentIndex);
-      }
       for (let i = 0; i < sentence.length; i++) {
         message.text += sentence[i];
         renderMessages();
         await new Promise(resolve => setTimeout(resolve, 30));
       }
-      currentIndex++;
     }
   }
 
