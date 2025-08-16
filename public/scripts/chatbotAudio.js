@@ -4,6 +4,7 @@
   let speechStates = new Map();
   let volume = 1;
   let rate = 1;
+  let speechQueue = []; // Queue for pending speech requests
 
   function loadVoices() {
     return new Promise((resolve) => {
@@ -16,7 +17,6 @@
         voices = window.speechSynthesis.getVoices();
         resolve(voices);
       };
-      // Retry if voices aren't loaded after 1 second
       setTimeout(() => {
         if (voices.length === 0) {
           voices = window.speechSynthesis.getVoices();
@@ -38,6 +38,12 @@
         });
         window.renderMessages?.();
       }
+      return;
+    }
+
+    // If speech is ongoing, queue the request
+    if (speechStates.size > 0) {
+      speechQueue.push({ messageId, text });
       return;
     }
 
@@ -66,6 +72,11 @@
       if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
+        // Process next queued speech
+        if (speechQueue.length > 0) {
+          const next = speechQueue.shift();
+          speakMessage(next.messageId, next.text);
+        }
         return;
       }
 
@@ -80,7 +91,6 @@
         voices = await loadVoices();
         let voice = voices.find(v => v.lang.includes(utterance.lang));
         if (!voice && utterance.lang === 'en-IN') {
-          // Fallback to en-US or en if en-IN is unavailable
           voice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en'));
         }
         if (voice) {
@@ -103,7 +113,7 @@
             if (window.messages) {
               window.messages.push({
                 sender: 'ai',
-                text: 'Speech synthesis failed: ' + event.error,
+                text: 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
                 id: Date.now(),
                 timestamp: new Date().toLocaleTimeString()
               });
@@ -112,6 +122,11 @@
             if (speechStates.has(messageId)) {
               speechStates.delete(messageId);
               updateSpeakButton(messageId, false);
+            }
+            // Process next queued speech
+            if (speechQueue.length > 0) {
+              const next = speechQueue.shift();
+              speakMessage(next.messageId, next.text);
             }
           };
 
@@ -130,6 +145,11 @@
           }
           speechStates.delete(messageId);
           updateSpeakButton(messageId, false);
+          // Process next queued speech
+          if (speechQueue.length > 0) {
+            const next = speechQueue.shift();
+            speakMessage(next.messageId, next.text);
+          }
         }
       } catch (error) {
         console.warn('Failed to load voices: ' + error.message);
@@ -144,10 +164,16 @@
         }
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
+        // Process next queued speech
+        if (speechQueue.length > 0) {
+          const next = speechQueue.shift();
+          speakMessage(next.messageId, next.text);
+        }
       }
     }
 
-    if (speechStates.has(messageId)) {
+    // Only cancel if no other speech is active
+    if (speechStates.has(messageId) && !state.isSpeaking) {
       synth.cancel();
     }
     speakNextChunk();
@@ -159,6 +185,7 @@
       updateSpeakButton(messageId, false);
       speechStates.delete(messageId);
     });
+    speechQueue = []; // Clear the queue
   }
 
   function updateSpeakButton(messageId, isSpeaking) {
