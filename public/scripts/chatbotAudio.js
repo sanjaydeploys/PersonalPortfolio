@@ -19,22 +19,25 @@
     });
   }
 
-  async function speakMessage(messageId, text, startIndex = 0) {
+  async function speakMessage(messageId, text) {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported in this browser.');
       return;
     }
 
     const synth = window.speechSynthesis;
-    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, currentChunk: startIndex };
+    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0 };
 
+    // If already speaking, pause
     if (state.isSpeaking && !state.isPaused) {
       synth.pause();
       state.isPaused = true;
       speechStates.set(messageId, state);
       updateSpeakButton(messageId, false);
       return;
-    } else if (state.isPaused) {
+    }
+    // If paused, resume
+    else if (state.isPaused) {
       synth.resume();
       state.isPaused = false;
       speechStates.set(messageId, state);
@@ -42,12 +45,13 @@
       return;
     }
 
-    synth.cancel();
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    let currentIndex = startIndex;
+    // Initialize new speech
+    state.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    state.currentChunk = 0;
+    speechStates.set(messageId, state);
 
     async function speakNextChunk() {
-      if (currentIndex >= sentences.length) {
+      if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
         return;
@@ -57,7 +61,7 @@
       utterance.volume = volume;
       utterance.rate = rate;
       utterance.pitch = 1;
-      utterance.text = sentences[currentIndex].trim() || 'No text available.';
+      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
       utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
 
       try {
@@ -65,19 +69,27 @@
         const voice = voices.find(v => v.lang.includes(utterance.lang));
         if (voice) {
           utterance.voice = voice;
-          state = { isSpeaking: true, isPaused: false, utterance, currentChunk: currentIndex };
+          state.utterance = utterance;
+          state.isSpeaking = true;
+          state.isPaused = false;
           speechStates.set(messageId, state);
+
           utterance.onend = function() {
-            currentIndex++;
-            state.currentChunk = currentIndex;
-            speechStates.set(messageId, state);
-            speakNextChunk();
+            if (speechStates.has(messageId)) {
+              state.currentChunk++;
+              speechStates.set(messageId, state);
+              speakNextChunk();
+            }
           };
+
           utterance.onerror = function(event) {
             console.warn('Speech synthesis error: ' + event.error);
-            speechStates.delete(messageId);
-            updateSpeakButton(messageId, false);
+            if (speechStates.has(messageId)) {
+              speechStates.delete(messageId);
+              updateSpeakButton(messageId, false);
+            }
           };
+
           synth.speak(utterance);
           updateSpeakButton(messageId, true);
         } else {
@@ -92,6 +104,10 @@
       }
     }
 
+    // Only cancel previous utterances for this messageId
+    if (speechStates.has(messageId)) {
+      synth.cancel();
+    }
     speakNextChunk();
   }
 
