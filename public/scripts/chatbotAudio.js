@@ -4,7 +4,7 @@
   let speechStates = new Map();
   let volume = 1;
   let rate = 1;
-  let speechQueue = []; // Queue for pending speech requests
+  let speechQueue = [];
 
   function loadVoices() {
     return new Promise((resolve) => {
@@ -34,18 +34,21 @@
           sender: 'ai',
           text: 'Speech synthesis is not supported in this browser.',
           id: Date.now(),
-          timestamp: new Date().toLocaleTimeString()
+          timestamp: new Date().toLocaleTimeString(),
+          category: 'general'
         });
         window.renderMessages?.();
       }
       return;
     }
 
-    // If speech is ongoing, queue the request
     if (speechStates.size > 0) {
       speechQueue.push({ messageId, text });
       return;
     }
+
+    window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {} };
+    window.interactionAnalytics.speechUsed++;
 
     const synth = window.speechSynthesis;
     let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0 };
@@ -72,7 +75,6 @@
       if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
-        // Process next queued speech
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
           speakMessage(next.messageId, next.text);
@@ -115,7 +117,8 @@
                 sender: 'ai',
                 text: 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
                 id: Date.now(),
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: new Date().toLocaleTimeString(),
+                category: 'general'
               });
               window.renderMessages?.();
             }
@@ -123,7 +126,6 @@
               speechStates.delete(messageId);
               updateSpeakButton(messageId, false);
             }
-            // Process next queued speech
             if (speechQueue.length > 0) {
               const next = speechQueue.shift();
               speakMessage(next.messageId, next.text);
@@ -139,13 +141,13 @@
               sender: 'ai',
               text: 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
               id: Date.now(),
-              timestamp: new Date().toLocaleTimeString()
+              timestamp: new Date().toLocaleTimeString(),
+              category: 'general'
             });
             window.renderMessages?.();
           }
           speechStates.delete(messageId);
           updateSpeakButton(messageId, false);
-          // Process next queued speech
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
             speakMessage(next.messageId, next.text);
@@ -158,13 +160,13 @@
             sender: 'ai',
             text: 'Failed to load voices: ' + error.message,
             id: Date.now(),
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: new Date().toLocaleTimeString(),
+            category: 'general'
           });
           window.renderMessages?.();
         }
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
-        // Process next queued speech
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
           speakMessage(next.messageId, next.text);
@@ -172,7 +174,6 @@
       }
     }
 
-    // Only cancel if no other speech is active
     if (speechStates.has(messageId) && !state.isSpeaking) {
       synth.cancel();
     }
@@ -185,7 +186,7 @@
       updateSpeakButton(messageId, false);
       speechStates.delete(messageId);
     });
-    speechQueue = []; // Clear the queue
+    speechQueue = [];
   }
 
   function updateSpeakButton(messageId, isSpeaking) {
@@ -196,7 +197,10 @@
         speakBtn.textContent = isSpeaking ? '⏸ Pause' : '🔊 Play';
         if (window.messages) {
           const message = window.messages.find(m => m.id === messageId);
-          if (message) message.isSpeaking = isSpeaking;
+          if (message) {
+            message.isSpeaking = isSpeaking;
+            window.renderMessages?.();
+          }
         }
       }
     }
