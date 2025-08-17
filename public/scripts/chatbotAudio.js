@@ -35,46 +35,66 @@
           text: 'Speech synthesis is not supported in this browser.',
           id: Date.now(),
           timestamp: new Date().toLocaleTimeString(),
-          category: 'general'
+          category: 'general',
+          reactions: [],
+          isPinned: false
         });
         window.renderMessages?.();
       }
       return;
     }
 
-    if (speechStates.size > 0) {
+    if (speechStates.size > 0 && !speechStates.has(messageId)) {
       speechQueue.push({ messageId, text });
       return;
     }
 
-    window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {} };
+    window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
     window.interactionAnalytics.speechUsed++;
 
     const synth = window.speechSynthesis;
-    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0 };
+    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
 
     if (state.isSpeaking && !state.isPaused) {
       synth.pause();
       state.isPaused = true;
+      state.isSpeaking = false;
       speechStates.set(messageId, state);
       updateSpeakButton(messageId, false);
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = false;
+        window.renderMessages?.();
+      }
       return;
     } else if (state.isPaused) {
       synth.resume();
       state.isPaused = false;
+      state.isSpeaking = true;
       speechStates.set(messageId, state);
       updateSpeakButton(messageId, true);
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = true;
+        window.renderMessages?.();
+      }
       return;
     }
 
     state.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     state.currentChunk = 0;
+    state.charIndex = 0;
     speechStates.set(messageId, state);
 
     async function speakNextChunk() {
       if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
+        const message = window.messages.find(m => m.id === messageId);
+        if (message) {
+          message.isSpeaking = false;
+          window.renderMessages?.();
+        }
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
           speakMessage(next.messageId, next.text);
@@ -86,7 +106,7 @@
       utterance.volume = volume;
       utterance.rate = rate;
       utterance.pitch = 1;
-      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
+      utterance.text = state.sentences[state.currentChunk].trim().slice(state.charIndex) || 'No text available.';
       utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
 
       try {
@@ -105,8 +125,16 @@
           utterance.onend = function() {
             if (speechStates.has(messageId)) {
               state.currentChunk++;
+              state.charIndex = 0;
               speechStates.set(messageId, state);
               speakNextChunk();
+            }
+          };
+
+          utterance.onboundary = function(event) {
+            if (speechStates.has(messageId)) {
+              state.charIndex = event.charIndex;
+              speechStates.set(messageId, state);
             }
           };
 
@@ -118,13 +146,20 @@
                 text: 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
                 id: Date.now(),
                 timestamp: new Date().toLocaleTimeString(),
-                category: 'general'
+                category: 'general',
+                reactions: [],
+                isPinned: false
               });
               window.renderMessages?.();
             }
             if (speechStates.has(messageId)) {
               speechStates.delete(messageId);
               updateSpeakButton(messageId, false);
+              const message = window.messages.find(m => m.id === messageId);
+              if (message) {
+                message.isSpeaking = false;
+                window.renderMessages?.();
+              }
             }
             if (speechQueue.length > 0) {
               const next = speechQueue.shift();
@@ -134,6 +169,11 @@
 
           synth.speak(utterance);
           updateSpeakButton(messageId, true);
+          const message = window.messages.find(m => m.id === messageId);
+          if (message) {
+            message.isSpeaking = true;
+            window.renderMessages?.();
+          }
         } else {
           console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
           if (window.messages) {
@@ -142,12 +182,19 @@
               text: 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
               id: Date.now(),
               timestamp: new Date().toLocaleTimeString(),
-              category: 'general'
+              category: 'general',
+              reactions: [],
+              isPinned: false
             });
             window.renderMessages?.();
           }
           speechStates.delete(messageId);
           updateSpeakButton(messageId, false);
+          const message = window.messages.find(m => m.id === messageId);
+          if (message) {
+            message.isSpeaking = false;
+            window.renderMessages?.();
+          }
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
             speakMessage(next.messageId, next.text);
@@ -161,12 +208,19 @@
             text: 'Failed to load voices: ' + error.message,
             id: Date.now(),
             timestamp: new Date().toLocaleTimeString(),
-            category: 'general'
+            category: 'general',
+            reactions: [],
+            isPinned: false
           });
           window.renderMessages?.();
         }
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
+        const message = window.messages.find(m => m.id === messageId);
+        if (message) {
+          message.isSpeaking = false;
+          window.renderMessages?.();
+        }
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
           speakMessage(next.messageId, next.text);
@@ -184,9 +238,14 @@
     window.speechSynthesis.cancel();
     speechStates.forEach((_, messageId) => {
       updateSpeakButton(messageId, false);
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = false;
+      }
       speechStates.delete(messageId);
     });
     speechQueue = [];
+    window.renderMessages?.();
   }
 
   function updateSpeakButton(messageId, isSpeaking) {
@@ -195,13 +254,10 @@
       const speakBtn = messageDiv.querySelector('.speak-btn');
       if (speakBtn) {
         speakBtn.textContent = isSpeaking ? '⏸ Pause' : '🔊 Play';
-        if (window.messages) {
-          const message = window.messages.find(m => m.id === messageId);
-          if (message) {
-            message.isSpeaking = isSpeaking;
-            window.renderMessages?.();
-          }
-        }
+      }
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = isSpeaking;
       }
     }
   }
