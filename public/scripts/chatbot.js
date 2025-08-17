@@ -123,11 +123,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       ? window.messages.filter(m => m.category === selectedCategory)
       : window.messages;
 
-    // Sort messages: pinned first, then by timestamp (newest first)
+    // Sort messages: pinned first, then by timestamp (oldest first for column-reverse)
     filteredMessages.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.timestamp) - new Date(a.timestamp);
+      return new Date(a.timestamp) - new Date(b.timestamp);
     });
 
     filteredMessages.forEach(function(message) {
@@ -205,7 +205,6 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       chatMessages.appendChild(loadingDiv);
     }
     updateTimestamps();
-    scrollToBottom();
     updateButtonStates();
     localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
   }
@@ -232,13 +231,6 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         ${details.link ? `<a href="${details.link}" target="_blank" rel="noopener" class="text-blue-500 underline">Learn More</a>` : ''}
       </div>
     `;
-  }
-
-  function scrollToBottom() {
-    const chatMessages = document.getElementById('chat-messages');
-    if (chatMessages) {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
   }
 
   function updateTimestamps() {
@@ -534,13 +526,152 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     renderMessages();
   }
 
-  function saveEditedMessage(id) {
+  async function saveEditedMessage(id) {
     if (window.editedText.trim()) {
       window.messages = window.messages.map(function(message) {
         return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toISOString(), category: categorizeMessage(window.editedText) } : message;
       });
       editingMessageId = null;
+      const editedMessageText = window.editedText;
       window.editedText = '';
+      renderMessages();
+      // Treat edited message as a new query
+      isLoading = true;
+      interactionAnalytics.questionsAsked++;
+      const category = categorizeMessage(editedMessageText);
+      let aiResponse;
+      let projectDetails = null;
+      let quickReplies = [];
+      const lowerMessage = editedMessageText.toLowerCase();
+      if (lowerMessage.includes('who is sanjay patidar')) {
+        aiResponse = 'Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft managers for building production-grade platforms. He’s delivered 12+ real-world applications across insurance, education, communication, and event management, with a focus on performance, SEO, and scalability, achieving impact in 127 countries.';
+        quickReplies = ['What are Sanjay’s key projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?'];
+        interactionAnalytics.categories['about'] = (interactionAnalytics.categories['about'] || 0) + 1;
+      } else if (lowerMessage.includes('sanjay patidar’s key projects')) {
+        aiResponse = 'Sanjay’s key projects include LIC Neemuch (a lead-gen portal with 80% conversion increase), Zedemy LMS (scalable e-learning platform), ConnectNow (low-latency video chat), EventEase (event management SaaS), and EduXcel (ed-tech platform with 500K+ global impressions).';
+        quickReplies = ['Tell me about LIC Neemuch.', 'What is Zedemy LMS?', 'How does ConnectNow work?'];
+        interactionAnalytics.categories['projects'] = (interactionAnalytics.categories['projects'] || 0) + 1;
+      } else if (lowerMessage.includes('lic neemuch')) {
+        aiResponse = 'LIC Neemuch is a modern portal Sanjay built from an outdated form, using SSR React, AWS Lambda, and CloudFront. It achieved a 100/100 PageSpeed score, reduced load times by 70%, and tripled inquiries, becoming the client’s primary lead generation tool.';
+        projectDetails = { name: 'LIC Neemuch', metrics: '100/100 PageSpeed, 70% faster load times, 80% higher conversions', tech: 'SSR React, AWS Lambda, CloudFront', link: 'https://licneemuch.example.com' };
+        quickReplies = ['What other projects has Sanjay built?', 'How did Sanjay optimize load times?', 'What tech was used in LIC Neemuch?'];
+        interactionAnalytics.categories['project'] = (interactionAnalytics.categories['project'] || 0) + 1;
+      } else if (lowerMessage.includes('zedemy lms')) {
+        aiResponse = 'Zedemy LMS is a serverless learning management system Sanjay developed with AWS Lambda, API Gateway, and DynamoDB. It features real-time analytics, SEO optimization, and scaled across 127 countries, reducing infrastructure costs by 40%.';
+        projectDetails = { name: 'Zedemy LMS', metrics: '40% cost reduction, 127 countries reached', tech: 'AWS Lambda, API Gateway, DynamoDB', link: 'https://zedemy.example.com' };
+        quickReplies = ['What other projects has Sanjay built?', 'How does Sanjay handle SEO?', 'What is real-time analytics?'];
+        interactionAnalytics.categories['project'] = (interactionAnalytics.categories['project'] || 0) + 1;
+      } else if (lowerMessage.includes('how does connectnow work')) {
+        aiResponse = 'ConnectNow is a video chat platform Sanjay built using WebRTC and Socket.io, optimized for low latency. He reduced call drop rates by 35% with custom signaling, STUN/TURN servers, and ICE candidate caching for reliable connections.';
+        projectDetails = { name: 'ConnectNow', metrics: '35% fewer call drops', tech: 'WebRTC, Socket.io, STUN/TURN' };
+        quickReplies = ['What challenges did Sanjay face in ConnectNow?', 'What is WebRTC?', 'What other projects use real-time tech?'];
+        interactionAnalytics.categories['project'] = (interactionAnalytics.categories['project'] || 0) + 1;
+      } else if (lowerMessage.includes('what is eventease')) {
+        aiResponse = 'EventEase is an event management SaaS app Sanjay developed with dynamic content delivery and Google Calendar integration. It uses lazy-loading and WebP for 25% faster load times, prioritizing user experience and performance.';
+        projectDetails = { name: 'EventEase', metrics: '25% faster load times', tech: 'React, Google Calendar API, WebP' };
+        quickReplies = ['How did Sanjay integrate Google Calendar?', 'What other projects has Sanjay built?', 'How does lazy-loading work?'];
+        interactionAnalytics.categories['project'] = (interactionAnalytics.categories['project'] || 0) + 1;
+      } else if (lowerMessage.includes('frontend skills')) {
+        aiResponse = 'Sanjay is proficient in React, Next.js, TypeScript, and Tailwind CSS, building responsive, accessible UIs with performance optimizations like lazy loading and code splitting. Example: `const LazyComponent = React.lazy(() => import("./Component"));`';
+        quickReplies = ['What backend skills does Sanjay have?', 'What is code splitting?', 'How does Sanjay ensure accessibility?'];
+        interactionAnalytics.categories['skills'] = (interactionAnalytics.categories['skills'] || 0) + 1;
+      } else if (lowerMessage.includes('backend skills')) {
+        aiResponse = 'Sanjay excels in Node.js, Express, MongoDB, and serverless architectures (AWS Lambda, API Gateway, DynamoDB), designing scalable REST and GraphQL APIs. Example: `app.get("/api", (req, res) => res.json({ data: "Hello" }));`';
+        quickReplies = ['What frontend skills does Sanjay have?', 'What is serverless architecture?', 'How does Sanjay secure APIs?'];
+        interactionAnalytics.categories['skills'] = (interactionAnalytics.categories['skills'] || 0) + 1;
+      } else if (lowerMessage.includes('cloud computing skills')) {
+        aiResponse = 'Sanjay is AWS Certified, specializing in serverless technologies (Lambda, Step Functions, SQS), infrastructure as code (CloudFormation, CDK), and CI/CD with GitHub Actions.';
+        quickReplies = ['What is AWS Lambda?', 'How does Sanjay use CI/CD?', 'What other cloud platforms does Sanjay know?'];
+        interactionAnalytics.categories['skills'] = (interactionAnalytics.categories['skills'] || 0) + 1;
+      } else if (lowerMessage.includes('optimize saas apps for seo')) {
+        aiResponse = 'Sanjay uses JSON-LD schemas, SSR with React Helmet, structured data, and mobile-first optimization, achieving 40% faster page loads and top rankings, as seen in EduXcel’s 500K+ impressions. Example: `<script type="application/ld+json">{ "@context": "https://schema.org" }</script>`';
+        quickReplies = ['What is SSR?', 'How does Sanjay improve load times?', 'What are JSON-LD schemas?'];
+        interactionAnalytics.categories['seo'] = (interactionAnalytics.categories['seo'] || 0) + 1;
+      } else if (lowerMessage.includes('sanjay’s key achievements')) {
+        aiResponse = 'Sanjay delivered 12+ applications, improved load times by up to 70%, achieved 500K+ impressions on EduXcel, reduced Zedemy costs by 40%, and earned recognition from Amazon and Microsoft.';
+        quickReplies = ['How did Sanjay reduce load times?', 'What is EduXcel?', 'Who recognized Sanjay?'];
+        interactionAnalytics.categories['achievements'] = (interactionAnalytics.categories['achievements'] || 0) + 1;
+      } else if (lowerMessage.includes('impacted page load times')) {
+        aiResponse = 'Sanjay reduced LIC Neemuch load times by 70% using SSR, AWS Lambda, and CloudFront caching, achieving a 100/100 PageSpeed score. He also improved EventEase load times by 25% with lazy-loading.';
+        quickReplies = ['What is CloudFront?', 'How does lazy-loading work?', 'What other optimizations has Sanjay done?'];
+        interactionAnalytics.categories['achievements'] = (interactionAnalytics.categories['achievements'] || 0) + 1;
+      } else if (lowerMessage.includes('contact sanjay for collaboration')) {
+        aiResponse = 'You can reach Sanjay at [sanjay.awsindia@gmail.com](mailto:sanjay.awsindia@gmail.com) or via [LinkedIn](https://linkedin.com/in/sanjay-patidar) for collaboration opportunities.';
+        quickReplies = ['What projects can I collaborate on?', 'What is Sanjay’s LinkedIn?', 'How does Sanjay handle collaborations?'];
+        interactionAnalytics.categories['contact'] = (interactionAnalytics.categories['contact'] || 0) + 1;
+      } else if (lowerMessage.includes('tight deadline')) {
+        aiResponse = 'For LIC Neemuch, Sanjay met a 3-week deadline by using CI/CD with GitHub Actions, breaking the project into milestones, and maintaining daily client feedback, delivering a functional MVP on time.';
+        quickReplies = ['What is CI/CD?', 'How did Sanjay manage milestones?', 'What other tight deadlines has Sanjay met?'];
+        interactionAnalytics.categories['challenges'] = (interactionAnalytics.categories['challenges'] || 0) + 1;
+      } else if (lowerMessage.includes('challenges in connectnow')) {
+        aiResponse = 'Sanjay tackled unreliable network connections in ConnectNow, reducing call drops by 35% with custom WebRTC signaling, STUN/TURN servers, and ICE candidate caching.';
+        quickReplies = ['What is WebRTC?', 'What are STUN/TURN servers?', 'What other challenges has Sanjay faced?'];
+        interactionAnalytics.categories['challenges'] = (interactionAnalytics.categories['challenges'] || 0) + 1;
+      } else if (lowerMessage.includes('academic setbacks')) {
+        aiResponse = 'Sanjay was detained in 8 subjects due to client work but presented project evidence (code, metrics, testimonials) to the Vice Chancellor, securing exam permissions and passing all subjects.';
+        quickReplies = ['What projects did Sanjay present?', 'How did Sanjay balance work and studies?', 'What other challenges has Sanjay overcome?'];
+        interactionAnalytics.categories['challenges'] = (interactionAnalytics.categories['challenges'] || 0) + 1;
+      } else if (lowerMessage.includes('learning new technologies')) {
+        aiResponse = 'Sanjay self-learns by building POCs, like mastering Google Calendar API for EventEase in a weekend and prototyping WebRTC signaling for ConnectNow, treating unknowns as research sprints.';
+        quickReplies = ['What is a POC?', 'How did Sanjay learn WebRTC?', 'What other technologies has Sanjay learned?'];
+        interactionAnalytics.categories['learning'] = (interactionAnalytics.categories['learning'] || 0) + 1;
+      } else if (lowerMessage.includes('handle team conflicts')) {
+        aiResponse = 'In EventEase, Sanjay resolved a design vs. performance dispute by A/B testing lazy-loaded images against full images, proving 25% faster loads and convincing the team with data.';
+        quickReplies = ['What is A/B testing?', 'How does Sanjay handle teamwork?', 'What other conflicts has Sanjay resolved?'];
+        interactionAnalytics.categories['challenges'] = (interactionAnalytics.categories['challenges'] || 0) + 1;
+      } else if (lowerMessage.includes('experience with ci/cd')) {
+        aiResponse = 'Sanjay used GitHub Actions for Zedemy and EventEase, automating builds, tests, and deployments to Vercel/S3, adding Slack notifications for build status to ensure reliable production.';
+        quickReplies = ['What is GitHub Actions?', 'How does Sanjay automate deployments?', 'What other CI/CD tools does Sanjay use?'];
+        interactionAnalytics.categories['skills'] = (interactionAnalytics.categories['skills'] || 0) + 1;
+      } else if (lowerMessage.includes('ensure app security')) {
+        aiResponse = 'Sanjay secures apps with HTTPS, JWT with expiry, input sanitization, and rate limiting. In Zedemy, he used role-based scopes for Lambda endpoints to protect user data.';
+        quickReplies = ['What is JWT?', 'How does Sanjay handle rate limiting?', 'What other security measures does Sanjay use?'];
+        interactionAnalytics.categories['skills'] = (interactionAnalytics.categories['skills'] || 0) + 1;
+      } else {
+        try {
+          const fullPrompt = `You are an AI assistant for Sanjay Patidar's portfolio. Use the following context to answer questions about Sanjay's work, skills, or projects. For general questions outside this context, provide accurate, professional, and concise answers based on general knowledge or web information, ensuring relevance to the user's query. Context: ${context}\n\nUser question: ${editedMessageText}\n\nProvide a clear, well-educated response.`;
+          const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+          });
+          if (!response.ok) throw new Error('API request failed');
+          const data = await response.json();
+          aiResponse = data.candidates[0].content.parts[0].text;
+          quickReplies = ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
+          if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
+            const searchResults = await performWebSearch(editedMessageText);
+            aiResponse = searchResults || 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!';
+          }
+        } catch (error) {
+          console.warn('API error: ' + error.message);
+          const searchResults = await performWebSearch(editedMessageText);
+          aiResponse = searchResults || 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!';
+          quickReplies = ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
+        }
+        interactionAnalytics.categories['general'] = (interactionAnalytics.categories['general'] || 0) + 1;
+      }
+      const messageId = Date.now();
+      window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
+      await typeMessage(aiResponse, messageId, projectDetails, quickReplies);
+
+      if (isAutoReplyEnabled) {
+        setTimeout(function() {
+          const followUpId = Date.now() + 1;
+          window.messages.push({
+            sender: 'ai',
+            text: '',
+            id: followUpId,
+            timestamp: new Date().toISOString(),
+            category: 'follow-up',
+            reactions: [],
+            isPinned: false
+          });
+          typeMessage('Do you have any more questions about Sanjay’s work or projects?', followUpId, null, ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']);
+        }, 2000);
+      }
+
+      isLoading = false;
       renderMessages();
     } else {
       editingMessageId = null;
