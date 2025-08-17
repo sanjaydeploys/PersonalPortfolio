@@ -4,12 +4,41 @@
       sender: 'ai',
       text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
       id: 'welcome',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toISOString(),
       category: 'welcome',
       reactions: [],
       isPinned: false
     }
   ];
+
+  // Validate and clean local storage if corrupted
+  try {
+    if (!Array.isArray(window.messages)) {
+      window.messages = [{
+        sender: 'ai',
+        text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+        id: 'welcome',
+        timestamp: new Date().toISOString(),
+        category: 'welcome',
+        reactions: [],
+        isPinned: false
+      }];
+      localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
+    }
+  } catch (e) {
+    console.warn('Invalid local storage data, resetting:', e);
+    window.messages = [{
+      sender: 'ai',
+      text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+      id: 'welcome',
+      timestamp: new Date().toISOString(),
+      category: 'welcome',
+      reactions: [],
+      isPinned: false
+    }];
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
+  }
+
   let isLoading = false;
   let isDarkMode = false;
   let isHistoryCollapsed = false;
@@ -86,21 +115,30 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function renderMessages() {
     const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
     chatMessages.innerHTML = '';
     const filteredMessages = searchQuery
       ? window.messages.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase()))
       : selectedCategory
       ? window.messages.filter(m => m.category === selectedCategory)
       : window.messages;
-    filteredMessages.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || parseInt(b.id) - parseInt(a.id));
+
+    // Sort messages: pinned first, then by timestamp (newest first)
+    filteredMessages.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    });
+
     filteredMessages.forEach(function(message) {
+      if (!message.reactions) message.reactions = []; // Ensure reactions array exists
       const messageDiv = document.createElement('div');
       messageDiv.className = `chat-message ${message.sender === 'user' ? 'user-message' : 'ai-message'}${message.category === 'project' ? ' project-card' : ''}${message.isPinned ? ' pinned-message' : ''}`;
       messageDiv.dataset.messageId = message.id;
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
       let formattedText = formatMarkdown(message.text);
-      if (message.category === 'project') {
+      if (message.category === 'project' && message.projectDetails) {
         formattedText = renderProjectCard(message.text, message.projectDetails);
       }
       if (editingMessageId === message.id) {
@@ -113,21 +151,19 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       } else {
         messageContent.innerHTML = formattedText;
         if (showTimestamps) {
-          messageContent.innerHTML += '<span class="message-timestamp">' + message.timestamp + '</span>';
+          messageContent.innerHTML += '<span class="message-timestamp">' + new Date(message.timestamp).toLocaleTimeString() + '</span>';
         }
         if (message.reactions.length > 0) {
           messageContent.innerHTML += '<div class="reactions flex gap-1 mt-2">' + message.reactions.map(r => `<span>${r}</span>`).join('') + '</div>';
         }
       }
-      if (message.sender === 'ai' && typeof window.speakMessage === 'function') {
-        let speakBtn = messageDiv.querySelector('.speak-btn');
-        if (!speakBtn) {
-          speakBtn = document.createElement('button');
-          speakBtn.className = 'speak-btn bg-blue-500 text-white px-2 py-1 rounded mt-2';
-          speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
-          speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
-          messageDiv.appendChild(speakBtn);
-        }
+      // Only add speak button for AI messages with valid text
+      if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
+        let speakBtn = document.createElement('button');
+        speakBtn.className = 'speak-btn bg-blue-500 text-white px-2 py-1 rounded mt-2';
+        speakBtn.textContent = message.isSpeaking ? '⏸ Pause' : '🔊 Play';
+        speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
+        messageDiv.appendChild(speakBtn);
       }
       const messageActions = document.createElement('div');
       messageActions.className = 'message-actions flex gap-2 mt-2';
@@ -148,7 +184,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       copyBtn.addEventListener('click', function() { copyMessage(message.text); });
       const pinBtn = document.createElement('button');
       pinBtn.className = 'pin-btn bg-yellow-500 text-white px-2 py-1 rounded';
-      pinBtn.textContent = message.isPinned ? 'Unpin' : 'Pin';
+      pinBtn.textContent = message.isPinned ? '📌 Unpin' : '📌 Pin';
       pinBtn.addEventListener('click', function() { togglePinMessage(message.id); });
       const reactionBtn = document.createElement('button');
       reactionBtn.className = 'reaction-btn bg-purple-500 text-white px-2 py-1 rounded';
@@ -200,7 +236,9 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function scrollToBottom() {
     const chatMessages = document.getElementById('chat-messages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
   }
 
   function updateTimestamps() {
@@ -208,15 +246,19 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     timestamps.forEach(function(timestamp) {
       const messageId = timestamp.parentElement.parentElement.dataset.messageId;
       const message = window.messages.find(function(message) { return message.id === messageId; });
-      if (message) timestamp.textContent = message.timestamp;
+      if (message) timestamp.textContent = new Date(message.timestamp).toLocaleTimeString();
     });
   }
 
   function updateButtonStates() {
-    document.querySelector('.clear-btn').disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
-    document.querySelector('.export-btn').disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
-    document.querySelector('.pdf-export-btn').disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
-    document.querySelector('.chat-input-area button:not(.voice-btn)').disabled = isLoading;
+    const clearBtn = document.querySelector('.clear-btn');
+    const exportBtn = document.querySelector('.export-btn');
+    const pdfExportBtn = document.querySelector('.pdf-export-btn');
+    if (clearBtn) clearBtn.disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
+    if (exportBtn) exportBtn.disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
+    if (pdfExportBtn) pdfExportBtn.disabled = window.messages.length === 1 && window.messages[0].id === 'welcome';
+    const sendBtn = document.querySelector('.chat-input-area button:not(.voice-btn)');
+    if (sendBtn) sendBtn.disabled = isLoading;
     document.querySelectorAll('.suggestion-btn').forEach(function(btn) { btn.disabled = isLoading; });
     const voiceBtn = document.querySelector('.voice-btn');
     if (voiceBtn) voiceBtn.disabled = isLoading || !recognition;
@@ -227,7 +269,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     if (!message) return;
     message.text = '';
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function') {
       window.speakMessage(messageId, text);
     }
     for (const sentence of sentences) {
@@ -250,7 +292,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     isLoading = true;
     interactionAnalytics.questionsAsked++;
     const category = categorizeMessage(message);
-    window.messages.push({ sender: 'user', text: message, id: Date.now(), timestamp: new Date().toLocaleTimeString(), category, reactions: [], isPinned: false });
+    window.messages.push({ sender: 'user', text: message, id: Date.now(), timestamp: new Date().toISOString(), category, reactions: [], isPinned: false });
     input.value = '';
     renderMessages();
 
@@ -368,7 +410,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     }
 
     const messageId = Date.now();
-    window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toLocaleTimeString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
+    window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
     await typeMessage(aiResponse, messageId, projectDetails, quickReplies);
 
     if (isAutoReplyEnabled) {
@@ -378,7 +420,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
           sender: 'ai',
           text: '',
           id: followUpId,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: new Date().toISOString(),
           category: 'follow-up',
           reactions: [],
           isPinned: false
@@ -435,10 +477,12 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function handleInputChange(value) {
     const suggestionsContainer = document.getElementById('chat-suggestions');
-    filteredSuggestions = value.trim() ? suggestedPrompts.filter(function(prompt) { return prompt.toLowerCase().includes(value.toLowerCase()); }) : suggestedPrompts;
-    suggestionsContainer.innerHTML = filteredSuggestions.map(function(prompt) {
-      return '<button class="suggestion-btn bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded" onclick="handlePromptClick(\'' + prompt.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">' + prompt + '</button>';
-    }).join('');
+    if (suggestionsContainer) {
+      filteredSuggestions = value.trim() ? suggestedPrompts.filter(function(prompt) { return prompt.toLowerCase().includes(value.toLowerCase()); }) : suggestedPrompts;
+      suggestionsContainer.innerHTML = filteredSuggestions.map(function(prompt) {
+        return '<button class="suggestion-btn bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded" onclick="handlePromptClick(\'' + prompt.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">' + prompt + '</button>';
+      }).join('');
+    }
     updateButtonStates();
   }
 
@@ -493,7 +537,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
   function saveEditedMessage(id) {
     if (window.editedText.trim()) {
       window.messages = window.messages.map(function(message) {
-        return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toLocaleTimeString(), category: categorizeMessage(window.editedText) } : message;
+        return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toISOString(), category: categorizeMessage(window.editedText) } : message;
       });
       editingMessageId = null;
       window.editedText = '';
@@ -518,7 +562,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function copyMessage(text) {
     navigator.clipboard.writeText(text);
-    window.messages.push({ sender: 'ai', text: 'Message copied to clipboard!', id: Date.now(), timestamp: new Date().toLocaleTimeString(), category: 'general', reactions: [], isPinned: false });
+    window.messages.push({ sender: 'ai', text: 'Message copied to clipboard!', id: Date.now(), timestamp: new Date().toISOString(), category: 'general', reactions: [], isPinned: false });
     renderMessages();
   }
 
@@ -536,12 +580,12 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       sender: 'ai',
       text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?" or Zedemy LMS.',
       id: 'welcome',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toISOString(),
       category: 'welcome',
       reactions: [],
       isPinned: false
     }];
-    localStorage.removeItem('portfolio-chat');
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
     renderMessages();
   }
@@ -551,7 +595,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     const language = document.querySelector('.lang-btn.active')?.dataset.lang || 'en';
     const settings = `Volume: ${window.getSpeechVolume ? window.getSpeechVolume() : 1}, Rate: ${window.getSpeechRate ? window.getSpeechRate() : 1}`;
     const chatText = `# Sanjay Patidar's Portfolio Chat\n\n**Date:** ${chatDate}\n**Language:** ${language === 'en' ? 'English' : 'Hindi'}\n**Settings:** ${settings}\n\n## Messages\n\n${window.messages.map(function(message) {
-      return `### ${message.sender === 'user' ? 'You' : 'Chatbot'} (${message.timestamp}, ${message.category}${message.isPinned ? ', Pinned' : ''})\n${message.text}\n${message.reactions.length > 0 ? `- **Reactions:** ${message.reactions.join(' ')}\n` : ''}${message.projectDetails ? `\n**Project Details:**\n- Name: ${message.projectDetails.name}\n- Metrics: ${message.projectDetails.metrics}\n- Tech: ${message.projectDetails.tech}\n${message.projectDetails.link ? `- Link: [${message.projectDetails.link}](${message.projectDetails.link})` : ''}\n` : ''}${message.quickReplies ? `- **Quick Replies:** ${message.quickReplies.join(', ')}\n` : ''}`;
+      return `### ${message.sender === 'user' ? 'You' : 'Chatbot'} (${new Date(message.timestamp).toLocaleTimeString()}, ${message.category}${message.isPinned ? ', Pinned' : ''})\n${message.text}\n${message.reactions.length > 0 ? `- **Reactions:** ${message.reactions.join(' ')}\n` : ''}${message.projectDetails ? `\n**Project Details:**\n- Name: ${message.projectDetails.name}\n- Metrics: ${message.projectDetails.metrics}\n- Tech: ${message.projectDetails.tech}\n${message.projectDetails.link ? `- Link: [${message.projectDetails.link}](${message.projectDetails.link})` : ''}\n` : ''}${message.quickReplies ? `- **Quick Replies:** ${message.quickReplies.join(', ')}\n` : ''}`;
     }).join('\n\n')}\n\n## Analytics\n- Questions Asked: ${interactionAnalytics.questionsAsked}\n- Speech Used: ${interactionAnalytics.speechUsed}\n- Reactions Used: ${interactionAnalytics.reactionsUsed}\n- Categories: ${Object.entries(interactionAnalytics.categories).map(([cat, count]) => `${cat}: ${count}`).join(', ')}`;
     const blob = new Blob([chatText], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -560,7 +604,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     a.download = `portfolio-chat-${chatDate}.md`;
     a.click();
     URL.revokeObjectURL(url);
-    window.messages.push({ sender: 'ai', text: 'Chat exported as Markdown!', id: Date.now(), timestamp: new Date().toLocaleTimeString(), category: 'general', reactions: [], isPinned: false });
+    window.messages.push({ sender: 'ai', text: 'Chat exported as Markdown!', id: Date.now(), timestamp: new Date().toISOString(), category: 'general', reactions: [], isPinned: false });
     renderMessages();
   }
 
@@ -590,7 +634,7 @@ ${language === 'hi' ? '\\setotherlanguage{hindi}\n\\newfontfamily\\hindifont{Not
 \\end{itemize}
 \\section*{Messages}
 ${window.messages.map(message => `
-\\subsection*{${message.sender === 'user' ? 'You' : 'Chatbot'} (${message.timestamp}, ${message.category}${message.isPinned ? ', Pinned' : ''})}
+\\subsection*{${message.sender === 'user' ? 'You' : 'Chatbot'} (${new Date(message.timestamp).toLocaleTimeString()}, ${message.category}${message.isPinned ? ', Pinned' : ''})}
 ${language === 'hi' && message.sender === 'ai' ? '\\begin{hindi}' : ''}
 ${message.text.replace(/&/g, '\\&').replace(/#/g, '\\#').replace(/%/g, '\\%').replace(/\$/g, '\\$')}
 ${language === 'hi' && message.sender === 'ai' ? '\\end{hindi}' : ''}
@@ -622,7 +666,7 @@ ${message.quickReplies ? `\\par\\textbf{Quick Replies}: ${message.quickReplies.j
     a.download = `portfolio-chat-${chatDate}.tex`;
     a.click();
     URL.revokeObjectURL(url);
-    window.messages.push({ sender: 'ai', text: 'Chat exported as LaTeX for PDF!', id: Date.now(), timestamp: new Date().toLocaleTimeString(), category: 'general', reactions: [], isPinned: false });
+    window.messages.push({ sender: 'ai', text: 'Chat exported as LaTeX for PDF!', id: Date.now(), timestamp: new Date().toISOString(), category: 'general', reactions: [], isPinned: false });
     renderMessages();
   }
 
@@ -675,7 +719,7 @@ ${message.quickReplies ? `\\par\\textbf{Quick Replies}: ${message.quickReplies.j
         sender: 'ai',
         text: 'Speech recognition is not supported in this browser.',
         id: Date.now(),
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toISOString(),
         category: 'general',
         reactions: [],
         isPinned: false
@@ -709,7 +753,7 @@ ${message.quickReplies ? `\\par\\textbf{Quick Replies}: ${message.quickReplies.j
           sender: 'ai',
           text: 'Speech recognition error: ' + event.error,
           id: Date.now(),
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: new Date().toISOString(),
           category: 'general',
           reactions: [],
           isPinned: false
