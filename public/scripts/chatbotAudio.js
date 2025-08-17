@@ -34,13 +34,18 @@
           sender: 'ai',
           text: 'Speech synthesis is not supported in this browser.',
           id: Date.now(),
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: new Date().toISOString(),
           category: 'general',
           reactions: [],
           isPinned: false
         });
         window.renderMessages?.();
       }
+      return;
+    }
+
+    if (!text || text.trim() === '') {
+      console.warn('No valid text to speak.');
       return;
     }
 
@@ -106,7 +111,7 @@
       utterance.volume = volume;
       utterance.rate = rate;
       utterance.pitch = 1;
-      utterance.text = state.sentences[state.currentChunk].trim().slice(state.charIndex) || 'No text available.';
+      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
       utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
 
       try {
@@ -145,7 +150,7 @@
                 sender: 'ai',
                 text: 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
                 id: Date.now(),
-                timestamp: new Date().toLocaleTimeString(),
+                timestamp: new Date().toISOString(),
                 category: 'general',
                 reactions: [],
                 isPinned: false
@@ -181,7 +186,7 @@
               sender: 'ai',
               text: 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
               id: Date.now(),
-              timestamp: new Date().toLocaleTimeString(),
+              timestamp: new Date().toISOString(),
               category: 'general',
               reactions: [],
               isPinned: false
@@ -207,7 +212,7 @@
             sender: 'ai',
             text: 'Failed to load voices: ' + error.message,
             id: Date.now(),
-            timestamp: new Date().toLocaleTimeString(),
+            timestamp: new Date().toISOString(),
             category: 'general',
             reactions: [],
             isPinned: false
