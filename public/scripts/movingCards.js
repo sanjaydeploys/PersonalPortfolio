@@ -3,9 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   tracks.forEach((track) => {
     const cards = Array.from(track.children);
-    const totalWidth = cards.reduce((acc, card) => acc + card.offsetWidth + 32, 0); // 32px gap approx
     let scrollX = 0;
-    let speed = 1.2; // 🔥 faster than before
+    let speed = window.innerWidth < 768 ? 0.8 : 1.5; // mobile slower
     let isPaused = false;
 
     // Duplicate cards for seamless loop
@@ -14,24 +13,37 @@ document.addEventListener("DOMContentLoaded", () => {
       track.appendChild(clone);
     });
 
+    // Store freeze state per card
+    const frozenCards = new WeakSet();
+
     const animate = () => {
       if (!isPaused) {
         scrollX -= speed;
+        const totalWidth = cards.reduce((acc, c) => acc + c.offsetWidth + 32, 0);
         if (Math.abs(scrollX) >= totalWidth) {
-          scrollX = 0; // reset like circular linked list
+          scrollX = 0;
         }
-        track.style.transform = `translateX(${scrollX}px)`;
+
+        // Apply transform individually → hovered (frozen) card stays
+        Array.from(track.children).forEach((card, idx) => {
+          if (!frozenCards.has(card)) {
+            card.style.transform = `translateX(${scrollX}px)`;
+          }
+        });
       }
       requestAnimationFrame(animate);
     };
     animate();
 
-    // Pause on hover (either on track or a card)
-    track.addEventListener("mouseenter", () => { isPaused = true; });
-    track.addEventListener("mouseleave", () => { isPaused = false; });
-    track.querySelectorAll(".moving-card").forEach(card => {
-      card.addEventListener("mouseenter", () => { isPaused = true; });
-      card.addEventListener("mouseleave", () => { isPaused = false; });
+    // Hover logic → freeze only hovered card
+    track.querySelectorAll(".moving-card").forEach((card) => {
+      card.addEventListener("mouseenter", () => {
+        frozenCards.add(card);
+        card.style.transform = "translateX(0)"; // lock in place
+      });
+      card.addEventListener("mouseleave", () => {
+        frozenCards.delete(card);
+      });
     });
   });
 });
