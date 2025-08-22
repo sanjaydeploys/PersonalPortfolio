@@ -195,10 +195,10 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     filteredMessages.forEach(function(message) {
       if (!message.reactions) message.reactions = [];
       const messageDiv = document.createElement('div');
-      messageDiv.className = `flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`;
+      messageDiv.className = `message-container flex mb-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`;
       messageDiv.dataset.messageId = message.id;
       const bubbleDiv = document.createElement('div');
-      bubbleDiv.className = `relative max-w-[70%] p-3 rounded-lg ${message.sender === 'user' ? 'bg-[#DCF8C6] text-black rounded-br-none' : 'bg-white text-black rounded-bl-none'} ${message.isPinned ? 'border-2 border-yellow-500' : ''}`;
+      bubbleDiv.className = `relative max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'user-message bg-[#DCF8C6] dark:bg-[#2A3942] text-black dark:text-[#E6E6FA] rounded-br-none' : 'ai-message bg-white dark:bg-[#2A3942] text-black dark:text-[#E6E6FA] rounded-bl-none'} ${message.isPinned ? 'border-2 border-yellow-500' : ''}`;
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
       let formattedText = formatMarkdown(message.text);
@@ -208,52 +208,52 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       if (editingMessageId === message.id) {
         messageContent.innerHTML =
           '<div class="edit-message flex items-center gap-2">' +
-            '<input type="text" class="flex-1 p-2 border rounded-lg bg-white text-black" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="window.editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
-            '<button class="bg-green-500 text-white p-1 rounded-full" onclick="saveEditedMessage(\'' + message.id + '\')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>' +
-            '<button class="bg-red-500 text-white p-1 rounded-full" onclick="cancelEdit()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>' +
+            '<input type="text" class="edit-message-input flex-1 p-2 border rounded-lg bg-[#F5F5F5] dark:bg-[#2A3942] text-black dark:text-[#E6E6FA]" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="window.editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
+            '<button class="edit-message-button bg-[#128C7E] text-white p-2 rounded-lg" onclick="saveEditedMessage(\'' + message.id + '\')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>' +
+            '<button class="cancel-btn bg-[#FF4D4F] text-white p-2 rounded-lg" onclick="cancelEdit()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>' +
           '</div>';
       } else {
         messageContent.innerHTML = formattedText;
         if (showTimestamps) {
           const timeSpan = document.createElement('span');
-          timeSpan.className = 'message-timestamp text-xs text-gray-500 ml-2';
+          timeSpan.className = 'message-timestamp text-xs text-[#999] dark:text-[#8696A0] mt-1 text-right';
           timeSpan.textContent = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           messageContent.appendChild(timeSpan);
         }
         if (message.reactions.length > 0) {
-          messageContent.innerHTML += '<div class="reactions flex gap-1 mt-1">' + message.reactions.map(r => `<span class="text-sm">${r}</span>`).join('') + '</div>';
+          messageContent.innerHTML += '<div class="message-reactions flex flex-wrap gap-1 mt-1">' + message.reactions.map(r => `<span class="reaction-tag bg-[#F5F5F5] dark:bg-[#2A3942] rounded-full px-2 py-1 text-sm">${r}</span>`).join('') + '</div>';
         }
       }
       if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
         let speakBtn = document.createElement('button');
-        speakBtn.className = 'speak-btn absolute -top-2 -right-2 bg-[#25D366] text-white p-1 rounded-full';
+        speakBtn.className = 'speak-btn absolute -top-2 -right-2 bg-[#25D366] dark:bg-[#2A3942] text-white p-1 rounded-full';
         speakBtn.innerHTML = message.isSpeaking ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14"></path></svg>';
         speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
         bubbleDiv.appendChild(speakBtn);
       }
       const messageActions = document.createElement('div');
-      messageActions.className = 'message-actions absolute -top-2 -right-2 flex gap-1';
+      messageActions.className = 'message-actions flex justify-end gap-2 mt-2';
       if (message.sender === 'user') {
         const editBtn = document.createElement('button');
-        editBtn.className = 'edit-btn text-gray-500 p-1 rounded-full bg-white';
+        editBtn.className = 'action-btn bg-[rgba(0,0,0,0.1)] dark:bg-[#2A3942] p-2 rounded-full';
         editBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>';
         editBtn.addEventListener('click', function() { startEditing(message.id, message.text); });
         messageActions.appendChild(editBtn);
       }
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-btn text-red-500 p-1 rounded-full bg-white';
+      deleteBtn.className = 'action-btn bg-[rgba(0,0,0,0.1)] dark:bg-[#2A3942] p-2 rounded-full';
       deleteBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4"></path></svg>';
       deleteBtn.addEventListener('click', function() { deleteMessage(message.id); });
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'copy-btn text-gray-500 p-1 rounded-full bg-white';
+      copyBtn.className = 'action-btn bg-[rgba(0,0,0,0.1)] dark:bg-[#2A3942] p-2 rounded-full';
       copyBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>';
       copyBtn.addEventListener('click', function() { copyMessage(message.text); });
       const pinBtn = document.createElement('button');
-      pinBtn.className = 'pin-btn text-yellow-500 p-1 rounded-full bg-white';
+      pinBtn.className = 'action-btn bg-[rgba(0,0,0,0.1)] dark:bg-[#2A3942] p-2 rounded-full';
       pinBtn.innerHTML = message.isPinned ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v7m-7 7h7m-7-7h14"></path></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>';
       pinBtn.addEventListener('click', function() { togglePinMessage(message.id); });
       const reactionBtn = document.createElement('button');
-      reactionBtn.className = 'reaction-btn text-purple-500 p-1 rounded-full bg-white';
+      reactionBtn.className = 'action-btn bg-[rgba(0,0,0,0.1)] dark:bg-[#2A3942] p-2 rounded-full';
       reactionBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
       reactionBtn.addEventListener('click', function() { showReactionPicker(message.id, bubbleDiv); });
       messageActions.appendChild(deleteBtn);
@@ -267,8 +267,8 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     });
     if (isLoading) {
       const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'flex justify-start mb-4';
-      loadingDiv.innerHTML = '<div class="bg-white p-3 rounded-lg rounded-bl-none max-w-[70%] flex items-center"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+      loadingDiv.className = 'flex justify-start mb-2';
+      loadingDiv.innerHTML = '<div class="ai-message bg-white dark:bg-[#2A3942] p-3 rounded-lg rounded-bl-none max-w-[80%] flex items-center"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
       chatMessages.appendChild(loadingDiv);
     }
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -281,7 +281,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 p-1 rounded">$1</code>')
+      .replace(/`(.*?)`/g, '<code class="bg-gray-100 dark:bg-[#2A3942] p-1 rounded">$1</code>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-blue-500 underline">$1</a>')
       .replace(/^- (.*)$/gm, '<li>$1</li>')
       .replace(/(\n<li>.*<\/li>)+/g, '<ul class="list-disc pl-5">$&</ul>')
@@ -291,7 +291,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
   function renderProjectCard(text, details = {}) {
     if (!details) return formatMarkdown(text);
     return `
-      <div class="project-card-content p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+      <div class="project-card-content p-3 bg-blue-50 dark:bg-[#2A3942] rounded-lg">
         <h4 class="text-base font-bold">${details.name || 'Project'}</h4>
         <p>${formatMarkdown(text)}</p>
         ${details.metrics ? `<p><strong>Metrics:</strong> ${details.metrics}</p>` : ''}
@@ -451,7 +451,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     if (suggestionsContainer) {
       filteredSuggestions = value.trim() ? suggestedPrompts[currentLang].filter(function(prompt) { return prompt.toLowerCase().includes(value.toLowerCase()); }) : suggestedPrompts[currentLang];
       suggestionsContainer.innerHTML = filteredSuggestions.map(function(prompt) {
-        return '<button class="suggestion-btn bg-gray-200 dark:bg-gray-600 p-2 rounded-lg text-sm" onclick="handlePromptClick(\'' + prompt.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">' + prompt + '</button>';
+        return '<button class="suggestion-btn bg-[#128C7E] dark:bg-[#2A3942] text-white dark:text-[#E6E6FA] p-2 rounded-lg text-sm min-w-[120px]" onclick="handlePromptClick(\'' + prompt.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">' + prompt + '</button>';
       }).join('');
     }
     updateButtonStates();
@@ -464,11 +464,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       return;
     }
     const picker = document.createElement('div');
-    picker.className = 'reaction-picker absolute bg-white dark:bg-gray-700 border rounded-lg p-2 flex gap-2 z-10';
+    picker.className = 'reaction-picker absolute bg-white dark:bg-[#2A3942] border rounded-lg p-2 flex gap-2 z-10';
     emojiOptions.forEach(emoji => {
       const btn = document.createElement('button');
       btn.textContent = emoji;
-      btn.className = 'text-lg';
+      btn.className = 'reaction-picker-item text-lg';
       btn.addEventListener('click', function() { addReaction(messageId, emoji); picker.remove(); });
       picker.appendChild(btn);
     });
@@ -592,11 +592,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function confirmClearChat() {
     const popup = document.createElement('div');
-    popup.className = 'confirm-popup absolute bg-white dark:bg-gray-700 border rounded-lg p-4 z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
-    popup.innerHTML = '<p class="text-center mb-2">Are you sure you want to clear the chat?</p>' +
+    popup.className = 'confirm-popup absolute bg-white dark:bg-[#2A3942] border rounded-lg p-4 z-20 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
+    popup.innerHTML = '<p class="text-center mb-2 text-black dark:text-[#E6E6FA]">' + (currentLang === 'hi' ? 'क्या आप चैट को साफ करना चाहते हैं?' : 'Are you sure you want to clear the chat?') + '</p>' +
       '<div class="flex justify-center gap-2">' +
-        '<button onclick="clearChat(); this.parentElement.parentElement.remove();" class="bg-red-500 text-white px-4 py-1 rounded-lg">Confirm</button>' +
-        '<button onclick="this.parentElement.parentElement.remove();" class="bg-gray-500 text-white px-4 py-1 rounded-lg">Cancel</button>' +
+        '<button onclick="clearChat(); this.parentElement.parentElement.remove();" class="bg-[#128C7E] text-white px-4 py-1 rounded-lg">Confirm</button>' +
+        '<button onclick="this.parentElement.parentElement.remove();" class="bg-[#FF4D4F] text-white px-4 py-1 rounded-lg">Cancel</button>' +
       '</div>';
     document.getElementById('chatbot-container').appendChild(popup);
   }
@@ -676,6 +676,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
     isRecording = !isRecording;
     const voiceBtn = document.querySelector('.voice-btn');
+    voiceBtn.className = `voice-btn p-2 rounded-full ${isRecording ? 'bg-[#FF4D4F] dark:bg-[#2A3942]' : 'bg-[#25D366] dark:bg-[#2A3942]'} text-white`;
     voiceBtn.innerHTML = isRecording ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
 
     if (isRecording) {
@@ -688,12 +689,14 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         const input = document.getElementById('chat-input');
         input.value = transcript;
         isRecording = false;
+        voiceBtn.className = 'voice-btn bg-[#25D366] dark:bg-[#2A3942] text-white p-2 rounded-full';
         voiceBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
         sendMessage();
       };
 
       recognition.onerror = function(event) {
         isRecording = false;
+        voiceBtn.className = 'voice-btn bg-[#25D366] dark:bg-[#2A3942] text-white p-2 rounded-full';
         voiceBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
         window.messages.push({
           sender: 'ai',
@@ -709,6 +712,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
       recognition.onend = function() {
         isRecording = false;
+        voiceBtn.className = 'voice-btn bg-[#25D366] dark:bg-[#2A3942] text-white p-2 rounded-full';
         voiceBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
       };
 
@@ -720,7 +724,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function switchLanguage(lang) {
     currentLang = lang;
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('bg-[#25D366]', btn.dataset.lang === lang));
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('control-btn-active', btn.dataset.lang === lang));
     window.messages = window.messages.map(m => {
       if (m.id === 'welcome') {
         m.text = currentLang === 'hi' ? 'नमस्ते! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूं। उनके प्रोजेक्ट्स, स्किल्स, या उपलब्धियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"';
@@ -750,6 +754,9 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     document.getElementById('chatbot-container').appendChild(liveRegion);
     document.querySelectorAll('.lang-btn').forEach(btn => {
       btn.addEventListener('click', () => switchLanguage(btn.dataset.lang));
+    });
+    document.querySelector('.controls-toggle').addEventListener('click', () => {
+      document.getElementById('chat-controls').classList.toggle('show');
     });
   });
 
