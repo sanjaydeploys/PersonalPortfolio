@@ -34,24 +34,33 @@ document.addEventListener("DOMContentLoaded", () => {
         const rect = card.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
-        // Store reference to reattach later
         lockedCard = card;
         originalIndex = index;
 
-        // Detach card and place it fixed in container
+        // Placeholder to keep layout stable
         const placeholder = document.createElement("div");
         placeholder.className = "card-placeholder";
         placeholder.style.width = `${card.offsetWidth}px`;
         placeholder.style.height = `${card.offsetHeight}px`;
         card.parentNode.insertBefore(placeholder, card);
 
+        // Move card to container for locking
         container.appendChild(card);
         card.classList.add("hover-active");
         card.style.position = "absolute";
-        card.style.left = `${rect.left - containerRect.left}px`;
-        card.style.top = `${rect.top - containerRect.top}px`;
 
-        // Scale down other cards
+        // Use transform for smooth positioning
+        const targetX = rect.left - containerRect.left;
+        const targetY = rect.top - containerRect.top;
+        card.style.transform = `translate(${targetX}px, ${targetY}px) scale(1)`;
+
+        // Allow transition after setting initial position
+        requestAnimationFrame(() => {
+          card.style.transition = "transform 0.35s ease, filter 0.3s ease";
+          card.style.transform = `translate(${targetX}px, ${targetY - 10}px) scale(1.05)`;
+        });
+
+        // Dim other cards
         track.querySelectorAll(".moving-card").forEach(c => {
           if (c !== card) c.classList.add("scale-down");
         });
@@ -60,24 +69,35 @@ document.addEventListener("DOMContentLoaded", () => {
       card.addEventListener("mouseleave", () => {
         if (!lockedCard) return;
 
-        // Remove absolute positioning
-        lockedCard.style.position = "";
-        lockedCard.style.left = "";
-        lockedCard.style.top = "";
-
-        // Reattach card back to track
         const placeholder = track.querySelector(".card-placeholder");
-        track.insertBefore(lockedCard, placeholder);
-        placeholder.remove();
+        const placeholderRect = placeholder.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
 
-        // Reset states
-        lockedCard.classList.remove("hover-active");
-        track.querySelectorAll(".moving-card").forEach(c => {
-          c.classList.remove("scale-down");
-        });
+        // Animate back to original slot
+        const backX = placeholderRect.left - containerRect.left;
+        const backY = placeholderRect.top - containerRect.top;
+        lockedCard.style.transform = `translate(${backX}px, ${backY}px) scale(1)`;
 
-        lockedCard = null;
-        originalIndex = null;
+        // After animation ends, put it back in the track
+        lockedCard.addEventListener(
+          "transitionend",
+          () => {
+            lockedCard.style.position = "";
+            lockedCard.style.transform = "";
+            lockedCard.style.transition = "";
+            lockedCard.classList.remove("hover-active");
+            track.insertBefore(lockedCard, placeholder);
+            placeholder.remove();
+
+            track.querySelectorAll(".moving-card").forEach(c => {
+              c.classList.remove("scale-down");
+            });
+
+            lockedCard = null;
+            originalIndex = null;
+          },
+          { once: true }
+        );
       });
     });
   });
