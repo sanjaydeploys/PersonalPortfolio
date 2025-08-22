@@ -1,4 +1,5 @@
 (function() {
+  // Initialize messages from localStorage or set default
   window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
     {
       sender: 'ai',
@@ -11,8 +12,10 @@
     }
   ];
 
+  // Validate and reset messages if corrupted
   try {
     if (!Array.isArray(window.messages)) {
+      console.warn('Invalid localStorage data, resetting messages');
       window.messages = [{
         sender: 'ai',
         text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
@@ -25,7 +28,7 @@
       localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     }
   } catch (e) {
-    console.warn('Invalid local storage data, resetting:', e);
+    console.error('Error parsing localStorage:', e);
     window.messages = [{
       sender: 'ai',
       text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
@@ -41,7 +44,7 @@
   let isLoading = false;
   let isDarkMode = false;
   let isHistoryCollapsed = false;
-  let fontSize = 14;
+  let fontSize = parseInt(localStorage.getItem('chat-font-size')) || 14;
   let editingMessageId = null;
   let editedText = '';
   let isRecording = false;
@@ -101,7 +104,7 @@
   let filteredSuggestions = suggestedPrompts.en;
   const emojiOptions = ['👍', '😄', '🚀', '🔥', '👏'];
   const apiKey = 'AIzaSyDt6yiWJ1_W4QtDf5mxr4wb-c3aH7TT_3I';
-const context = `
+ const context = `
 Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
 ### Projects
@@ -176,13 +179,21 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function renderMessages() {
     const chatMessages = document.getElementById('chat-messages');
-    if (!chatMessages) return;
+    if (!chatMessages) {
+      console.error('Error: #chat-messages element not found');
+      return;
+    }
     chatMessages.innerHTML = '';
     const filteredMessages = searchQuery
       ? window.messages.filter(m => m.text.toLowerCase().includes(searchQuery.toLowerCase()))
       : selectedCategory
       ? window.messages.filter(m => m.category === selectedCategory)
       : window.messages;
+
+    if (filteredMessages.length === 0) {
+      console.warn('No messages to render');
+      chatMessages.innerHTML = '<div class="no-messages">No messages found</div>';
+    }
 
     filteredMessages.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
@@ -199,6 +210,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       bubbleDiv.className = `relative max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'user-message' : 'ai-message'} ${message.isPinned ? 'border-2 border-yellow-500' : ''}`;
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
+      messageContent.style.fontSize = `${fontSize}px`; // Apply font size
       let formattedText = formatMarkdown(message.text);
       if (message.category === 'project' && message.projectDetails) {
         formattedText = renderProjectCard(message.text, message.projectDetails);
@@ -260,18 +272,26 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       messageActions.appendChild(reactionBtn);
       bubbleDiv.appendChild(messageContent);
       bubbleDiv.appendChild(messageActions);
+      messageDiv.appendChild(bubbleDiv); // Ensure bubbleDiv is appended to messageDiv
       chatMessages.appendChild(messageDiv);
     });
+
     if (isLoading) {
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'flex justify-start mb-2';
       loadingDiv.innerHTML = '<div class="ai-message p-3 rounded-lg rounded-bl-none max-w-[80%] flex items-center"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
       chatMessages.appendChild(loadingDiv);
     }
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (e) {
+      console.error('Error scrolling chat messages:', e);
+    }
     updateTimestamps();
     updateButtonStates();
     localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
+    console.log('Messages rendered:', window.messages.length);
   }
 
   function formatMarkdown(text) {
@@ -319,8 +339,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   async function typeMessage(text, messageId, projectDetails = null, quickReplies = []) {
     const message = window.messages.find(m => m.id === messageId);
-    if (!message) return;
-    message.text = text; // Set full text after typing
+    if (!message) {
+      console.error('Message not found for ID:', messageId);
+      return;
+    }
+    message.text = text;
     if (projectDetails) message.projectDetails = projectDetails;
     if (quickReplies.length > 0) message.quickReplies = quickReplies;
     if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function') {
@@ -332,6 +355,10 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   async function sendMessage() {
     const input = document.getElementById('chat-input');
+    if (!input) {
+      console.error('Error: #chat-input element not found');
+      return;
+    }
     const message = input.value.trim();
     if (!message || isLoading) return;
 
@@ -362,7 +389,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
       }
     } catch (error) {
-      console.warn('API error: ' + error.message);
+      console.error('API error:', error.message);
       const searchResults = await performWebSearch(message);
       aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
       quickReplies = currentLang === 'hi' ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?'] : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
@@ -452,7 +479,6 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       suggestionsContainer.innerHTML = filteredSuggestions.map(function(prompt) {
         return '<button class="suggestion-btn">' + prompt + '</button>';
       }).join('');
-      // Attach event listeners to suggestion buttons
       suggestionsContainer.querySelectorAll('.suggestion-btn').forEach((btn, index) => {
         btn.addEventListener('click', () => handlePromptClick(filteredSuggestions[index]));
       });
@@ -553,7 +579,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
           aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
         }
       } catch (error) {
-        console.warn('API error: ' + error.message);
+        console.error('API error:', error.message);
         const searchResults = await performWebSearch(editedMessageText);
         aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
         quickReplies = currentLang === 'hi' ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?'] : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
@@ -629,6 +655,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         ? '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>'
         : '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>';
     }
+    renderMessages(); // Re-render to ensure visibility in new theme
   }
 
   function toggleControls() {
@@ -672,6 +699,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     if (chatMessages) {
       chatMessages.style.display = isHistoryCollapsed ? 'none' : 'block';
     }
+    if (!isHistoryCollapsed) renderMessages(); // Re-render when showing history
   }
 
   function toggleAutoReply() {
@@ -701,10 +729,12 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
   function adjustFontSize(change) {
     fontSize = Math.max(10, Math.min(18, fontSize + change));
-    const messages = document.querySelectorAll('.message-content');
-    messages.forEach(function(message) {
-      message.style.fontSize = fontSize + 'px';
+    localStorage.setItem('chat-font-size', fontSize);
+    const messages = document.querySelectorAll('.message-content, .chat-input, .search-bar, .suggestion-btn');
+    messages.forEach(function(element) {
+      element.style.fontSize = `${fontSize}px !important`;
     });
+    console.log('Font size adjusted to:', fontSize);
   }
 
   function confirmClearChat() {
@@ -773,7 +803,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       if (voiceBtn) voiceBtn.classList.remove('recording');
     };
     recognition.onerror = function(event) {
-      console.warn('Speech recognition error: ' + event.error);
+      console.error('Speech recognition error:', event.error);
       isRecording = false;
       const voiceBtn = document.querySelector('.voice-btn');
       if (voiceBtn) voiceBtn.classList.remove('recording');
@@ -782,6 +812,12 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
   }
 
   document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) {
+      console.error('Critical: #chat-messages element not found on DOM load');
+      return;
+    }
+    chatMessages.style.display = 'block'; // Ensure chat-messages is visible
     renderMessages();
     handleInputChange('');
 
@@ -866,5 +902,8 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
     const sendBtn = document.querySelector('.send-btn');
     if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+    // Apply initial font size
+    adjustFontSize(0);
   });
 })();
