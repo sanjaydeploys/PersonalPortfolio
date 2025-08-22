@@ -1,34 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const track = document.querySelector('.moving-cards-track');
+  const track = document.querySelector('.software-blogs-section .software-cards-track');
+  if (!track) return;
+
   const cards = Array.from(track.children);
 
-  // Duplicate cards for smooth infinite loop
+  // Clone cards for infinite effect
   cards.forEach(card => {
     const clone = card.cloneNode(true);
     track.appendChild(clone);
   });
 
   // Independent hover lock
-  cards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      card.classList.add('locked'); // flip stops reel only for this card
-    });
-    card.addEventListener('mouseleave', () => {
-      card.classList.remove('locked');
-    });
+  track.addEventListener('mouseover', e => {
+    const card = e.target.closest('.software-card');
+    if (card) {
+      card.classList.add('active');
+    }
   });
 
-  // Optional: make reel speed adjustable
-  let speed = 0.5; // pixels per frame
-  let position = 0;
-
-  function animate() {
-    position -= speed;
-    if (Math.abs(position) >= track.scrollWidth / 2) {
-      position = 0; // reset smoothly
+  track.addEventListener('mouseout', e => {
+    const card = e.target.closest('.software-card');
+    if (card) {
+      card.classList.remove('active');
     }
-    track.style.transform = `translateX(${position}px)`;
-    requestAnimationFrame(animate);
-  }
-  animate();
+  });
 });
