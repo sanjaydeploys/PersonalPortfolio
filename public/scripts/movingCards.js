@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let scrollX = 0;
     let speed = 1.5;
     let lockedCard = null;
-    let placeholder = null;
+    let originalIndex = null;
 
     // Clone cards for infinite loop
     cards.forEach(card => {
@@ -27,39 +27,31 @@ document.addEventListener("DOMContentLoaded", () => {
     animate();
 
     // Hover lock logic
-    track.querySelectorAll(".moving-card").forEach(card => {
+    track.querySelectorAll(".moving-card").forEach((card, index) => {
       card.addEventListener("mouseenter", () => {
         if (lockedCard) return;
 
         const rect = card.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
+        // Store reference to reattach later
         lockedCard = card;
+        originalIndex = index;
 
-        // Create placeholder to maintain layout
-        placeholder = document.createElement("div");
+        // Detach card and place it fixed in container
+        const placeholder = document.createElement("div");
         placeholder.className = "card-placeholder";
         placeholder.style.width = `${card.offsetWidth}px`;
         placeholder.style.height = `${card.offsetHeight}px`;
         card.parentNode.insertBefore(placeholder, card);
 
-        // Move card into container for independent positioning
         container.appendChild(card);
         card.classList.add("hover-active");
+        card.style.position = "absolute";
+        card.style.left = `${rect.left - containerRect.left}px`;
+        card.style.top = `${rect.top - containerRect.top}px`;
 
-        // Set initial position via transform for smoothness
-        const startX = rect.left - containerRect.left;
-        const startY = rect.top - containerRect.top;
-        card.style.transform = `translate(${startX}px, ${startY}px) scale(1)`;
-
-        // Force browser reflow so transition triggers
-        card.offsetHeight;
-
-        // Animate smoothly into locked position
-        card.style.transition = "transform 0.3s ease";
-        card.style.transform = `translate(${startX}px, ${startY - 10}px) scale(1.05)`;
-
-        // Dim other cards
+        // Scale down other cards
         track.querySelectorAll(".moving-card").forEach(c => {
           if (c !== card) c.classList.add("scale-down");
         });
@@ -68,28 +60,24 @@ document.addEventListener("DOMContentLoaded", () => {
       card.addEventListener("mouseleave", () => {
         if (!lockedCard) return;
 
-        // Remove transition to avoid flicker when reattaching
-        lockedCard.style.transition = "transform 0.2s ease";
-        lockedCard.style.transform = "scale(1)";
+        // Remove absolute positioning
+        lockedCard.style.position = "";
+        lockedCard.style.left = "";
+        lockedCard.style.top = "";
 
-        setTimeout(() => {
-          // Reattach to track
-          const temp = lockedCard;
-          track.insertBefore(temp, placeholder);
-          placeholder.remove();
-          placeholder = null;
+        // Reattach card back to track
+        const placeholder = track.querySelector(".card-placeholder");
+        track.insertBefore(lockedCard, placeholder);
+        placeholder.remove();
 
-          // Reset styles
-          temp.classList.remove("hover-active");
-          temp.style.transition = "";
-          temp.style.transform = "";
+        // Reset states
+        lockedCard.classList.remove("hover-active");
+        track.querySelectorAll(".moving-card").forEach(c => {
+          c.classList.remove("scale-down");
+        });
 
-          track.querySelectorAll(".moving-card").forEach(c => {
-            c.classList.remove("scale-down");
-          });
-
-          lockedCard = null;
-        }, 200);
+        lockedCard = null;
+        originalIndex = null;
       });
     });
   });
