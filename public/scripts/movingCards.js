@@ -1,27 +1,41 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const track = document.querySelector('.software-blogs-section .software-cards-track');
-  if (!track) return;
+document.addEventListener("DOMContentLoaded", () => {
+  const tracks = document.querySelectorAll(".moving-cards-track");
 
-  const cards = Array.from(track.children);
+  tracks.forEach(track => {
+    const cards = Array.from(track.children);
+    const cardWidth = cards[0].offsetWidth + 32; // card + gap
+    let scrollX = 0;
+    let speed = 1.5;
+    let pausedCard = null;
 
-  // Clone cards for infinite effect
-  cards.forEach(card => {
-    const clone = card.cloneNode(true);
-    track.appendChild(clone);
-  });
+    // Clone cards for infinite loop
+    cards.forEach(card => {
+      const clone = card.cloneNode(true);
+      track.appendChild(clone);
+    });
 
-  // Independent hover lock
-  track.addEventListener('mouseover', e => {
-    const card = e.target.closest('.software-card');
-    if (card) {
-      card.classList.add('active');
-    }
-  });
+    const animate = () => {
+      if (!pausedCard) {
+        scrollX -= speed;
+        if (Math.abs(scrollX) >= cardWidth * cards.length) {
+          scrollX = 0;
+        }
+        track.style.transform = `translateX(${scrollX}px)`;
+      }
+      requestAnimationFrame(animate);
+    };
+    animate();
 
-  track.addEventListener('mouseout', e => {
-    const card = e.target.closest('.software-card');
-    if (card) {
-      card.classList.remove('active');
-    }
+    // Hover: only lock hovered card, others continue
+    track.querySelectorAll(".moving-card").forEach(card => {
+      card.addEventListener("mouseenter", () => {
+        pausedCard = card;
+        card.classList.add("hover-active");
+      });
+      card.addEventListener("mouseleave", () => {
+        pausedCard = null;
+        card.classList.remove("hover-active");
+      });
+    });
   });
 });
