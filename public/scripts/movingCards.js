@@ -1,48 +1,40 @@
 document.addEventListener("DOMContentLoaded", () => {
   const tracks = document.querySelectorAll(".moving-cards-track");
 
-  tracks.forEach((track) => {
+  tracks.forEach(track => {
     const cards = Array.from(track.children);
+    const cardWidth = cards[0].offsetWidth + 32; // card + gap
     let scrollX = 0;
-    let speed = window.innerWidth < 768 ? 0.8 : 1.5; // mobile slower
-    let isPaused = false;
+    let speed = 1.5;
+    let pausedCard = null;
 
-    // Duplicate cards for seamless loop
-    cards.forEach((card) => {
+    // Clone cards for infinite loop
+    cards.forEach(card => {
       const clone = card.cloneNode(true);
       track.appendChild(clone);
     });
 
-    // Store freeze state per card
-    const frozenCards = new WeakSet();
-
     const animate = () => {
-      if (!isPaused) {
+      if (!pausedCard) {
         scrollX -= speed;
-        const totalWidth = cards.reduce((acc, c) => acc + c.offsetWidth + 32, 0);
-        if (Math.abs(scrollX) >= totalWidth) {
+        if (Math.abs(scrollX) >= cardWidth * cards.length) {
           scrollX = 0;
         }
-
-        // Apply transform individually → hovered (frozen) card stays
-        Array.from(track.children).forEach((card, idx) => {
-          if (!frozenCards.has(card)) {
-            card.style.transform = `translateX(${scrollX}px)`;
-          }
-        });
+        track.style.transform = `translateX(${scrollX}px)`;
       }
       requestAnimationFrame(animate);
     };
     animate();
 
-    // Hover logic → freeze only hovered card
-    track.querySelectorAll(".moving-card").forEach((card) => {
+    // Hover: only lock hovered card, others continue
+    track.querySelectorAll(".moving-card").forEach(card => {
       card.addEventListener("mouseenter", () => {
-        frozenCards.add(card);
-        card.style.transform = "translateX(0)"; // lock in place
+        pausedCard = card;
+        card.classList.add("hover-active");
       });
       card.addEventListener("mouseleave", () => {
-        frozenCards.delete(card);
+        pausedCard = null;
+        card.classList.remove("hover-active");
       });
     });
   });
