@@ -101,9 +101,73 @@
   let filteredSuggestions = suggestedPrompts.en;
   const emojiOptions = ['👍', '😄', '🚀', '🔥', '👏'];
   const apiKey = 'AIzaSyDt6yiWJ1_W4QtDf5mxr4wb-c3aH7TT_3I';
-  const context = `...`; // Context omitted for brevity, same as provided
-  const hindiContext = `...`; // Hindi context omitted for brevity, same as provided
+const context = `
+Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
+### Projects
+- **LIC Neemuch**: A modern portal built with SSR React, AWS Lambda, and CloudFront, achieving a 100/100 PageSpeed score, 70% faster load times, and 80% higher inquiry conversions.
+- **Zedemy LMS**: A serverless learning management system with real-time analytics and SEO optimization, using AWS Lambda, API Gateway, and DynamoDB, reducing costs by 40%.
+- **ConnectNow**: A video chat platform using WebRTC and Socket.io, with 35% fewer call drops via custom signaling and STUN/TURN servers.
+- **EventEase**: An event management SaaS with Google Calendar integration and 25% faster load times through lazy-loading and WebP optimization.
+- **EduXcel**: An ed-tech platform with optimized MongoDB and React Helmet, ranking above Shiksha.com with 500K+ global impressions.
+
+### Skills
+- **Frontend**: Proficient in React, Next.js, TypeScript, Tailwind CSS; builds responsive, accessible UIs with lazy loading and code splitting.
+- **Backend**: Expertise in Node.js, Express, MongoDB, serverless (AWS Lambda, API Gateway, DynamoDB); designs scalable REST and GraphQL APIs.
+- **Cloud**: AWS Certified, specializing in serverless (Lambda, Step Functions, SQS), CloudFormation, CDK, and CI/CD with GitHub Actions.
+- **SEO**: Advanced skills in JSON-LD schemas, SSR, structured data, mobile-first optimization; improved load times by 40% and search rankings.
+- **Other**: Experienced with WebRTC, Socket.io, Google Calendar API, Jest, GitHub, and accessibility (semantic HTML, alt tags).
+
+### Achievements
+- Delivered 12+ applications in multiple domains.
+- Achieved 500K+ impressions and 20K+ clicks on EduXcel.
+- Reduced Zedemy costs by 40% and LIC load times by 70%.
+- Recognized by Amazon and Microsoft for platforms and content.
+
+### Challenges Overcome
+- Overcame academic detention by proving project impact.
+- Resolved EventEase design disputes with data-driven A/B testing.
+- Met LIC’s 3-week deadline with CI/CD and milestones.
+- Self-taught Google Calendar API and WebRTC under pressure.
+
+### Contact
+- Email: sanjay.awsindia@gmail.com
+- LinkedIn: linkedin.com/in/sanjay-patidar
+`;
+
+  const hindiContext = `
+संजय पाटीदार एक सर्वरलेस फुल-स्टैक SaaS इंजीनियर हैं, जिन्हें अमेज़न और माइक्रोसॉफ्ट मैनेजरों द्वारा प्रोडक्शन-ग्रेड प्लेटफॉर्म और टेक कंटेंट बनाने के लिए मान्यता प्राप्त है। उन्होंने बीमा, शिक्षा, संचार और इवेंट मैनेजमेंट में 12+ रियल-वर्ल्ड एप्लिकेशन डिलीवर किए हैं, जो 127 देशों में ग्लोबल पहुंच रखते हैं।
+
+### प्रोजेक्ट्स
+- **LIC Neemuch**: SSR React, AWS Lambda, और CloudFront से बना एक आधुनिक पोर्टल, जो 100/100 PageSpeed स्कोर, 70% तेज लोड टाइम्स, और 80% अधिक पूछताछ कन्वर्जन्स प्राप्त करता है।
+- **Zedemy LMS**: AWS Lambda, API Gateway, और DynamoDB के साथ रीयल-टाइम एनालिटिक्स और SEO ऑप्टिमाइजेशन वाला सर्वरलेस लर्निंग मैनेजमेंट सिस्टम, जो लागतों को 40% कम करता है।
+- **ConnectNow**: WebRTC और Socket.io का उपयोग करके वीडियो चैट प्लेटफॉर्म, कस्टम सिग्नलिंग और STUN/TURN सर्वरों से 35% कम कॉल ड्रॉप्स।
+- **EventEase**: Google Calendar इंटीग्रेशन और लेजी-लोडिंग तथा WebP ऑप्टिमाइजेशन से 25% तेज लोड टाइम्स वाला इवेंट मैनेजमेंट SaaS।
+- **EduXcel**: ऑप्टिमाइज्ड MongoDB और React Helmet के साथ एड-टेक प्लेटफॉर्म, जो Shiksha.com से ऊपर रैंक करता है और 500K+ ग्लोबल इंप्रेशन्स प्राप्त करता है।
+
+### स्किल्स
+- **फ्रंटएंड**: React, Next.js, TypeScript, Tailwind CSS में कुशल; लेजी लोडिंग और कोड स्प्लिटिंग के साथ रिस्पॉन्सिव, एक्सेसिबल UI बनाते हैं।
+- **बैकएंड**: Node.js, Express, MongoDB, सर्वरलेस (AWS Lambda, API Gateway, DynamoDB) में विशेषज्ञता; स्केलेबल REST और GraphQL API डिजाइन करते हैं।
+- **क्लाउड**: AWS प्रमाणित, सर्वरलेस (Lambda, Step Functions, SQS), CloudFormation, CDK, और GitHub Actions के साथ CI/CD में विशेषज्ञ।
+- **SEO**: JSON-LD स्कीमास, SSR, स्ट्रक्चर्ड डेटा, मोबाइल-फर्स्ट ऑप्टिमाइजेशन में उन्नत स्किल्स; लोड टाइम्स को 40% बेहतर बनाया और सर्च रैंकिंग्स सुधारी।
+- **अन्य**: WebRTC, Socket.io, Google Calendar API, Jest, GitHub, और एक्सेसिबिलिटी (सिमेंटिक HTML, alt टैग्स) में अनुभवी।
+
+### उपलब्धियां
+- कई डोमेन में 12+ एप्लिकेशन डिलीवर किए।
+- EduXcel पर 500K+ इंप्रेशन्स और 20K+ क्लिक्स प्राप्त किए।
+- Zedemy की लागतों को 40% कम किया और LIC लोड टाइम्स को 70%।
+- अमेज़न और माइक्रोसॉफ्ट द्वारा प्लेटफॉर्म और कंटेंट के लिए मान्यता प्राप्त।
+
+### चुनौतियां पार कीं
+- प्रोजेक्ट प्रभाव साबित करके अकादमिक डिटेंशन से पार पाया।
+- डेटा-ड्रिवन A/B टेस्टिंग से EventEase डिजाइन विवादों को हल किया।
+- CI/CD और माइलस्टोन्स से LIC की 3-वीक डेडलाइन पूरी की।
+- दबाव में Google Calendar API और WebRTC सेल्फ-टॉट।
+
+### संपर्क
+- ईमेल: sanjay.awsindia@gmail.com
+- LinkedIn: linkedin.com/in/sanjay-patidar
+`;
   const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
 
   function getContext() {
@@ -142,9 +206,9 @@
       if (editingMessageId === message.id) {
         messageContent.innerHTML =
           '<div class="edit-message flex items-center gap-2">' +
-            '<input type="text" class="edit-message-input flex-1 p-2 border rounded-lg bg-[#F5F5F5] dark:bg-[#2A3942] text-black dark:text-[#E6E6FA]" value="' + editedText.replace(/"/g, '&quot;') + '" oninput="window.editedText = this.value" onkeypress="if(event.key === \'Enter\') saveEditedMessage(\'' + message.id + '\')">' +
-            '<button class="edit-message-button bg-[#128C7E] text-white p-2 rounded-lg" onclick="saveEditedMessage(\'' + message.id + '\')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>' +
-            '<button class="cancel-btn bg-[#FF4D4F] text-white p-2 rounded-lg" onclick="cancelEdit()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>' +
+            '<input type="text" class="edit-message-input flex-1 p-2 border rounded-lg bg-[#F5F5F5] dark:bg-[#2A3942] text-black dark:text-[#E6E6FA]" value="' + editedText.replace(/"/g, '&quot;') + '">' +
+            '<button class="edit-message-button bg-[#128C7E] text-white p-2 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>' +
+            '<button class="cancel-btn bg-[#FF4D4F] text-white p-2 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>' +
           '</div>';
       } else {
         messageContent.innerHTML = formattedText;
@@ -196,7 +260,6 @@
       messageActions.appendChild(reactionBtn);
       bubbleDiv.appendChild(messageContent);
       bubbleDiv.appendChild(messageActions);
-      messageDiv.appendChild(bubbleDiv);
       chatMessages.appendChild(messageDiv);
     });
     if (isLoading) {
@@ -360,19 +423,26 @@
   function filterByCategory(category) {
     selectedCategory = category;
     searchQuery = '';
-    document.getElementById('search-bar').value = '';
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) searchBar.value = '';
     renderMessages();
     handleInputChange('');
   }
 
   function handlePromptClick(prompt) {
-    document.getElementById('chat-input').value = prompt;
-    sendMessage();
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+      chatInput.value = prompt;
+      sendMessage();
+    }
   }
 
   function handleQuickReply(prompt) {
-    document.getElementById('chat-input').value = prompt;
-    sendMessage();
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+      chatInput.value = prompt;
+      sendMessage();
+    }
   }
 
   function handleInputChange(value) {
@@ -380,8 +450,12 @@
     if (suggestionsContainer) {
       filteredSuggestions = value.trim() ? suggestedPrompts[currentLang].filter(function(prompt) { return prompt.toLowerCase().includes(value.toLowerCase()); }) : suggestedPrompts[currentLang];
       suggestionsContainer.innerHTML = filteredSuggestions.map(function(prompt) {
-        return '<button class="suggestion-btn" onclick="handlePromptClick(\'' + prompt.replace(/'/g, '\\\'').replace(/"/g, '&quot;') + '\')">' + prompt + '</button>';
+        return '<button class="suggestion-btn">' + prompt + '</button>';
       }).join('');
+      // Attach event listeners to suggestion buttons
+      suggestionsContainer.querySelectorAll('.suggestion-btn').forEach((btn, index) => {
+        btn.addEventListener('click', () => handlePromptClick(filteredSuggestions[index]));
+      });
     }
     updateButtonStates();
   }
@@ -402,6 +476,7 @@
       picker.appendChild(btn);
     });
     messageDiv.appendChild(picker);
+    const message = window.messages.find(m => m.id === messageId);
     picker.style.top = '100%';
     picker.style.left = message.sender === 'user' ? 'auto' : '0';
     picker.style.right = message.sender === 'user' ? '0' : 'auto';
@@ -433,6 +508,18 @@
     editingMessageId = id;
     window.editedText = text;
     renderMessages();
+    const editInput = document.querySelector('.edit-message-input');
+    if (editInput) {
+      editInput.focus();
+      editInput.addEventListener('input', (e) => window.editedText = e.target.value);
+      editInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') saveEditedMessage(id);
+      });
+    }
+    const saveBtn = document.querySelector('.edit-message-button');
+    if (saveBtn) saveBtn.addEventListener('click', () => saveEditedMessage(id));
+    const cancelBtn = document.querySelector('.cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
   }
 
   async function saveEditedMessage(id) {
@@ -465,12 +552,10 @@
           const searchResults = await performWebSearch(editedMessageText);
           aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
         }
-      
-
-              } catch (error) {
+      } catch (error) {
         console.warn('API error: ' + error.message);
         const searchResults = await performWebSearch(editedMessageText);
-        aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
+        aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
         quickReplies = currentLang === 'hi' ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?'] : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
       }
       interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
@@ -628,11 +713,15 @@
     confirmPopup.innerHTML = `
       <p class="text-sm">${currentLang === 'hi' ? 'क्या आप वाकई चैट इतिहास मिटाना चाहते हैं?' : 'Are you sure you want to clear the chat history?'}</p>
       <div class="flex justify-end gap-2 mt-2">
-        <button class="control-btn bg-[#128C7E] text-white" onclick="clearChat()">${currentLang === 'hi' ? 'हाँ' : 'Yes'}</button>
-        <button class="control-btn bg-[#FF4D4F] text-white" onclick="this.parentElement.parentElement.remove()">${currentLang === 'hi' ? 'नहीं' : 'No'}</button>
+        <button class="control-btn bg-[#128C7E] text-white clear-confirm-btn">${currentLang === 'hi' ? 'हाँ' : 'Yes'}</button>
+        <button class="control-btn bg-[#FF4D4F] text-white clear-cancel-btn">${currentLang === 'hi' ? 'नहीं' : 'No'}</button>
       </div>
     `;
     document.getElementById('chatbot-container').appendChild(confirmPopup);
+    const confirmBtn = confirmPopup.querySelector('.clear-confirm-btn');
+    const cancelBtn = confirmPopup.querySelector('.clear-cancel-btn');
+    if (confirmBtn) confirmBtn.addEventListener('click', clearChat);
+    if (cancelBtn) cancelBtn.addEventListener('click', () => confirmPopup.remove());
   }
 
   function clearChat() {
@@ -669,11 +758,14 @@
   if (recognition) {
     recognition.onresult = function(event) {
       const transcript = event.results[0][0].transcript;
-      document.getElementById('chat-input').value = transcript;
-      isRecording = false;
-      const voiceBtn = document.querySelector('.voice-btn');
-      if (voiceBtn) voiceBtn.classList.remove('recording');
-      sendMessage();
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.value = transcript;
+        isRecording = false;
+        const voiceBtn = document.querySelector('.voice-btn');
+        if (voiceBtn) voiceBtn.classList.remove('recording');
+        sendMessage();
+      }
     };
     recognition.onend = function() {
       isRecording = false;
@@ -692,15 +784,40 @@
   document.addEventListener('DOMContentLoaded', function() {
     renderMessages();
     handleInputChange('');
-    document.querySelector('.controls-toggle').addEventListener('click', toggleControls);
-    document.querySelector('.search-toggle').addEventListener('click', toggleSearchBar);
+
+    // Attach event listeners to header controls
+    const controlsToggle = document.querySelector('.controls-toggle');
+    if (controlsToggle) controlsToggle.addEventListener('click', toggleControls);
+
+    const searchToggle = document.querySelector('.search-toggle');
+    if (searchToggle) searchToggle.addEventListener('click', toggleSearchBar);
+
+    const themeBtn = document.querySelector('.theme-btn');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+    // Attach event listeners to chat controls
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) searchBar.addEventListener('input', (e) => searchMessages(e.target.value));
+
+    const historyBtn = document.querySelector('.history-btn');
+    if (historyBtn) historyBtn.addEventListener('click', toggleHistory);
+
+    const autoReplyBtn = document.querySelector('.auto-reply-btn');
+    if (autoReplyBtn) autoReplyBtn.addEventListener('click', toggleAutoReply);
+
+    const autoSpeakBtn = document.querySelector('.auto-speak-btn');
+    if (autoSpeakBtn) autoSpeakBtn.addEventListener('click', toggleAutoSpeak);
+
+    const timestampBtn = document.querySelector('.timestamp-btn');
+    if (timestampBtn) timestampBtn.addEventListener('click', toggleTimestamps);
+
     document.querySelectorAll('.lang-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         currentLang = btn.dataset.lang;
         document.getElementById('chatbot-container').lang = currentLang;
         const chatInput = document.getElementById('chat-input');
         if (chatInput) {
-          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : chatInput.placeholder;
+          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
         }
         const searchBar = document.getElementById('search-bar');
         if (searchBar) {
@@ -711,11 +828,43 @@
         renderMessages();
       });
     });
-    document.getElementById('volume-control').addEventListener('input', function(e) {
+
+    const volumeControl = document.getElementById('volume-control');
+    if (volumeControl) volumeControl.addEventListener('input', function(e) {
       if (typeof window.setSpeechVolume === 'function') window.setSpeechVolume(e.target.value);
     });
-    document.getElementById('rate-control').addEventListener('input', function(e) {
+
+    const rateControl = document.getElementById('rate-control');
+    if (rateControl) rateControl.addEventListener('input', function(e) {
       if (typeof window.setSpeechRate === 'function') window.setSpeechRate(e.target.value);
     });
+
+    document.querySelectorAll('.font-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const change = btn.textContent === 'A+' ? 2 : -2;
+        adjustFontSize(change);
+      });
+    });
+
+    const categoryFilter = document.getElementById('category-filter');
+    if (categoryFilter) categoryFilter.addEventListener('change', (e) => filterByCategory(e.target.value));
+
+    const clearBtn = document.querySelector('.clear-btn');
+    if (clearBtn) clearBtn.addEventListener('click', confirmClearChat);
+
+    // Attach event listeners to input area
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+      chatInput.addEventListener('input', (e) => handleInputChange(e.target.value));
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+    }
+
+    const voiceBtn = document.querySelector('.voice-btn');
+    if (voiceBtn) voiceBtn.addEventListener('click', toggleRecording);
+
+    const sendBtn = document.querySelector('.send-btn');
+    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
   });
 })();
