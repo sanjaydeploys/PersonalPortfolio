@@ -1,30 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
   const track = document.querySelector('.moving-cards-track');
   const cards = Array.from(track.children);
-  const cardWidth = cards[0].offsetWidth + 32; // include gap
-  let scrollX = 0;
 
-  // Duplicate cards for seamless loop
+  // Duplicate cards for smooth infinite loop
   cards.forEach(card => {
     const clone = card.cloneNode(true);
     track.appendChild(clone);
   });
 
+  // Independent hover lock
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.classList.add('locked'); // flip stops reel only for this card
+    });
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('locked');
+    });
+  });
+
+  // Optional: make reel speed adjustable
+  let speed = 0.5; // pixels per frame
+  let position = 0;
+
   function animate() {
-    scrollX -= 1.2; // speed
-    if (Math.abs(scrollX) >= cardWidth * cards.length) {
-      scrollX = 0;
+    position -= speed;
+    if (Math.abs(position) >= track.scrollWidth / 2) {
+      position = 0; // reset smoothly
     }
-    track.style.transform = `translateX(${scrollX}px)`;
+    track.style.transform = `translateX(${position}px)`;
     requestAnimationFrame(animate);
   }
   animate();
-
-  // Independent hover lock
-  track.addEventListener('mouseover', e => {
-    if (e.target.closest('.moving-card')) {
-      // hovered card flips, others keep scrolling
-      e.target.closest('.moving-card').style.transform = 'scale(1.1) translateY(-20px)';
-    }
-  });
 });
