@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let scrollX = 0;
     let speed = 1.5;
     let lockedCard = null;
-    let originalIndex = null;
+    let placeholder = null;
 
     // Clone cards for infinite loop
     cards.forEach(card => {
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     animate();
 
     // Hover lock logic
-    track.querySelectorAll(".moving-card").forEach((card, index) => {
+    track.querySelectorAll(".moving-card").forEach(card => {
       card.addEventListener("mouseenter", () => {
         if (lockedCard) return;
 
@@ -35,30 +35,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const containerRect = container.getBoundingClientRect();
 
         lockedCard = card;
-        originalIndex = index;
 
-        // Placeholder to keep layout stable
-        const placeholder = document.createElement("div");
+        // Create placeholder to maintain layout
+        placeholder = document.createElement("div");
         placeholder.className = "card-placeholder";
         placeholder.style.width = `${card.offsetWidth}px`;
         placeholder.style.height = `${card.offsetHeight}px`;
         card.parentNode.insertBefore(placeholder, card);
 
-        // Move card to container for locking
+        // Move card into container for independent positioning
         container.appendChild(card);
         card.classList.add("hover-active");
-        card.style.position = "absolute";
 
-        // Use transform for smooth positioning
-        const targetX = rect.left - containerRect.left;
-        const targetY = rect.top - containerRect.top;
-        card.style.transform = `translate(${targetX}px, ${targetY}px) scale(1)`;
+        // Set initial position via transform for smoothness
+        const startX = rect.left - containerRect.left;
+        const startY = rect.top - containerRect.top;
+        card.style.transform = `translate(${startX}px, ${startY}px) scale(1)`;
 
-        // Allow transition after setting initial position
-        requestAnimationFrame(() => {
-          card.style.transition = "transform 0.35s ease, filter 0.3s ease";
-          card.style.transform = `translate(${targetX}px, ${targetY - 10}px) scale(1.05)`;
-        });
+        // Force browser reflow so transition triggers
+        card.offsetHeight;
+
+        // Animate smoothly into locked position
+        card.style.transition = "transform 0.3s ease";
+        card.style.transform = `translate(${startX}px, ${startY - 10}px) scale(1.05)`;
 
         // Dim other cards
         track.querySelectorAll(".moving-card").forEach(c => {
@@ -69,35 +68,28 @@ document.addEventListener("DOMContentLoaded", () => {
       card.addEventListener("mouseleave", () => {
         if (!lockedCard) return;
 
-        const placeholder = track.querySelector(".card-placeholder");
-        const placeholderRect = placeholder.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
+        // Remove transition to avoid flicker when reattaching
+        lockedCard.style.transition = "transform 0.2s ease";
+        lockedCard.style.transform = "scale(1)";
 
-        // Animate back to original slot
-        const backX = placeholderRect.left - containerRect.left;
-        const backY = placeholderRect.top - containerRect.top;
-        lockedCard.style.transform = `translate(${backX}px, ${backY}px) scale(1)`;
+        setTimeout(() => {
+          // Reattach to track
+          const temp = lockedCard;
+          track.insertBefore(temp, placeholder);
+          placeholder.remove();
+          placeholder = null;
 
-        // After animation ends, put it back in the track
-        lockedCard.addEventListener(
-          "transitionend",
-          () => {
-            lockedCard.style.position = "";
-            lockedCard.style.transform = "";
-            lockedCard.style.transition = "";
-            lockedCard.classList.remove("hover-active");
-            track.insertBefore(lockedCard, placeholder);
-            placeholder.remove();
+          // Reset styles
+          temp.classList.remove("hover-active");
+          temp.style.transition = "";
+          temp.style.transform = "";
 
-            track.querySelectorAll(".moving-card").forEach(c => {
-              c.classList.remove("scale-down");
-            });
+          track.querySelectorAll(".moving-card").forEach(c => {
+            c.classList.remove("scale-down");
+          });
 
-            lockedCard = null;
-            originalIndex = null;
-          },
-          { once: true }
-        );
+          lockedCard = null;
+        }, 200);
       });
     });
   });
