@@ -3,7 +3,7 @@
   window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
     {
       sender: 'ai',
-      text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+      text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or personal stories, like "Who is Sanjay Patidar?" or "Tell me a funny story about Sanjay!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
@@ -18,7 +18,7 @@
       console.warn('Invalid localStorage data, resetting messages');
       window.messages = [{
         sender: 'ai',
-        text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+        text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or personal stories, like "Who is Sanjay Patidar?" or "Tell me a funny story about Sanjay!"',
         id: 'welcome',
         timestamp: new Date().toISOString(),
         category: 'welcome',
@@ -31,7 +31,7 @@
     console.error('Error parsing localStorage:', e);
     window.messages = [{
       sender: 'ai',
-      text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+      text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or personal stories, like "Who is Sanjay Patidar?" or "Tell me a funny story about Sanjay!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
@@ -54,6 +54,8 @@
   let searchQuery = '';
   let selectedCategory = '';
   let currentLang = localStorage.getItem('chat-lang') || 'en';
+  let pendingMessage = null; // Store message waiting for tone selection
+  let pendingMessageId = null; // Store ID of pending message
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
   const suggestedPrompts = {
     en: [
@@ -76,7 +78,11 @@
       'How does Sanjay approach learning new technologies?',
       'How does Sanjay handle team conflicts?',
       'What’s Sanjay’s experience with CI/CD?',
-      'How does Sanjay ensure app security?'
+      'How does Sanjay ensure app security?',
+      'Tell me a funny story about Sanjay!',
+      'How did Sanjay meet his fiancée?',
+      'What’s Sanjay’s favorite hobby?',
+      'Share a memorable moment from Sanjay’s life.'
     ],
     hi: [
       'संजय पाटीदार कौन हैं?',
@@ -98,7 +104,11 @@
       'संजय नई तकनीकों को कैसे सीखते हैं?',
       'संजय टीम संघर्षों को कैसे हैंडल करते हैं?',
       'संजय का CI/CD में क्या अनुभव है?',
-      'संजय ऐप सिक्योरिटी कैसे सुनिश्चित करते हैं?'
+      'संजय ऐप सिक्योरिटी कैसे सुनिश्चित करते हैं?',
+      'संजय की एक मज़ेदार कहानी बताएं!',
+      'संजय अपनी मंगेतर से कैसे मिले?',
+      'संजय का पसंदीदा शौक क्या है?',
+      'संजय के जीवन का एक यादगार पल साझा करें।'
     ]
   };
   let filteredSuggestions = suggestedPrompts[currentLang];
@@ -171,10 +181,138 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 - ईमेल: sanjay.awsindia@gmail.com
 - LinkedIn: linkedin.com/in/sanjay-patidar
 `;
+
   const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
 
   function getContext() {
     return currentLang === 'hi' ? hindiContext : context;
+  }
+
+  function showTonePicker(message, messageId) {
+    const tonePromptText = currentLang === 'hi' ? 'आप कौन सा लहजा सुनना चाहेंगे?' : 'Which tone would you like to hear?';
+    const tonePromptId = Date.now();
+    
+    // Add tone prompt message to chat
+    window.messages.push({
+      sender: 'ai',
+      text: tonePromptText,
+      id: tonePromptId,
+      timestamp: new Date().toISOString(),
+      category: 'tone_prompt',
+      reactions: [],
+      isPinned: false
+    });
+    
+    // Store pending message
+    pendingMessage = message;
+    pendingMessageId = messageId;
+    
+    // Render messages to show the prompt
+    renderMessages();
+    
+    // Speak the tone prompt
+    if (typeof window.speakMessage === 'function') {
+      window.speakMessage(tonePromptId, tonePromptText, currentLang);
+    }
+    
+    // Create popup
+    const tonePicker = document.createElement('div');
+    tonePicker.className = 'tone-picker absolute bg-white dark:bg-[#2A3942] border rounded-lg p-3 flex flex-col gap-2 z-20';
+    tonePicker.innerHTML = `
+      <p class="text-sm font-semibold">${tonePromptText}</p>
+      <div class="flex gap-2">
+        <button class="tone-btn funny-btn bg-[#128C7E] text-white p-2 rounded-lg">${currentLang === 'hi' ? 'मज़ेदार' : 'Funny'}</button>
+        <button class="tone-btn professional-btn bg-[#128C7E] text-white p-2 rounded-lg">${currentLang === 'hi' ? 'पेशेवर' : 'Professional'}</button>
+      </div>
+    `;
+    const chatbotContainer = document.getElementById('chatbot-container');
+    if (chatbotContainer) {
+      chatbotContainer.appendChild(tonePicker);
+      tonePicker.style.bottom = '80px'; // Position above input area
+      tonePicker.style.right = '20px';
+      
+      const funnyBtn = tonePicker.querySelector('.funny-btn');
+      const professionalBtn = tonePicker.querySelector('.professional-btn');
+      
+      funnyBtn.addEventListener('click', () => {
+        processMessageWithTone(pendingMessage, pendingMessageId, 'funny');
+        tonePicker.remove();
+      });
+      professionalBtn.addEventListener('click', () => {
+        processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
+        tonePicker.remove();
+      });
+    }
+  }
+
+  async function processMessageWithTone(message, messageId, tone) {
+    isLoading = true;
+    interactionAnalytics.questionsAsked++;
+    const category = categorizeMessage(message);
+    interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
+
+    let aiResponse;
+    let projectDetails = null;
+    let quickReplies = [];
+    const toneInstruction = tone === 'funny'
+      ? 'Respond in a funny, engaging, and heartfelt tone suitable for an Indian audience, using culturally relevant humor (e.g., Bollywood references, light-hearted desi banter).'
+      : 'Respond in a professional, concise, and technical tone suitable for a tech audience.';
+    const fullPrompt = `You are an AI assistant for Sanjay Patidar's portfolio. ${toneInstruction} Use the following context to answer questions about Sanjay's work, skills, or personal life. For general questions outside this context, provide accurate and relevant answers based on general knowledge. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear, well-educated response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
+
+    try {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+      });
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      aiResponse = data.candidates[0].content.parts[0].text;
+      quickReplies = currentLang === 'hi'
+        ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?']
+        : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
+      if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
+        const searchResults = await performWebSearch(message);
+        aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या निजी कहानियों के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or personal stories!');
+      }
+    } catch (error) {
+      console.error('API error:', error.message);
+      const searchResults = await performWebSearch(message);
+      aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स, स्किल्स, या निजी कहानियों के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects, skills, or personal stories!');
+      quickReplies = currentLang === 'hi'
+        ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की एक मज़ेदार कहानी बताएं']
+        : ['Try another question', 'Ask about Sanjay’s projects', 'Tell me a funny story about Sanjay'];
+    }
+
+    const responseId = Date.now();
+    window.messages.push({ sender: 'ai', text: '', id: responseId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
+    await typeMessage(aiResponse, responseId, projectDetails, quickReplies);
+
+    if (isAutoReplyEnabled) {
+      setTimeout(function() {
+        const followUpId = Date.now() + 1;
+        window.messages.push({
+          sender: 'ai',
+          text: '',
+          id: followUpId,
+          timestamp: new Date().toISOString(),
+          category: 'follow-up',
+          reactions: [],
+          isPinned: false
+        });
+        typeMessage(
+          currentLang === 'hi' ? 'संजय के काम, स्किल्स, या निजी कहानियों के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work, skills, or personal stories?',
+          followUpId,
+          null,
+          currentLang === 'hi'
+            ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय की एक मज़ेदार कहानी बताएं']
+            : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'Tell me a funny story about Sanjay']
+        );
+      }, 2000);
+    }
+
+    isLoading = false;
+    renderMessages();
   }
 
   function renderMessages() {
@@ -234,7 +372,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
           messageContent.innerHTML += '<div class="message-reactions flex flex-wrap gap-1 mt-1">' + message.reactions.map(r => `<span class="reaction-tag bg-[#F5F5F5] dark:bg-[#2A3942] rounded-full px-2 py-1 text-sm">${r}</span>`).join('') + '</div>';
         }
       }
-      if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
+      if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
         const speakBtn = document.createElement('button');
         speakBtn.className = 'speak-btn';
         speakBtn.setAttribute('aria-label', 'Play or pause message');
@@ -349,7 +487,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     message.text = text;
     if (projectDetails) message.projectDetails = projectDetails;
     if (quickReplies.length > 0) message.quickReplies = quickReplies;
-    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function') {
+    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
       window.speakMessage(messageId, text, currentLang);
       interactionAnalytics.speechUsed++;
     }
@@ -365,73 +503,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     const message = input.value.trim();
     if (!message || isLoading) return;
 
-    isLoading = true;
-    interactionAnalytics.questionsAsked++;
-    const category = categorizeMessage(message);
-    window.messages.push({ sender: 'user', text: message, id: Date.now(), timestamp: new Date().toISOString(), category, reactions: [], isPinned: false });
+    const messageId = Date.now();
+    window.messages.push({ sender: 'user', text: message, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(message), reactions: [], isPinned: false });
     input.value = '';
     renderMessages();
-
-    let aiResponse;
-    let projectDetails = null;
-    let quickReplies = [];
-    const lowerMessage = message.toLowerCase();
-    const fullPrompt = `You are an AI assistant for Sanjay Patidar's portfolio. Use the following context to answer questions about Sanjay's work, skills, or projects. For general questions outside this context, provide accurate, professional, and concise answers based on general knowledge, ensuring relevance to the user's query. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear, well-educated response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
-    try {
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
-      });
-      if (!response.ok) throw new Error('API request failed');
-      const data = await response.json();
-      aiResponse = data.candidates[0].content.parts[0].text;
-      quickReplies = currentLang === 'hi'
-        ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?']
-        : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
-      if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
-        const searchResults = await performWebSearch(message);
-        aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
-      }
-    } catch (error) {
-      console.error('API error:', error.message);
-      const searchResults = await performWebSearch(message);
-      aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
-      quickReplies = currentLang === 'hi'
-        ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?']
-        : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
-    }
-    interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
-
-    const messageId = Date.now();
-    window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
-    await typeMessage(aiResponse, messageId, projectDetails, quickReplies);
-
-    if (isAutoReplyEnabled) {
-      setTimeout(function() {
-        const followUpId = Date.now() + 1;
-        window.messages.push({
-          sender: 'ai',
-          text: '',
-          id: followUpId,
-          timestamp: new Date().toISOString(),
-          category: 'follow-up',
-          reactions: [],
-          isPinned: false
-        });
-        typeMessage(
-          currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?',
-          followUpId,
-          null,
-          currentLang === 'hi'
-            ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?']
-            : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']
-        );
-      }, 2000);
-    }
-
-    isLoading = false;
-    renderMessages();
+    showTonePicker(message, messageId);
   }
 
   async function performWebSearch(query) {
@@ -458,8 +534,8 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       return 'contact';
     } else if (lowerMessage.includes('challenge') || lowerMessage.includes('deadline') || lowerMessage.includes('setback') || lowerMessage.includes('conflict') || lowerMessage.includes('learn') || lowerMessage.includes('चुनौती') || lowerMessage.includes('डेडलाइन') || lowerMessage.includes('असफलता') || lowerMessage.includes('संघर्ष') || lowerMessage.includes('सीखना')) {
       return 'challenges';
-    } else if (lowerMessage.includes('who is sanjay') || lowerMessage.includes('संजय कौन')) {
-      return 'about';
+    } else if (lowerMessage.includes('who is sanjay') || lowerMessage.includes('संजय कौन') || lowerMessage.includes('life') || lowerMessage.includes('story') || lowerMessage.includes('fiancée') || lowerMessage.includes('hobby') || lowerMessage.includes('जीवन') || lowerMessage.includes('कहानी') || lowerMessage.includes('मंगेतर') || lowerMessage.includes('शौक')) {
+      return 'personal';
     } else {
       return 'general';
     }
@@ -575,68 +651,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       const editedMessageText = editedText;
       editedText = '';
       renderMessages();
-      isLoading = true;
-      interactionAnalytics.questionsAsked++;
-      const category = categorizeMessage(editedMessageText);
-      let aiResponse;
-      let projectDetails = null;
-      let quickReplies = [];
-      const fullPrompt = `You are an AI assistant for Sanjay Patidar's portfolio. Use the following context to answer questions about Sanjay's work, skills, or projects. For general questions outside this context, provide accurate, professional, and concise answers based on general knowledge, ensuring relevance to the user's query. Context: ${getContext()}\n\nUser question: ${editedMessageText}\n\nProvide a clear, well-educated response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
-      try {
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
-        });
-        if (!response.ok) throw new Error('API request failed');
-        const data = await response.json();
-        aiResponse = data.candidates[0].content.parts[0].text;
-        quickReplies = currentLang === 'hi'
-          ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?']
-          : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
-        if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
-          const searchResults = await performWebSearch(editedMessageText);
-          aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
-        }
-      } catch (error) {
-        console.error('API error:', error.message);
-        const searchResults = await performWebSearch(editedMessageText);
-        aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
-        quickReplies = currentLang === 'hi'
-          ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?']
-          : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
-      }
-      interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
-
-      const messageId = Date.now() + 2;
-      window.messages.push({ sender: 'ai', text: '', id: messageId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
-      await typeMessage(aiResponse, messageId, projectDetails, quickReplies);
-
-      if (isAutoReplyEnabled) {
-        setTimeout(function() {
-          const followUpId = Date.now() + 3;
-          window.messages.push({
-            sender: 'ai',
-            text: '',
-            id: followUpId,
-            timestamp: new Date().toISOString(),
-            category: 'follow-up',
-            reactions: [],
-            isPinned: false
-          });
-          typeMessage(
-            currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?',
-            followUpId,
-            null,
-            currentLang === 'hi'
-              ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?']
-              : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']
-          );
-        }, 2000);
-      }
-
-      isLoading = false;
-      renderMessages();
+      showTonePicker(editedMessageText, id);
     } else {
       editingMessageId = null;
       editedText = '';
@@ -655,7 +670,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     if (window.messages.length === 0) {
       window.messages.push({
         sender: 'ai',
-        text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या उपलब्धियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+        text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या निजी कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय की एक मज़ेदार कहानी बताएं!"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or personal stories, like "Who is Sanjay Patidar?" or "Tell me a funny story about Sanjay!"',
         id: 'welcome',
         timestamp: new Date().toISOString(),
         category: 'welcome',
@@ -784,7 +799,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
   function clearChat() {
     window.messages = [{
       sender: 'ai',
-      text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या उपलब्धियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or achievements, like "Who is Sanjay Patidar?"',
+      text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या निजी कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय की एक मज़ेदार कहानी बताएं!"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or personal stories, like "Who is Sanjay Patidar?" or "Tell me a funny story about Sanjay!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
@@ -821,7 +836,10 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         isRecording = false;
         const voiceBtn = document.querySelector('.voice-btn');
         if (voiceBtn) voiceBtn.classList.remove('recording');
-        sendMessage();
+        const messageId = Date.now();
+        window.messages.push({ sender: 'user', text: transcript, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(transcript), reactions: [], isPinned: false });
+        renderMessages();
+        showTonePicker(transcript, messageId);
       }
     };
     recognition.onend = function() {
@@ -834,7 +852,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       isRecording = false;
       const voiceBtn = document.querySelector('.voice-btn');
       if (voiceBtn) voiceBtn.classList.remove('recording');
-      alert(currentLang === 'hi' ? 'वॉइस रिकग्निशन में त्रुटि: ' + event.error : 'Voice recognition error: ' + event.error);
+      alert(currentLang === 'hi' ? 'वॉइस रिकग्निशन में त्रुटि: ' + event.error : 'Voice recognition error: ' + 여행);
     };
   }
 
