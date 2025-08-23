@@ -53,7 +53,7 @@
   let showTimestamps = true;
   let searchQuery = '';
   let selectedCategory = '';
-  let currentLang = 'en';
+  let currentLang = localStorage.getItem('chat-lang') || 'en';
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
   const suggestedPrompts = {
     en: [
@@ -101,10 +101,10 @@
       'संजय ऐप सिक्योरिटी कैसे सुनिश्चित करते हैं?'
     ]
   };
-  let filteredSuggestions = suggestedPrompts.en;
+  let filteredSuggestions = suggestedPrompts[currentLang];
   const emojiOptions = ['👍', '😄', '🚀', '🔥', '👏'];
   const apiKey = 'AIzaSyDt6yiWJ1_W4QtDf5mxr4wb-c3aH7TT_3I';
- const context = `
+  const context = `
 Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
 ### Projects
@@ -197,7 +197,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
 
     filteredMessages.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
+      if (!b.isPinned && b.isPinned) return 1;
       return new Date(a.timestamp) - new Date(b.timestamp);
     });
 
@@ -210,7 +210,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       bubbleDiv.className = `relative max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'user-message' : 'ai-message'} ${message.isPinned ? 'border-2 border-yellow-500' : ''}`;
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
-      messageContent.style.fontSize = `${fontSize}px`; // Apply font size
+      messageContent.style.fontSize = `${fontSize}px`;
       let formattedText = formatMarkdown(message.text);
       if (message.category === 'project' && message.projectDetails) {
         formattedText = renderProjectCard(message.text, message.projectDetails);
@@ -235,11 +235,14 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         }
       }
       if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
-      const speakBtn = document.createElement('button');
-speakBtn.className = 'speak-btn';
-speakBtn.setAttribute('aria-label', 'Play or pause message');
-speakBtn.innerHTML = `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.504-3.753v7.506l6.504-3.753zM5 3v18l14-9L5 3z"></path></svg>`;
-bubbleDiv.appendChild(speakBtn);
+        const speakBtn = document.createElement('button');
+        speakBtn.className = 'speak-btn';
+        speakBtn.setAttribute('aria-label', 'Play or pause message');
+        speakBtn.innerHTML = message.isSpeaking
+          ? `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path></svg>`
+          : `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.504-3.753v7.506l6.504-3.753zM5 3v18l14-9L5 3z"></path></svg>`;
+        speakBtn.addEventListener('click', () => window.speakMessage(message.id, message.text, currentLang));
+        bubbleDiv.appendChild(speakBtn);
       }
       const messageActions = document.createElement('div');
       messageActions.className = 'message-actions flex justify-end gap-2 mt-2';
@@ -272,7 +275,7 @@ bubbleDiv.appendChild(speakBtn);
       messageActions.appendChild(reactionBtn);
       bubbleDiv.appendChild(messageContent);
       bubbleDiv.appendChild(messageActions);
-      messageDiv.appendChild(bubbleDiv); // Ensure bubbleDiv is appended to messageDiv
+      messageDiv.appendChild(bubbleDiv);
       chatMessages.appendChild(messageDiv);
     });
 
@@ -347,7 +350,7 @@ bubbleDiv.appendChild(speakBtn);
     if (projectDetails) message.projectDetails = projectDetails;
     if (quickReplies.length > 0) message.quickReplies = quickReplies;
     if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function') {
-      window.speakMessage(messageId, text);
+      window.speakMessage(messageId, text, currentLang);
       interactionAnalytics.speechUsed++;
     }
     renderMessages();
@@ -383,7 +386,9 @@ bubbleDiv.appendChild(speakBtn);
       if (!response.ok) throw new Error('API request failed');
       const data = await response.json();
       aiResponse = data.candidates[0].content.parts[0].text;
-      quickReplies = currentLang === 'hi' ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?'] : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
+      quickReplies = currentLang === 'hi'
+        ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?']
+        : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
       if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
         const searchResults = await performWebSearch(message);
         aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
@@ -392,7 +397,9 @@ bubbleDiv.appendChild(speakBtn);
       console.error('API error:', error.message);
       const searchResults = await performWebSearch(message);
       aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
-      quickReplies = currentLang === 'hi' ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?'] : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
+      quickReplies = currentLang === 'hi'
+        ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?']
+        : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
     }
     interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
 
@@ -412,39 +419,31 @@ bubbleDiv.appendChild(speakBtn);
           reactions: [],
           isPinned: false
         });
-        typeMessage(currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?', followUpId, null, currentLang === 'hi' ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?'] : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']);
+        typeMessage(
+          currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?',
+          followUpId,
+          null,
+          currentLang === 'hi'
+            ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?']
+            : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']
+        );
       }, 2000);
     }
 
     isLoading = false;
     renderMessages();
   }
-const langToggle = document.querySelector('.lang-toggle');
-    if (langToggle) {
-      langToggle.addEventListener('click', function() {
-        currentLang = currentLang === 'en' ? 'hi' : 'en';
-        document.getElementById('chatbot-container').setAttribute('lang', currentLang);
-        langToggle.setAttribute('data-lang', currentLang === 'en' ? 'hi' : 'en');
-        const chatInput = document.getElementById('chat-input');
-        if (chatInput) {
-          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
-        }
-        const searchBar = document.getElementById('search-bar');
-        if (searchBar) {
-          searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search Messages';
-        }
-        handleInputChange(document.getElementById('chat-input').value);
-        filteredSuggestions = suggestedPrompts[currentLang];
-        renderMessages();
-      });
-    }
-    
+
   async function performWebSearch(query) {
     const lowerQuery = query.toLowerCase();
     if (lowerQuery.includes('sanjay patidar')) {
-      return currentLang === 'hi' ? `संजय पाटीदार सर्वरलेस आर्किटेक्चर में विशेषज्ञ फुल-स्टैक इंजीनियर हैं, जिन्हें इंडस्ट्री लीडर्स द्वारा मान्यता प्राप्त है। अधिक जानकारी के लिए उनका [LinkedIn](https://linkedin.com/in/sanjay-patidar) देखें।` : `Sanjay Patidar is a Full-Stack Engineer with expertise in serverless architectures, recognized by industry leaders. Check his [LinkedIn](https://linkedin.com/in/sanjay-patidar) for more details.`;
+      return currentLang === 'hi'
+        ? `संजय पाटीदार सर्वरलेस आर्किटेक्चर में विशेषज्ञ फुल-स्टैक इंजीनियर हैं, जिन्हें इंडस्ट्री लीडर्स द्वारा मान्यता प्राप्त है। अधिक जानकारी के लिए उनका [LinkedIn](https://linkedin.com/in/sanjay-patidar) देखें।`
+        : `Sanjay Patidar is a Full-Stack Engineer with expertise in serverless architectures, recognized by industry leaders. Check his [LinkedIn](https://linkedin.com/in/sanjay-patidar) for more details.`;
     }
-    return currentLang === 'hi' ? ` "${query}" पर सामान्य जानकारी: अधिक संदर्भ प्रदान करें या संजय-संबंधित प्रश्न के लिए विस्तृत जानकारी के लिए पूछें।` : `General information on "${query}": Please provide more context or try a Sanjay-specific question for detailed insights.`;
+    return currentLang === 'hi'
+      ? `"${query}" पर सामान्य जानकारी: अधिक संदर्भ प्रदान करें या संजय-संबंधित प्रश्न के लिए विस्तृत जानकारी के लिए पूछें।`
+      : `General information on "${query}": Please provide more context or try a Sanjay-specific question for detailed insights.`;
   }
 
   function categorizeMessage(message) {
@@ -551,12 +550,12 @@ const langToggle = document.querySelector('.lang-toggle');
 
   function startEditing(id, text) {
     editingMessageId = id;
-    window.editedText = text;
+    editedText = text;
     renderMessages();
     const editInput = document.querySelector('.edit-message-input');
     if (editInput) {
       editInput.focus();
-      editInput.addEventListener('input', (e) => window.editedText = e.target.value);
+      editInput.addEventListener('input', (e) => editedText = e.target.value);
       editInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') saveEditedMessage(id);
       });
@@ -568,13 +567,13 @@ const langToggle = document.querySelector('.lang-toggle');
   }
 
   async function saveEditedMessage(id) {
-    if (window.editedText.trim()) {
+    if (editedText.trim()) {
       window.messages = window.messages.map(function(message) {
-        return message.id === id ? { ...message, text: window.editedText, timestamp: new Date().toISOString(), category: categorizeMessage(window.editedText) } : message;
+        return message.id === id ? { ...message, text: editedText, timestamp: new Date().toISOString(), category: categorizeMessage(editedText) } : message;
       });
       editingMessageId = null;
-      const editedMessageText = window.editedText;
-      window.editedText = '';
+      const editedMessageText = editedText;
+      editedText = '';
       renderMessages();
       isLoading = true;
       interactionAnalytics.questionsAsked++;
@@ -592,7 +591,9 @@ const langToggle = document.querySelector('.lang-toggle');
         if (!response.ok) throw new Error('API request failed');
         const data = await response.json();
         aiResponse = data.candidates[0].content.parts[0].text;
-        quickReplies = currentLang === 'hi' ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?'] : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
+        quickReplies = currentLang === 'hi'
+          ? ['इस पर और विस्तार से बताएं?', 'और क्या बता सकते हैं?', 'यह संजय के काम से कैसे संबंधित है?']
+          : ['Can you elaborate on this?', 'What else can you tell me?', 'How does this relate to Sanjay’s work?'];
         if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
           const searchResults = await performWebSearch(editedMessageText);
           aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या सामान्य टेक टॉपिक्स के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or general tech topics!');
@@ -601,7 +602,9 @@ const langToggle = document.querySelector('.lang-toggle');
         console.error('API error:', error.message);
         const searchResults = await performWebSearch(editedMessageText);
         aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects or skills!');
-        quickReplies = currentLang === 'hi' ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?'] : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
+        quickReplies = currentLang === 'hi'
+          ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्किल्स क्या हैं?']
+          : ['Try another question', 'Ask about Sanjay’s projects', 'What are Sanjay’s skills?'];
       }
       interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
 
@@ -621,7 +624,14 @@ const langToggle = document.querySelector('.lang-toggle');
             reactions: [],
             isPinned: false
           });
-          typeMessage(currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?', followUpId, null, currentLang === 'hi' ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?'] : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']);
+          typeMessage(
+            currentLang === 'hi' ? 'संजय के काम या प्रोजेक्ट्स के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work or projects?',
+            followUpId,
+            null,
+            currentLang === 'hi'
+              ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय से संपर्क कैसे करें?']
+              : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'How can I contact Sanjay?']
+          );
         }, 2000);
       }
 
@@ -629,14 +639,14 @@ const langToggle = document.querySelector('.lang-toggle');
       renderMessages();
     } else {
       editingMessageId = null;
-      window.editedText = '';
+      editedText = '';
       renderMessages();
     }
   }
 
   function cancelEdit() {
     editingMessageId = null;
-    window.editedText = '';
+    editedText = '';
     renderMessages();
   }
 
@@ -674,7 +684,7 @@ const langToggle = document.querySelector('.lang-toggle');
         ? '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>'
         : '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>';
     }
-    renderMessages(); // Re-render to ensure visibility in new theme
+    renderMessages();
   }
 
   function toggleControls() {
@@ -718,7 +728,7 @@ const langToggle = document.querySelector('.lang-toggle');
     if (chatMessages) {
       chatMessages.style.display = isHistoryCollapsed ? 'none' : 'block';
     }
-    if (!isHistoryCollapsed) renderMessages(); // Re-render when showing history
+    if (!isHistoryCollapsed) renderMessages();
   }
 
   function toggleAutoReply() {
@@ -746,29 +756,27 @@ const langToggle = document.querySelector('.lang-toggle');
     renderMessages();
   }
 
- function adjustFontSize(change) {
-  fontSize = Math.max(10, Math.min(18, fontSize + change));
-  localStorage.setItem('chat-font-size', fontSize);
-  const elements = document.querySelectorAll('.chatbot-container .message-content, .chatbot-container .chat-input, .chatbot-container .search-bar, .chatbot-container .suggestion-btn, .chatbot-container .message-actions');
-  elements.forEach(function(element) {
-    element.style.setProperty('font-size', `${fontSize}px`, 'important');
-  });
-  console.log(`Font size adjusted to ${fontSize}px, affected ${elements.length} elements`);
-}
+  function adjustFontSize(change) {
+    fontSize = Math.max(10, Math.min(18, fontSize + change));
+    localStorage.setItem('chat-font-size', fontSize);
+    const elements = document.querySelectorAll('.chatbot-container .message-content, .chatbot-container .chat-input, .chatbot-container .search-bar, .chatbot-container .suggestion-btn, .chatbot-container .message-actions');
+    elements.forEach(function(element) {
+      element.style.setProperty('font-size', `${fontSize}px`, 'important');
+    });
+    console.log(`Font size adjusted to ${fontSize}px, affected ${elements.length} elements`);
+  }
 
   function confirmClearChat() {
     const confirmPopup = document.createElement('div');
-    confirmPopup.className = 'confirm-popup top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
+    confirmPopup.className = 'confirm-popup';
     confirmPopup.innerHTML = `
-      <p class="text-sm">${currentLang === 'hi' ? 'क्या आप वाकई चैट इतिहास मिटाना चाहते हैं?' : 'Are you sure you want to clear the chat history?'}</p>
-      <div class="flex justify-end gap-2 mt-2">
-        <button class="control-btn bg-[#128C7E] text-white clear-confirm-btn">${currentLang === 'hi' ? 'हाँ' : 'Yes'}</button>
-        <button class="control-btn bg-[#FF4D4F] text-white clear-cancel-btn">${currentLang === 'hi' ? 'नहीं' : 'No'}</button>
-      </div>
+      <p>${currentLang === 'hi' ? 'क्या आप वाकई चैट इतिहास मिटाना चाहते हैं?' : 'Are you sure you want to clear the chat history?'}</p>
+      <button class="confirm-btn">${currentLang === 'hi' ? 'हाँ' : 'Yes'}</button>
+      <button class="cancel-btn">${currentLang === 'hi' ? 'नहीं' : 'No'}</button>
     `;
     document.getElementById('chatbot-container').appendChild(confirmPopup);
-    const confirmBtn = confirmPopup.querySelector('.clear-confirm-btn');
-    const cancelBtn = confirmPopup.querySelector('.clear-cancel-btn');
+    const confirmBtn = confirmPopup.querySelector('.confirm-btn');
+    const cancelBtn = confirmPopup.querySelector('.cancel-btn');
     if (confirmBtn) confirmBtn.addEventListener('click', clearChat);
     if (cancelBtn) cancelBtn.addEventListener('click', () => confirmPopup.remove());
   }
@@ -836,11 +844,10 @@ const langToggle = document.querySelector('.lang-toggle');
       console.error('Critical: #chat-messages element not found on DOM load');
       return;
     }
-    chatMessages.style.display = 'block'; // Ensure chat-messages is visible
+    chatMessages.style.display = 'block';
     renderMessages();
     handleInputChange('');
 
-    // Attach event listeners to header controls
     const controlsToggle = document.querySelector('.controls-toggle');
     if (controlsToggle) controlsToggle.addEventListener('click', toggleControls);
 
@@ -850,7 +857,28 @@ const langToggle = document.querySelector('.lang-toggle');
     const themeBtn = document.querySelector('.theme-btn');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-    // Attach event listeners to chat controls
+    const langToggle = document.querySelector('.lang-toggle');
+    if (langToggle) {
+      langToggle.addEventListener('click', function() {
+        currentLang = currentLang === 'en' ? 'hi' : 'en';
+        localStorage.setItem('chat-lang', currentLang);
+        document.getElementById('chatbot-container').setAttribute('lang', currentLang);
+        langToggle.setAttribute('data-lang', currentLang === 'en' ? 'hi' : 'en');
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
+        }
+        const searchBar = document.getElementById('search-bar');
+        if (searchBar) {
+          searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search Messages';
+        }
+        handleInputChange(document.getElementById('chat-input').value);
+        filteredSuggestions = suggestedPrompts[currentLang];
+        renderMessages();
+        if (typeof window.stopAllSpeech === 'function') window.stopAllSpeech();
+      });
+    }
+
     const searchBar = document.getElementById('search-bar');
     if (searchBar) searchBar.addEventListener('input', (e) => searchMessages(e.target.value));
 
@@ -866,24 +894,6 @@ const langToggle = document.querySelector('.lang-toggle');
     const timestampBtn = document.querySelector('.timestamp-btn');
     if (timestampBtn) timestampBtn.addEventListener('click', toggleTimestamps);
 
-    document.querySelectorAll('.lang-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        currentLang = btn.dataset.lang;
-        document.getElementById('chatbot-container').lang = currentLang;
-        const chatInput = document.getElementById('chat-input');
-        if (chatInput) {
-          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
-        }
-        const searchBar = document.getElementById('search-bar');
-        if (searchBar) {
-          searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search messages...';
-        }
-        handleInputChange(document.getElementById('chat-input').value);
-        updateButtonStates();
-        renderMessages();
-      });
-    });
-
     const volumeControl = document.getElementById('volume-control');
     if (volumeControl) volumeControl.addEventListener('input', function(e) {
       if (typeof window.setSpeechVolume === 'function') window.setSpeechVolume(e.target.value);
@@ -896,7 +906,7 @@ const langToggle = document.querySelector('.lang-toggle');
 
     document.querySelectorAll('.font-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const change = btn.textContent === 'A+' ? 2 : -2;
+        const change = btn.textContent.includes('Increase') ? 2 : -2;
         adjustFontSize(change);
       });
     });
@@ -907,7 +917,6 @@ const langToggle = document.querySelector('.lang-toggle');
     const clearBtn = document.querySelector('.clear-btn');
     if (clearBtn) clearBtn.addEventListener('click', confirmClearChat);
 
-    // Attach event listeners to input area
     const chatInput = document.getElementById('chat-input');
     if (chatInput) {
       chatInput.addEventListener('input', (e) => handleInputChange(e.target.value));
@@ -922,7 +931,6 @@ const langToggle = document.querySelector('.lang-toggle');
     const sendBtn = document.querySelector('.send-btn');
     if (sendBtn) sendBtn.addEventListener('click', sendMessage);
 
-    // Apply initial font size
     adjustFontSize(0);
   });
 })();
