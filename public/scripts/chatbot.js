@@ -420,16 +420,25 @@ bubbleDiv.appendChild(speakBtn);
     renderMessages();
   }
 const langToggle = document.querySelector('.lang-toggle');
-langToggle.addEventListener('click', () => {
-  const container = document.getElementById('chatbot-container');
-  const currentLang = container.getAttribute('lang');
-  container.setAttribute('lang', currentLang === 'en' ? 'hi' : 'en');
-  langToggle.setAttribute('data-lang', currentLang === 'en' ? 'en' : 'hi');
-  // Update lang-hidden/lang-visible visibility
-  document.querySelectorAll('.lang-hidden, .lang-visible').forEach(el => {
-    el.classList.toggle('hidden', !el.classList.contains(currentLang === 'en' ? 'lang-hidden' : 'lang-visible'));
-  });
-});
+    if (langToggle) {
+      langToggle.addEventListener('click', function() {
+        currentLang = currentLang === 'en' ? 'hi' : 'en';
+        document.getElementById('chatbot-container').setAttribute('lang', currentLang);
+        langToggle.setAttribute('data-lang', currentLang === 'en' ? 'hi' : 'en');
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
+        }
+        const searchBar = document.getElementById('search-bar');
+        if (searchBar) {
+          searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search Messages';
+        }
+        handleInputChange(document.getElementById('chat-input').value);
+        filteredSuggestions = suggestedPrompts[currentLang];
+        renderMessages();
+      });
+    }
+    
   async function performWebSearch(query) {
     const lowerQuery = query.toLowerCase();
     if (lowerQuery.includes('sanjay patidar')) {
