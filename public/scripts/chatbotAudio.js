@@ -14,162 +14,218 @@
       }
       window.speechSynthesis.onvoiceschanged = function() {
         voices = window.speechSynthesis.getVoices();
+        console.log('Voices loaded:', voices.map(v => `${v.name} (${v.lang})`));
         resolve(voices);
       };
       setTimeout(() => {
         if (voices.length === 0) {
           voices = window.speechSynthesis.getVoices();
+          console.log('Voices after timeout:', voices.map(v => `${v.name} (${v.lang})`));
           resolve(voices);
         }
-      }, 1000);
+      }, 2000); // Increased timeout for slower devices
     });
   }
-async function speakMessage(messageId, text, lang) {
-  if (!window.speechSynthesis) {
-    console.warn('Speech synthesis not supported in this browser.');
-    if (window.messages) {
-      window.messages.push({
-        sender: 'ai',
-        text: lang === 'hi' ? 'इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है।' : 'Speech synthesis is not supported in this browser.',
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        category: 'general',
-        reactions: [],
-        isPinned: false
-      });
-      window.renderMessages?.();
+
+  // Improved sentence splitting to preserve technical terms like "React.js"
+  function splitSentences(text) {
+    if (!text || text.trim() === '') return [text];
+    // Protect technical terms with periods (e.g., React.js, Node.js)
+    const techTerms = text.replace(/(React|Node|Next|Express)\.js/g, '$1_js');
+    // Split on sentence boundaries (period, question mark, exclamation mark followed by space or end)
+    const sentences = techTerms.match(/[^.!?]+[.!?]+(?:\s+|$)/g) || [text];
+    // Restore protected terms
+    return sentences.map(s => s.replace(/(React|Node|Next|Express)_js/g, '$1.js'));
+  }
+
+  async function speakMessage(messageId, text, lang) {
+    if (!window.speechSynthesis) {
+      console.warn('Speech synthesis not supported in this browser.');
+      if (window.messages) {
+        window.messages.push({
+          sender: 'ai',
+          text: lang === 'hi' ? 'इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है।' : 'Speech synthesis is not supported in this browser.',
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          category: 'general',
+          reactions: [],
+          isPinned: false
+        });
+        window.renderMessages?.();
+      }
+      return;
     }
-    return;
-  }
 
-  if (!text || text.trim() === '') {
-    console.warn('No valid text to speak.');
-    return;
-  }
-
-  if (speechStates.size > 0 && !speechStates.has(messageId)) {
-    speechQueue.push({ messageId, text, lang });
-    return;
-  }
-
-  window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
-  window.interactionAnalytics.speechUsed++;
-
-  const synth = window.speechSynthesis;
-  let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
-
-  if (state.isSpeaking && !state.isPaused) {
-    synth.pause();
-    state.isPaused = true;
-    state.isSpeaking = false;
-    speechStates.set(messageId, state);
-    updateSpeakButton(messageId, false);
-    const message = window.messages.find(m => m.id === messageId);
-    if (message) {
-      message.isSpeaking = false;
-      window.renderMessages?.();
+    if (!text || text.trim() === '') {
+      console.warn('No valid text to speak.');
+      return;
     }
-    return;
-  } else if (state.isPaused) {
-    synth.resume();
-    state.isPaused = false;
-    state.isSpeaking = true;
-    speechStates.set(messageId, state);
-    updateSpeakButton(messageId, true);
-    const message = window.messages.find(m => m.id === messageId);
-    if (message) {
-      message.isSpeaking = true;
-      window.renderMessages?.();
+
+    if (speechStates.size > 0 && !speechStates.has(messageId)) {
+      speechQueue.push({ messageId, text, lang });
+      return;
     }
-    return;
-  }
 
-  // Improved sentence splitting to avoid breaking on technical terms like "React.js"
-  const techTermRegex = /\b\w+\.\w+\b/g;
-  const techTerms = text.match(techTermRegex) || [];
-  let tempText = text;
-  techTerms.forEach((term, index) => {
-    tempText = tempText.replace(term, `TECHTERM${index}PLACEHOLDER`);
-  });
-  state.sentences = tempText.match(/[^.!?]+[.!?]+/g) || [tempText];
-  state.sentences = state.sentences.map(sentence => {
-    techTerms.forEach((term, index) => {
-      sentence = sentence.replace(`TECHTERM${index}PLACEHOLDER`, term);
-    });
-    return sentence;
-  });
-  if (state.sentences.length === 1 && state.sentences[0] === tempText) {
-    state.sentences = [text]; // Fallback to full text if splitting fails
-  }
-  state.currentChunk = 0;
-  state.charIndex = 0;
-  speechStates.set(messageId, state);
+    window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
+    window.interactionAnalytics.speechUsed++;
 
-  async function speakNextChunk() {
-    if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
-      speechStates.delete(messageId);
+    const synth = window.speechSynthesis;
+    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
+
+    if (state.isSpeaking && !state.isPaused) {
+      synth.pause();
+      state.isPaused = true;
+      state.isSpeaking = false;
+      speechStates.set(messageId, state);
       updateSpeakButton(messageId, false);
       const message = window.messages.find(m => m.id === messageId);
       if (message) {
         message.isSpeaking = false;
         window.renderMessages?.();
       }
-      if (speechQueue.length > 0) {
-        const next = speechQueue.shift();
-        speakMessage(next.messageId, next.text, next.lang);
+      return;
+    } else if (state.isPaused) {
+      synth.resume();
+      state.isPaused = false;
+      state.isSpeaking = true;
+      speechStates.set(messageId, state);
+      updateSpeakButton(messageId, true);
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = true;
+        window.renderMessages?.();
       }
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance();
-    utterance.volume = volume;
-    utterance.rate = rate;
-    utterance.pitch = 1;
-    utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
-    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+    state.sentences = splitSentences(text);
+    state.currentChunk = 0;
+    state.charIndex = 0;
+    speechStates.set(messageId, state);
 
-    try {
-      voices = await loadVoices();
-      let voice;
-      if (lang === 'hi') {
-        voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) || 
-                voices.find(v => v.lang === 'hi-IN') || 
-                voices.find(v => v.lang.includes('hi')); // Fallback to any Hindi voice
-      } else {
-        voice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || 
-                voices.find(v => v.lang === 'en-US') || 
-                voices.find(v => v.lang.includes('en'));
+    async function speakNextChunk() {
+      if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
+        speechStates.delete(messageId);
+        updateSpeakButton(messageId, false);
+        const message = window.messages.find(m => m.id === messageId);
+        if (message) {
+          message.isSpeaking = false;
+          window.renderMessages?.();
+        }
+        if (speechQueue.length > 0) {
+          const next = speechQueue.shift();
+          speakMessage(next.messageId, next.text, next.lang);
+        }
+        return;
       }
 
-      if (voice) {
-        utterance.voice = voice;
-        state.utterance = utterance;
-        state.isSpeaking = true;
-        state.isPaused = false;
-        speechStates.set(messageId, state);
+      const utterance = new SpeechSynthesisUtterance();
+      utterance.volume = volume;
+      utterance.rate = lang === 'hi' ? rate * 0.9 : rate; // Slower rate for Hindi clarity
+      utterance.pitch = 1;
+      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
+      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
 
-        utterance.onend = function() {
-          if (speechStates.has(messageId)) {
-            state.currentChunk++;
-            state.charIndex = 0;
-            speechStates.set(messageId, state);
-            speakNextChunk();
+      try {
+        voices = await loadVoices();
+        let voice;
+        if (lang === 'hi') {
+          // Try hi-IN, then hi, then fallback to en-US
+          voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) ||
+                  voices.find(v => v.lang === 'hi-IN') ||
+                  voices.find(v => v.lang === 'hi') ||
+                  voices.find(v => v.lang.includes('en')); // Fallback to English
+          if (!voice) {
+            console.warn('No Hindi voice available, falling back to default.');
+            window.messages.push({
+              sender: 'ai',
+              text: 'कोई हिंदी आवाज़ उपलब्ध नहीं है। कृपया अपने डिवाइस पर Google Text-to-Speech स्थापित करें या अंग्रेजी में सुनने के लिए भाषा बदलें।',
+              id: Date.now(),
+              timestamp: new Date().toISOString(),
+              category: 'general',
+              reactions: [],
+              isPinned: false
+            });
+            window.renderMessages?.();
+            speechStates.delete(messageId);
+            updateSpeakButton(messageId, false);
+            if (speechQueue.length > 0) {
+              const next = speechQueue.shift();
+              speakMessage(next.messageId, next.text, next.lang);
+            }
+            return;
           }
-        };
+        } else {
+          voice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) ||
+                  voices.find(v => v.lang === 'en-US') ||
+                  voices.find(v => v.lang.includes('en'));
+        }
 
-        utterance.onboundary = function(event) {
-          if (speechStates.has(messageId)) {
-            state.charIndex = event.charIndex;
-            speechStates.set(messageId, state);
+        if (voice) {
+          utterance.voice = voice;
+          state.utterance = utterance;
+          state.isSpeaking = true;
+          state.isPaused = false;
+          speechStates.set(messageId, state);
+
+          utterance.onend = function() {
+            if (speechStates.has(messageId)) {
+              state.currentChunk++;
+              state.charIndex = 0;
+              speechStates.set(messageId, state);
+              speakNextChunk();
+            }
+          };
+
+          utterance.onboundary = function(event) {
+            if (speechStates.has(messageId)) {
+              state.charIndex = event.charIndex;
+              speechStates.set(messageId, state);
+            }
+          };
+
+          utterance.onerror = function(event) {
+            console.warn('Speech synthesis error: ' + event.error);
+            if (window.messages) {
+              window.messages.push({
+                sender: 'ai',
+                text: lang === 'hi' ? 'स्पीच सिंथेसिस में त्रुटि: ' + event.error + '. कृपया स्पीच रेट समायोजित करें या Google Text-to-Speech स्थापित करें।' : 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or installing Google Text-to-Speech.',
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                category: 'general',
+                reactions: [],
+                isPinned: false
+              });
+              window.renderMessages?.();
+            }
+            if (speechStates.has(messageId)) {
+              speechStates.delete(messageId);
+              updateSpeakButton(messageId, false);
+              const message = window.messages.find(m => m.id === messageId);
+              if (message) {
+                message.isSpeaking = false;
+                window.renderMessages?.();
+              }
+            }
+            if (speechQueue.length > 0) {
+              const next = speechQueue.shift();
+              speakMessage(next.messageId, next.text, next.lang);
+            }
+          };
+
+          synth.speak(utterance);
+          updateSpeakButton(messageId, true);
+          const message = window.messages.find(m => m.id === messageId);
+          if (message) {
+            message.isSpeaking = true;
+            window.renderMessages?.();
           }
-        };
-
-        utterance.onerror = function(event) {
-          console.warn('Speech synthesis error: ' + event.error);
+        } else {
+          console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
           if (window.messages) {
             window.messages.push({
               sender: 'ai',
-              text: lang === 'hi' ? 'स्पीच सिंथेसिस में त्रुटि: ' + event.error + '. कृपया स्पीच रेट समायोजित करें या वर्तमान स्पीच के पूरा होने की प्रतीक्षा करें।' : 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
+              text: lang === 'hi' ? 'उपयुक्त आवाज़ ' + utterance.lang + ' के लिए उपलब्ध नहीं है। कृपया Google Text-to-Speech स्थापित करें या अपने सिस्टम की भाषा सेटिंग्स जांचें।' : 'No suitable voice available for ' + utterance.lang + '. Please install Google Text-to-Speech or check your system’s language settings.',
               id: Date.now(),
               timestamp: new Date().toISOString(),
               category: 'general',
@@ -178,34 +234,24 @@ async function speakMessage(messageId, text, lang) {
             });
             window.renderMessages?.();
           }
-          if (speechStates.has(messageId)) {
-            speechStates.delete(messageId);
-            updateSpeakButton(messageId, false);
-            const message = window.messages.find(m => m.id === messageId);
-            if (message) {
-              message.isSpeaking = false;
-              window.renderMessages?.();
-            }
+          speechStates.delete(messageId);
+          updateSpeakButton(messageId, false);
+          const message = window.messages.find(m => m.id === messageId);
+          if (message) {
+            message.isSpeaking = false;
+            window.renderMessages?.();
           }
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
             speakMessage(next.messageId, next.text, next.lang);
           }
-        };
-
-        synth.speak(utterance);
-        updateSpeakButton(messageId, true);
-        const message = window.messages.find(m => m.id === messageId);
-        if (message) {
-          message.isSpeaking = true;
-          window.renderMessages?.();
         }
-      } else {
-        console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
+      } catch (error) {
+        console.warn('Failed to load voices: ' + error.message);
         if (window.messages) {
           window.messages.push({
             sender: 'ai',
-            text: lang === 'hi' ? 'उपयुक्त आवाज़ ' + utterance.lang + ' के लिए उपलब्ध नहीं है। कृपया अपने सिस्टम की भाषा सेटिंग्स जांचें।' : 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
+            text: lang === 'hi' ? 'आवाज़ लोड करने में विफल: ' + error.message + '. कृपया Google Text-to-Speech स्थापित करें।' : 'Failed to load voices: ' + error.message + '. Please install Google Text-to-Speech.',
             id: Date.now(),
             timestamp: new Date().toISOString(),
             category: 'general',
@@ -226,35 +272,14 @@ async function speakMessage(messageId, text, lang) {
           speakMessage(next.messageId, next.text, next.lang);
         }
       }
-    } catch (error) {
-      console.warn('Failed to load voices: ' + error.message);
-      if (window.messages) {
-        window.messages.push({
-          sender: 'ai',
-          text: lang === 'hi' ? 'आवाज़ लोड करने में विफल: ' + error.message : 'Failed to load voices: ' + error.message,
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-          category: 'general',
-          reactions: [],
-          isPinned: false
-        });
-        window.renderMessages?.();
-      }
-      speechStates.delete(messageId);
-      updateSpeakButton(messageId, false);
-      const message = window.messages.find(m => m.id === messageId);
-      if (message) {
-        message.isSpeaking = false;
-        window.renderMessages?.();
-      }
-      if (speechQueue.length > 0) {
-        const next = speechQueue.shift();
-        speakMessage(next.messageId, next.text, next.lang);
-      }
     }
+
+    if (speechStates.has(messageId) && !state.isSpeaking) {
+      synth.cancel();
+    }
+    speakNextChunk();
   }
-}
-  
+
   function stopAllSpeech() {
     window.speechSynthesis.cancel();
     speechStates.forEach((_, messageId) => {
