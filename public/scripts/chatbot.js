@@ -235,11 +235,11 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         }
       }
       if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
-        let speakBtn = document.createElement('button');
-        speakBtn.className = 'speak-btn absolute -top-2 -right-2 bg-[#25D366] dark:bg-[#2A3942] text-white p-1 rounded-full';
-        speakBtn.innerHTML = message.isSpeaking ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14"></path></svg>';
-        speakBtn.addEventListener('click', function() { window.toggleSpeak(message.id, message.text); });
-        bubbleDiv.appendChild(speakBtn);
+      const speakBtn = document.createElement('button');
+speakBtn.className = 'speak-btn';
+speakBtn.setAttribute('aria-label', 'Play or pause message');
+speakBtn.innerHTML = `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.504-3.753v7.506l6.504-3.753zM5 3v18l14-9L5 3z"></path></svg>`;
+bubbleDiv.appendChild(speakBtn);
       }
       const messageActions = document.createElement('div');
       messageActions.className = 'message-actions flex justify-end gap-2 mt-2';
@@ -419,7 +419,17 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     isLoading = false;
     renderMessages();
   }
-
+const langToggle = document.querySelector('.lang-toggle');
+langToggle.addEventListener('click', () => {
+  const container = document.getElementById('chatbot-container');
+  const currentLang = container.getAttribute('lang');
+  container.setAttribute('lang', currentLang === 'en' ? 'hi' : 'en');
+  langToggle.setAttribute('data-lang', currentLang === 'en' ? 'en' : 'hi');
+  // Update lang-hidden/lang-visible visibility
+  document.querySelectorAll('.lang-hidden, .lang-visible').forEach(el => {
+    el.classList.toggle('hidden', !el.classList.contains(currentLang === 'en' ? 'lang-hidden' : 'lang-visible'));
+  });
+});
   async function performWebSearch(query) {
     const lowerQuery = query.toLowerCase();
     if (lowerQuery.includes('sanjay patidar')) {
