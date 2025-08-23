@@ -1,9 +1,8 @@
 (function() {
-  let currentLang = document.querySelector('.lang-btn.active')?.dataset.lang || 'en';
   let voices = [];
   let speechStates = new Map();
-  let volume = 1;
-  let rate = 1;
+  let volume = parseFloat(localStorage.getItem('speech-volume') || 1);
+  let rate = parseFloat(localStorage.getItem('speech-rate') || 1);
   let speechQueue = [];
 
   function loadVoices() {
@@ -26,13 +25,13 @@
     });
   }
 
-  async function speakMessage(messageId, text) {
+  async function speakMessage(messageId, text, lang) {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported in this browser.');
       if (window.messages) {
         window.messages.push({
           sender: 'ai',
-          text: 'Speech synthesis is not supported in this browser.',
+          text: lang === 'hi' ? 'इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है।' : 'Speech synthesis is not supported in this browser.',
           id: Date.now(),
           timestamp: new Date().toISOString(),
           category: 'general',
@@ -50,7 +49,7 @@
     }
 
     if (speechStates.size > 0 && !speechStates.has(messageId)) {
-      speechQueue.push({ messageId, text });
+      speechQueue.push({ messageId, text, lang });
       return;
     }
 
@@ -102,7 +101,7 @@
         }
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
-          speakMessage(next.messageId, next.text);
+          speakMessage(next.messageId, next.text, next.lang);
         }
         return;
       }
@@ -112,14 +111,20 @@
       utterance.rate = rate;
       utterance.pitch = 1;
       utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
-      utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
+      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
 
       try {
         voices = await loadVoices();
-        let voice = voices.find(v => v.lang.includes(utterance.lang));
-        if (!voice && utterance.lang === 'en-IN') {
-          voice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en'));
+        let voice;
+        if (lang === 'hi') {
+          voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) || 
+                  voices.find(v => v.lang === 'hi-IN');
+        } else {
+          voice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || 
+                  voices.find(v => v.lang === 'en-US') || 
+                  voices.find(v => v.lang.includes('en'));
         }
+
         if (voice) {
           utterance.voice = voice;
           state.utterance = utterance;
@@ -148,7 +153,7 @@
             if (window.messages) {
               window.messages.push({
                 sender: 'ai',
-                text: 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
+                text: lang === 'hi' ? 'स्पीच सिंथेसिस में त्रुटि: ' + event.error + '. कृपया स्पीच रेट समायोजित करें या वर्तमान स्पीच के पूरा होने की प्रतीक्षा करें।' : 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
                 id: Date.now(),
                 timestamp: new Date().toISOString(),
                 category: 'general',
@@ -168,7 +173,7 @@
             }
             if (speechQueue.length > 0) {
               const next = speechQueue.shift();
-              speakMessage(next.messageId, next.text);
+              speakMessage(next.messageId, next.text, next.lang);
             }
           };
 
@@ -184,7 +189,7 @@
           if (window.messages) {
             window.messages.push({
               sender: 'ai',
-              text: 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
+              text: lang === 'hi' ? 'उपयुक्त आवाज़ ' + utterance.lang + ' के लिए उपलब्ध नहीं है। कृपया अपने सिस्टम की भाषा सेटिंग्स जांचें।' : 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
               id: Date.now(),
               timestamp: new Date().toISOString(),
               category: 'general',
@@ -202,7 +207,7 @@
           }
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
-            speakMessage(next.messageId, next.text);
+            speakMessage(next.messageId, next.text, next.lang);
           }
         }
       } catch (error) {
@@ -210,7 +215,7 @@
         if (window.messages) {
           window.messages.push({
             sender: 'ai',
-            text: 'Failed to load voices: ' + error.message,
+            text: lang === 'hi' ? 'आवाज़ लोड करने में विफल: ' + error.message : 'Failed to load voices: ' + error.message,
             id: Date.now(),
             timestamp: new Date().toISOString(),
             category: 'general',
@@ -228,7 +233,7 @@
         }
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
-          speakMessage(next.messageId, next.text);
+          speakMessage(next.messageId, next.text, next.lang);
         }
       }
     }
@@ -258,7 +263,10 @@
     if (messageDiv) {
       const speakBtn = messageDiv.querySelector('.speak-btn');
       if (speakBtn) {
-        speakBtn.textContent = isSpeaking ? '⏸ Pause' : '🔊 Play';
+        speakBtn.innerHTML = isSpeaking
+          ? `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path></svg>`
+          : `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.504-3.753v7.506l6.504-3.753zM5 3v18l14-9L5 3z"></path></svg>`;
+        speakBtn.setAttribute('aria-label', isSpeaking ? 'Pause message' : 'Play message');
       }
       const message = window.messages.find(m => m.id === messageId);
       if (message) {
@@ -269,6 +277,7 @@
 
   function setSpeechVolume(value) {
     volume = parseFloat(value);
+    localStorage.setItem('speech-volume', volume);
     if (speechStates.size > 0) {
       stopAllSpeech();
     }
@@ -276,6 +285,7 @@
 
   function setSpeechRate(value) {
     rate = parseFloat(value);
+    localStorage.setItem('speech-rate', rate);
     if (speechStates.size > 0) {
       stopAllSpeech();
     }
@@ -290,20 +300,16 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.lang-btn').forEach(function(button) {
-      button.addEventListener('click', function() {
-        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        currentLang = button.dataset.lang || 'en';
-        stopAllSpeech();
-      });
-    });
-    document.getElementById('volume-control')?.addEventListener('input', function() {
+    const volumeControl = document.getElementById('volume-control');
+    if (volumeControl) volumeControl.addEventListener('input', function() {
       setSpeechVolume(this.value);
     });
-    document.getElementById('rate-control')?.addEventListener('input', function() {
+
+    const rateControl = document.getElementById('rate-control');
+    if (rateControl) rateControl.addEventListener('input', function() {
       setSpeechRate(this.value);
     });
+
     loadVoices();
   });
 
