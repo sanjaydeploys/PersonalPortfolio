@@ -192,6 +192,10 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
     const tonePromptText = currentLang === 'hi' ? 'आप कौन सा लहजा सुनना चाहेंगे?' : 'Which tone would you like to hear?';
     const tonePromptId = Date.now();
     
+    // Store pending message
+    pendingMessage = message;
+    pendingMessageId = messageId;
+    
     // Add tone prompt message to chat
     window.messages.push({
       sender: 'ai',
@@ -203,45 +207,12 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       isPinned: false
     });
     
-    // Store pending message
-    pendingMessage = message;
-    pendingMessageId = messageId;
-    
     // Render messages to show the prompt
     renderMessages();
     
     // Speak the tone prompt
     if (typeof window.speakMessage === 'function') {
       window.speakMessage(tonePromptId, tonePromptText, currentLang);
-    }
-    
-    // Create popup
-    const tonePicker = document.createElement('div');
-    tonePicker.className = 'tone-picker absolute bg-white dark:bg-[#2A3942] border rounded-lg p-3 flex flex-col gap-2 z-20';
-    tonePicker.innerHTML = `
-      <p class="text-sm font-semibold">${tonePromptText}</p>
-      <div class="flex gap-2">
-        <button class="tone-btn funny-btn bg-[#128C7E] text-white p-2 rounded-lg">${currentLang === 'hi' ? 'मज़ेदार' : 'Funny'}</button>
-        <button class="tone-btn professional-btn bg-[#128C7E] text-white p-2 rounded-lg">${currentLang === 'hi' ? 'पेशेवर' : 'Professional'}</button>
-      </div>
-    `;
-    const chatbotContainer = document.getElementById('chatbot-container');
-    if (chatbotContainer) {
-      chatbotContainer.appendChild(tonePicker);
-      tonePicker.style.bottom = '80px'; // Position above input area
-      tonePicker.style.right = '20px';
-      
-      const funnyBtn = tonePicker.querySelector('.funny-btn');
-      const professionalBtn = tonePicker.querySelector('.professional-btn');
-      
-      funnyBtn.addEventListener('click', () => {
-        processMessageWithTone(pendingMessage, pendingMessageId, 'funny');
-        tonePicker.remove();
-      });
-      professionalBtn.addEventListener('click', () => {
-        processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
-        tonePicker.remove();
-      });
     }
   }
 
@@ -370,6 +341,26 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
         }
         if (message.reactions.length > 0) {
           messageContent.innerHTML += '<div class="message-reactions flex flex-wrap gap-1 mt-1">' + message.reactions.map(r => `<span class="reaction-tag bg-[#F5F5F5] dark:bg-[#2A3942] rounded-full px-2 py-1 text-sm">${r}</span>`).join('') + '</div>';
+        }
+        // Add tone buttons for tone_prompt messages
+        if (message.category === 'tone_prompt') {
+          const toneButtons = document.createElement('div');
+          toneButtons.className = 'tone-buttons flex gap-2 mt-2';
+          toneButtons.innerHTML = `
+            <button class="tone-btn funny-btn bg-[var(--chat-border-light)] dark:bg-[var(--chat-border-dark)] text-white dark:text-[var(--chat-text-dark)] p-2 rounded-lg text-sm">${currentLang === 'hi' ? 'मज़ेदार' : 'Funny'}</button>
+            <button class="tone-btn professional-btn bg-[var(--chat-border-light)] dark:bg-[var(--chat-border-dark)] text-white dark:text-[var(--chat-text-dark)] p-2 rounded-lg text-sm">${currentLang === 'hi' ? 'पेशेवर' : 'Professional'}</button>
+          `;
+          messageContent.appendChild(toneButtons);
+          toneButtons.querySelector('.funny-btn').addEventListener('click', () => {
+            window.messages = window.messages.filter(m => m.id !== message.id); // Remove tone prompt
+            processMessageWithTone(pendingMessage, pendingMessageId, 'funny');
+            renderMessages();
+          });
+          toneButtons.querySelector('.professional-btn').addEventListener('click', () => {
+            window.messages = window.messages.filter(m => m.id !== message.id); // Remove tone prompt
+            processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
+            renderMessages();
+          });
         }
       }
       if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
@@ -852,7 +843,7 @@ Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and
       isRecording = false;
       const voiceBtn = document.querySelector('.voice-btn');
       if (voiceBtn) voiceBtn.classList.remove('recording');
-      alert(currentLang === 'hi' ? 'वॉइस रिकग्निशन में त्रुटि: ' + event.error : 'Voice recognition error: ' + 여행);
+      alert(currentLang === 'hi' ? 'वॉइस रिकग्निशन में त्रुटि: ' + event.error : 'Voice recognition error: ' + event.error);
     };
   }
 
