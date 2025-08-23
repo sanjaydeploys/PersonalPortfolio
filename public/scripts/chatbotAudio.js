@@ -24,172 +24,152 @@
       }, 1000);
     });
   }
-
-  async function speakMessage(messageId, text, lang) {
-    if (!window.speechSynthesis) {
-      console.warn('Speech synthesis not supported in this browser.');
-      if (window.messages) {
-        window.messages.push({
-          sender: 'ai',
-          text: lang === 'hi' ? 'इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है।' : 'Speech synthesis is not supported in this browser.',
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-          category: 'general',
-          reactions: [],
-          isPinned: false
-        });
-        window.renderMessages?.();
-      }
-      return;
+async function speakMessage(messageId, text, lang) {
+  if (!window.speechSynthesis) {
+    console.warn('Speech synthesis not supported in this browser.');
+    if (window.messages) {
+      window.messages.push({
+        sender: 'ai',
+        text: lang === 'hi' ? 'इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है।' : 'Speech synthesis is not supported in this browser.',
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        category: 'general',
+        reactions: [],
+        isPinned: false
+      });
+      window.renderMessages?.();
     }
+    return;
+  }
 
-    if (!text || text.trim() === '') {
-      console.warn('No valid text to speak.');
-      return;
+  if (!text || text.trim() === '') {
+    console.warn('No valid text to speak.');
+    return;
+  }
+
+  if (speechStates.size > 0 && !speechStates.has(messageId)) {
+    speechQueue.push({ messageId, text, lang });
+    return;
+  }
+
+  window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
+  window.interactionAnalytics.speechUsed++;
+
+  const synth = window.speechSynthesis;
+  let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
+
+  if (state.isSpeaking && !state.isPaused) {
+    synth.pause();
+    state.isPaused = true;
+    state.isSpeaking = false;
+    speechStates.set(messageId, state);
+    updateSpeakButton(messageId, false);
+    const message = window.messages.find(m => m.id === messageId);
+    if (message) {
+      message.isSpeaking = false;
+      window.renderMessages?.();
     }
-
-    if (speechStates.size > 0 && !speechStates.has(messageId)) {
-      speechQueue.push({ messageId, text, lang });
-      return;
+    return;
+  } else if (state.isPaused) {
+    synth.resume();
+    state.isPaused = false;
+    state.isSpeaking = true;
+    speechStates.set(messageId, state);
+    updateSpeakButton(messageId, true);
+    const message = window.messages.find(m => m.id === messageId);
+    if (message) {
+      message.isSpeaking = true;
+      window.renderMessages?.();
     }
+    return;
+  }
 
-    window.interactionAnalytics = window.interactionAnalytics || { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
-    window.interactionAnalytics.speechUsed++;
+  // Improved sentence splitting to avoid breaking on technical terms like "React.js"
+  const techTermRegex = /\b\w+\.\w+\b/g;
+  const techTerms = text.match(techTermRegex) || [];
+  let tempText = text;
+  techTerms.forEach((term, index) => {
+    tempText = tempText.replace(term, `TECHTERM${index}PLACEHOLDER`);
+  });
+  state.sentences = tempText.match(/[^.!?]+[.!?]+/g) || [tempText];
+  state.sentences = state.sentences.map(sentence => {
+    techTerms.forEach((term, index) => {
+      sentence = sentence.replace(`TECHTERM${index}PLACEHOLDER`, term);
+    });
+    return sentence;
+  });
+  if (state.sentences.length === 1 && state.sentences[0] === tempText) {
+    state.sentences = [text]; // Fallback to full text if splitting fails
+  }
+  state.currentChunk = 0;
+  state.charIndex = 0;
+  speechStates.set(messageId, state);
 
-    const synth = window.speechSynthesis;
-    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
-
-    if (state.isSpeaking && !state.isPaused) {
-      synth.pause();
-      state.isPaused = true;
-      state.isSpeaking = false;
-      speechStates.set(messageId, state);
+  async function speakNextChunk() {
+    if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
+      speechStates.delete(messageId);
       updateSpeakButton(messageId, false);
       const message = window.messages.find(m => m.id === messageId);
       if (message) {
         message.isSpeaking = false;
         window.renderMessages?.();
       }
-      return;
-    } else if (state.isPaused) {
-      synth.resume();
-      state.isPaused = false;
-      state.isSpeaking = true;
-      speechStates.set(messageId, state);
-      updateSpeakButton(messageId, true);
-      const message = window.messages.find(m => m.id === messageId);
-      if (message) {
-        message.isSpeaking = true;
-        window.renderMessages?.();
+      if (speechQueue.length > 0) {
+        const next = speechQueue.shift();
+        speakMessage(next.messageId, next.text, next.lang);
       }
       return;
     }
 
-    state.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    state.currentChunk = 0;
-    state.charIndex = 0;
-    speechStates.set(messageId, state);
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.volume = volume;
+    utterance.rate = rate;
+    utterance.pitch = 1;
+    utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
+    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
 
-    async function speakNextChunk() {
-      if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
-        speechStates.delete(messageId);
-        updateSpeakButton(messageId, false);
-        const message = window.messages.find(m => m.id === messageId);
-        if (message) {
-          message.isSpeaking = false;
-          window.renderMessages?.();
-        }
-        if (speechQueue.length > 0) {
-          const next = speechQueue.shift();
-          speakMessage(next.messageId, next.text, next.lang);
-        }
-        return;
+    try {
+      voices = await loadVoices();
+      let voice;
+      if (lang === 'hi') {
+        voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) || 
+                voices.find(v => v.lang === 'hi-IN') || 
+                voices.find(v => v.lang.includes('hi')); // Fallback to any Hindi voice
+      } else {
+        voice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || 
+                voices.find(v => v.lang === 'en-US') || 
+                voices.find(v => v.lang.includes('en'));
       }
 
-      const utterance = new SpeechSynthesisUtterance();
-      utterance.volume = volume;
-      utterance.rate = rate;
-      utterance.pitch = 1;
-      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
-      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+      if (voice) {
+        utterance.voice = voice;
+        state.utterance = utterance;
+        state.isSpeaking = true;
+        state.isPaused = false;
+        speechStates.set(messageId, state);
 
-      try {
-        voices = await loadVoices();
-        let voice;
-        if (lang === 'hi') {
-          voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) || 
-                  voices.find(v => v.lang === 'hi-IN');
-        } else {
-          voice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || 
-                  voices.find(v => v.lang === 'en-US') || 
-                  voices.find(v => v.lang.includes('en'));
-        }
-
-        if (voice) {
-          utterance.voice = voice;
-          state.utterance = utterance;
-          state.isSpeaking = true;
-          state.isPaused = false;
-          speechStates.set(messageId, state);
-
-          utterance.onend = function() {
-            if (speechStates.has(messageId)) {
-              state.currentChunk++;
-              state.charIndex = 0;
-              speechStates.set(messageId, state);
-              speakNextChunk();
-            }
-          };
-
-          utterance.onboundary = function(event) {
-            if (speechStates.has(messageId)) {
-              state.charIndex = event.charIndex;
-              speechStates.set(messageId, state);
-            }
-          };
-
-          utterance.onerror = function(event) {
-            console.warn('Speech synthesis error: ' + event.error);
-            if (window.messages) {
-              window.messages.push({
-                sender: 'ai',
-                text: lang === 'hi' ? 'स्पीच सिंथेसिस में त्रुटि: ' + event.error + '. कृपया स्पीच रेट समायोजित करें या वर्तमान स्पीच के पूरा होने की प्रतीक्षा करें।' : 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                category: 'general',
-                reactions: [],
-                isPinned: false
-              });
-              window.renderMessages?.();
-            }
-            if (speechStates.has(messageId)) {
-              speechStates.delete(messageId);
-              updateSpeakButton(messageId, false);
-              const message = window.messages.find(m => m.id === messageId);
-              if (message) {
-                message.isSpeaking = false;
-                window.renderMessages?.();
-              }
-            }
-            if (speechQueue.length > 0) {
-              const next = speechQueue.shift();
-              speakMessage(next.messageId, next.text, next.lang);
-            }
-          };
-
-          synth.speak(utterance);
-          updateSpeakButton(messageId, true);
-          const message = window.messages.find(m => m.id === messageId);
-          if (message) {
-            message.isSpeaking = true;
-            window.renderMessages?.();
+        utterance.onend = function() {
+          if (speechStates.has(messageId)) {
+            state.currentChunk++;
+            state.charIndex = 0;
+            speechStates.set(messageId, state);
+            speakNextChunk();
           }
-        } else {
-          console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
+        };
+
+        utterance.onboundary = function(event) {
+          if (speechStates.has(messageId)) {
+            state.charIndex = event.charIndex;
+            speechStates.set(messageId, state);
+          }
+        };
+
+        utterance.onerror = function(event) {
+          console.warn('Speech synthesis error: ' + event.error);
           if (window.messages) {
             window.messages.push({
               sender: 'ai',
-              text: lang === 'hi' ? 'उपयुक्त आवाज़ ' + utterance.lang + ' के लिए उपलब्ध नहीं है। कृपया अपने सिस्टम की भाषा सेटिंग्स जांचें।' : 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
+              text: lang === 'hi' ? 'स्पीच सिंथेसिस में त्रुटि: ' + event.error + '. कृपया स्पीच रेट समायोजित करें या वर्तमान स्पीच के पूरा होने की प्रतीक्षा करें।' : 'Speech synthesis failed: ' + event.error + '. Try adjusting the speech rate or waiting for the current speech to complete.',
               id: Date.now(),
               timestamp: new Date().toISOString(),
               category: 'general',
@@ -198,24 +178,34 @@
             });
             window.renderMessages?.();
           }
-          speechStates.delete(messageId);
-          updateSpeakButton(messageId, false);
-          const message = window.messages.find(m => m.id === messageId);
-          if (message) {
-            message.isSpeaking = false;
-            window.renderMessages?.();
+          if (speechStates.has(messageId)) {
+            speechStates.delete(messageId);
+            updateSpeakButton(messageId, false);
+            const message = window.messages.find(m => m.id === messageId);
+            if (message) {
+              message.isSpeaking = false;
+              window.renderMessages?.();
+            }
           }
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
             speakMessage(next.messageId, next.text, next.lang);
           }
+        };
+
+        synth.speak(utterance);
+        updateSpeakButton(messageId, true);
+        const message = window.messages.find(m => m.id === messageId);
+        if (message) {
+          message.isSpeaking = true;
+          window.renderMessages?.();
         }
-      } catch (error) {
-        console.warn('Failed to load voices: ' + error.message);
+      } else {
+        console.warn('Voice for ' + utterance.lang + ' or fallback not available.');
         if (window.messages) {
           window.messages.push({
             sender: 'ai',
-            text: lang === 'hi' ? 'आवाज़ लोड करने में विफल: ' + error.message : 'Failed to load voices: ' + error.message,
+            text: lang === 'hi' ? 'उपयुक्त आवाज़ ' + utterance.lang + ' के लिए उपलब्ध नहीं है। कृपया अपने सिस्टम की भाषा सेटिंग्स जांचें।' : 'No suitable voice available for ' + utterance.lang + '. Please check your system’s language settings.',
             id: Date.now(),
             timestamp: new Date().toISOString(),
             category: 'general',
@@ -236,14 +226,35 @@
           speakMessage(next.messageId, next.text, next.lang);
         }
       }
+    } catch (error) {
+      console.warn('Failed to load voices: ' + error.message);
+      if (window.messages) {
+        window.messages.push({
+          sender: 'ai',
+          text: lang === 'hi' ? 'आवाज़ लोड करने में विफल: ' + error.message : 'Failed to load voices: ' + error.message,
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          category: 'general',
+          reactions: [],
+          isPinned: false
+        });
+        window.renderMessages?.();
+      }
+      speechStates.delete(messageId);
+      updateSpeakButton(messageId, false);
+      const message = window.messages.find(m => m.id === messageId);
+      if (message) {
+        message.isSpeaking = false;
+        window.renderMessages?.();
+      }
+      if (speechQueue.length > 0) {
+        const next = speechQueue.shift();
+        speakMessage(next.messageId, next.text, next.lang);
+      }
     }
-
-    if (speechStates.has(messageId) && !state.isSpeaking) {
-      synth.cancel();
-    }
-    speakNextChunk();
   }
-
+}
+  
   function stopAllSpeech() {
     window.speechSynthesis.cancel();
     speechStates.forEach((_, messageId) => {
