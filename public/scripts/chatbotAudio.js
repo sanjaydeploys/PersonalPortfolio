@@ -17,25 +17,34 @@
         console.log('Voices loaded:', voices.map(v => `${v.name} (${v.lang})`));
         resolve(voices);
       };
-      setTimeout(() => {
-        if (voices.length === 0) {
-          voices = window.speechSynthesis.getVoices();
-          console.log('Voices after timeout:', voices.map(v => `${v.name} (${v.lang})`));
-          resolve(voices);
-        }
-      }, 2000); // Increased timeout for slower devices
+      // No timeout; rely on onvoiceschanged event
     });
   }
 
-  // Improved sentence splitting to preserve technical terms like "React.js"
-  function splitSentences(text) {
+  // Robust chunking for long messages
+  function chunkText(text, maxLength = 500) {
     if (!text || text.trim() === '') return [text];
-    // Protect technical terms with periods (e.g., React.js, Node.js)
-    const techTerms = text.replace(/(React|Node|Next|Express)\.js/g, '$1_js');
-    // Split on sentence boundaries (period, question mark, exclamation mark followed by space or end)
-    const sentences = techTerms.match(/[^.!?]+[.!?]+(?:\s+|$)/g) || [text];
-    // Restore protected terms
-    return sentences.map(s => s.replace(/(React|Node|Next|Express)_js/g, '$1.js'));
+    const chunks = [];
+    let currentChunk = '';
+    const paragraphs = text.split('\n').filter(p => p.trim());
+
+    for (const paragraph of paragraphs) {
+      const words = paragraph.split(/\s+/);
+      for (const word of words) {
+        if ((currentChunk + ' ' + word).length > maxLength) {
+          if (currentChunk) chunks.push(currentChunk.trim());
+          currentChunk = word;
+        } else {
+          currentChunk += (currentChunk ? ' ' : '') + word;
+        }
+      }
+      if (currentChunk) {
+        chunks.push(currentChunk.trim());
+        currentChunk = '';
+      }
+    }
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks.length > 0 ? chunks : [text];
   }
 
   async function speakMessage(messageId, text, lang) {
@@ -70,7 +79,7 @@
     window.interactionAnalytics.speechUsed++;
 
     const synth = window.speechSynthesis;
-    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, sentences: [], currentChunk: 0, charIndex: 0 };
+    let state = speechStates.get(messageId) || { isSpeaking: false, isPaused: false, utterance: null, chunks: [], currentChunk: 0 };
 
     if (state.isSpeaking && !state.isPaused) {
       synth.pause();
@@ -98,13 +107,12 @@
       return;
     }
 
-    state.sentences = splitSentences(text);
+    state.chunks = chunkText(text);
     state.currentChunk = 0;
-    state.charIndex = 0;
     speechStates.set(messageId, state);
 
     async function speakNextChunk() {
-      if (state.currentChunk >= state.sentences.length || !speechStates.has(messageId)) {
+      if (state.currentChunk >= state.chunks.length || !speechStates.has(messageId)) {
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
         const message = window.messages.find(m => m.id === messageId);
@@ -123,14 +131,13 @@
       utterance.volume = volume;
       utterance.rate = lang === 'hi' ? rate * 0.9 : rate; // Slower rate for Hindi clarity
       utterance.pitch = 1;
-      utterance.text = state.sentences[state.currentChunk].trim() || 'No text available.';
+      utterance.text = state.chunks[state.currentChunk].trim() || 'No text available.';
       utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
 
       try {
         voices = await loadVoices();
         let voice;
         if (lang === 'hi') {
-          // Try hi-IN, then hi, then fallback to en-US
           voice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) ||
                   voices.find(v => v.lang === 'hi-IN') ||
                   voices.find(v => v.lang === 'hi') ||
@@ -171,16 +178,8 @@
           utterance.onend = function() {
             if (speechStates.has(messageId)) {
               state.currentChunk++;
-              state.charIndex = 0;
               speechStates.set(messageId, state);
               speakNextChunk();
-            }
-          };
-
-          utterance.onboundary = function(event) {
-            if (speechStates.has(messageId)) {
-              state.charIndex = event.charIndex;
-              speechStates.set(messageId, state);
             }
           };
 
@@ -199,17 +198,9 @@
               window.renderMessages?.();
             }
             if (speechStates.has(messageId)) {
-              speechStates.delete(messageId);
-              updateSpeakButton(messageId, false);
-              const message = window.messages.find(m => m.id === messageId);
-              if (message) {
-                message.isSpeaking = false;
-                window.renderMessages?.();
-              }
-            }
-            if (speechQueue.length > 0) {
-              const next = speechQueue.shift();
-              speakMessage(next.messageId, next.text, next.lang);
+              state.currentChunk++; // Retry next chunk
+              speechStates.set(messageId, state);
+              speakNextChunk(); // Continue instead of stopping
             }
           };
 
@@ -236,11 +227,6 @@
           }
           speechStates.delete(messageId);
           updateSpeakButton(messageId, false);
-          const message = window.messages.find(m => m.id === messageId);
-          if (message) {
-            message.isSpeaking = false;
-            window.renderMessages?.();
-          }
           if (speechQueue.length > 0) {
             const next = speechQueue.shift();
             speakMessage(next.messageId, next.text, next.lang);
@@ -262,11 +248,6 @@
         }
         speechStates.delete(messageId);
         updateSpeakButton(messageId, false);
-        const message = window.messages.find(m => m.id === messageId);
-        if (message) {
-          message.isSpeaking = false;
-          window.renderMessages?.();
-        }
         if (speechQueue.length > 0) {
           const next = speechQueue.shift();
           speakMessage(next.messageId, next.text, next.lang);
