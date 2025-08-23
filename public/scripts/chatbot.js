@@ -113,8 +113,8 @@
   };
   let filteredSuggestions = suggestedPrompts[currentLang];
   const emojiOptions = ['👍', '😄', '⚽', '🍲', '👏'];
-  const primaryApiKey = 'AIzaSyDt6yiWJ1_W4QtDf5mxr4wb-c3aH7TT_3I';
-  const fallbackApiKey = 'AIzaSyDrREs858u-6yXsv7LFNQhyN4UH81EyXIs';
+  const primaryApiKey = 'AIzaSyA6R5mEyZM7Vz61fisMnFaYedGptHv8B4I';
+  const fallbackApiKey = 'AIzaSyCP0zYjRT5Gkdb2PQjSmVi6-TnO2a7ldAA';
 const context = `
 Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft hiring managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
