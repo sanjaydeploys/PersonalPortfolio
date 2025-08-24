@@ -53,7 +53,7 @@
   let showTimestamps = true;
   let searchQuery = '';
   let selectedCategory = '';
-  let currentLang = localStorage.getItem('chat-lang') || 'en';
+  let currentLang = localStorage.getItem('chat-lang') || 'hi';
   let pendingMessage = null;
   let pendingMessageId = null;
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
