@@ -54,8 +54,8 @@
   let searchQuery = '';
   let selectedCategory = '';
   let currentLang = localStorage.getItem('chat-lang') || 'en';
-  let pendingMessage = null; // Store message waiting for tone selection
-  let pendingMessageId = null; // Store ID of pending message
+  let pendingMessage = null;
+  let pendingMessageId = null;
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
   const suggestedPrompts = {
     en: [
@@ -115,6 +115,30 @@
   const emojiOptions = ['👍', '😄', '⚽', '🍲', '👏'];
   const primaryApiKey = 'AIzaSyA6R5mEyZM7Vz61fisMnFaYedGptHv8B4I';
   const fallbackApiKey = 'AIzaSyCP0zYjRT5Gkdb2PQjSmVi6-TnO2a7ldAA';
+  const imageContext = {
+    "six-pack-abs": {
+      urls: [
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/468014411_2009682226215316_3169123021096312149_n_17842587129367608.webp",
+          alt: "Sanjay Patidar standing next to Hrithik Roshan, showcasing six-pack abs from Navodaya football days"
+        },
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/412545366_1110668996980205_1019140475763798870_n_18209282047272856.webp",
+          alt: "Sanjay Patidar flexing his six-pack abs from Navodaya football days"
+        }
+      ],
+      keywords: ["body", "abs", "six pack", "six-pack", "tagdi", "fitness", "hrithik", "bodybuilding"]
+    },
+    "gora-smart-ladka": {
+      urls: [
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/IMG_20250220_112646_458.webp",
+          alt: "Sanjay Patidar as the charming gora smart ladka from Navodaya hostel days"
+        }
+      ],
+      keywords: ["gora", "smart ladka", "charming", "hostel look", "sanjay look"]
+    }
+  };
 const context = `
 Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft hiring managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
 
@@ -219,7 +243,6 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
 - ईमेल: sanjay.awsindia@gmail.com
 - LinkedIn: linkedin.com/in/sanjay-patidar
 `;
-
   const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
 
   function getContext() {
@@ -229,12 +252,8 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
   function showTonePicker(message, messageId) {
     const tonePromptText = currentLang === 'hi' ? 'आप कौन सा लहजा सुनना चाहेंगे?' : 'Which tone would you like to hear?';
     const tonePromptId = Date.now();
-    
-    // Store pending message
     pendingMessage = message;
     pendingMessageId = messageId;
-    
-    // Add tone prompt message to chat
     window.messages.push({
       sender: 'ai',
       text: tonePromptText,
@@ -244,11 +263,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
       reactions: [],
       isPinned: false
     });
-    
-    // Render messages to show the prompt
     renderMessages();
-    
-    // Speak the tone prompt
     if (typeof window.speakMessage === 'function') {
       window.speakMessage(tonePromptId, tonePromptText, currentLang);
     }
@@ -257,7 +272,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
   async function processMessageWithTone(message, messageId, tone) {
     isLoading = true;
     interactionAnalytics.questionsAsked++;
-    const category = categorizeMessage(message);
+    const { category, imageKey } = categorizeMessage(message);
     interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
 
     let aiResponse;
@@ -285,7 +300,6 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
     }
 
     try {
-      // Try primary API key first
       aiResponse = await tryApiRequest(primaryApiKey);
       if (!aiResponse) {
         console.warn('Primary API failed, trying fallback API key');
@@ -308,7 +322,21 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
     }
 
     const responseId = Date.now();
-    window.messages.push({ sender: 'ai', text: '', id: responseId, timestamp: new Date().toISOString(), category: projectDetails ? 'project' : category, reactions: [], isPinned: false });
+    // Select a random image from the category if imageKey exists
+    const imageData = imageKey && imageContext[imageKey] && tone === 'funny'
+      ? imageContext[imageKey].urls[Math.floor(Math.random() * imageContext[imageKey].urls.length)]
+      : null;
+    window.messages.push({
+      sender: 'ai',
+      text: '',
+      id: responseId,
+      timestamp: new Date().toISOString(),
+      category: projectDetails ? 'project' : category,
+      reactions: [],
+      isPinned: false,
+      imageUrl: imageData?.url,
+      imageAlt: imageData?.alt
+    });
     await typeMessage(aiResponse, responseId, projectDetails, quickReplies);
 
     if (isAutoReplyEnabled) {
@@ -385,6 +413,9 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
           '</div>';
       } else {
         messageContent.innerHTML = formattedText;
+        if (message.imageUrl) {
+          messageContent.innerHTML += `<img src="${message.imageUrl}" alt="${message.imageAlt || 'Image related to Sanjay Patidar'}" class="message-image" loading="lazy">`;
+        }
         if (showTimestamps) {
           const timeSpan = document.createElement('span');
           timeSpan.className = 'message-timestamp';
@@ -394,7 +425,6 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
         if (message.reactions.length > 0) {
           messageContent.innerHTML += '<div class="message-reactions flex flex-wrap gap-1 mt-1">' + message.reactions.map(r => `<span class="reaction-tag bg-[#F5F5F5] dark:bg-[#2A3942] rounded-full px-2 py-1 text-sm">${r}</span>`).join('') + '</div>';
         }
-        // Add tone buttons for tone_prompt messages
         if (message.category === 'tone_prompt') {
           const toneButtons = document.createElement('div');
           toneButtons.className = 'tone-buttons flex gap-2 mt-2';
@@ -404,12 +434,12 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
           `;
           messageContent.appendChild(toneButtons);
           toneButtons.querySelector('.funny-btn').addEventListener('click', () => {
-            window.messages = window.messages.filter(m => m.id !== message.id); // Remove tone prompt
+            window.messages = window.messages.filter(m => m.id !== message.id);
             processMessageWithTone(pendingMessage, pendingMessageId, 'funny');
             renderMessages();
           });
           toneButtons.querySelector('.professional-btn').addEventListener('click', () => {
-            window.messages = window.messages.filter(m => m.id !== message.id); // Remove tone prompt
+            window.messages = window.messages.filter(m => m.id !== message.id);
             processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
             renderMessages();
           });
@@ -547,7 +577,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
     if (!message || isLoading) return;
 
     const messageId = Date.now();
-    window.messages.push({ sender: 'user', text: message, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(message), reactions: [], isPinned: false });
+    window.messages.push({ sender: 'user', text: message, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(message).category, reactions: [], isPinned: false });
     input.value = '';
     renderMessages();
     showTonePicker(message, messageId);
@@ -567,20 +597,25 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
 
   function categorizeMessage(message) {
     const lowerMessage = message.toLowerCase();
+    for (const [imageKey, { keywords }] of Object.entries(imageContext)) {
+      if (keywords.some(keyword => lowerMessage.includes(keyword))) {
+        return { category: 'personal', imageKey };
+      }
+    }
     if (lowerMessage.includes('project') || lowerMessage.includes('lic neemuch') || lowerMessage.includes('zedemy') || lowerMessage.includes('connectnow') || lowerMessage.includes('eventease') || lowerMessage.includes('eduxcel') || lowerMessage.includes('प्रोजेक्ट') || lowerMessage.includes('lic नीमच') || lowerMessage.includes('जेडेमी') || lowerMessage.includes('कनेक्टनाउ') || lowerMessage.includes('इवेंटईज') || lowerMessage.includes('एडुक्सेल')) {
-      return 'project';
+      return { category: 'project' };
     } else if (lowerMessage.includes('skill') || lowerMessage.includes('frontend') || lowerMessage.includes('backend') || lowerMessage.includes('cloud') || lowerMessage.includes('seo') || lowerMessage.includes('ci/cd') || lowerMessage.includes('security') || lowerMessage.includes('स्किल') || lowerMessage.includes('फ्रंटएंड') || lowerMessage.includes('बैकएंड') || lowerMessage.includes('क्लाउड') || lowerMessage.includes('एसईओ') || lowerMessage.includes('सीआई/सीडी') || lowerMessage.includes('सुरक्षा')) {
-      return 'skills';
+      return { category: 'skills' };
     } else if (lowerMessage.includes('achievement') || lowerMessage.includes('load time') || lowerMessage.includes('impression') || lowerMessage.includes('उपलब्धि') || lowerMessage.includes('लोड टाइम') || lowerMessage.includes('इंप्रेशन')) {
-      return 'achievements';
+      return { category: 'achievements' };
     } else if (lowerMessage.includes('contact') || lowerMessage.includes('collaboration') || lowerMessage.includes('संपर्क') || lowerMessage.includes('सहयोग')) {
-      return 'contact';
+      return { category: 'contact' };
     } else if (lowerMessage.includes('challenge') || lowerMessage.includes('deadline') || lowerMessage.includes('setback') || lowerMessage.includes('conflict') || lowerMessage.includes('learn') || lowerMessage.includes('चुनौती') || lowerMessage.includes('डेडलाइन') || lowerMessage.includes('असफलता') || lowerMessage.includes('संघर्ष') || lowerMessage.includes('सीखना')) {
-      return 'challenges';
+      return { category: 'challenges' };
     } else if (lowerMessage.includes('who is sanjay') || lowerMessage.includes('संजय कौन') || lowerMessage.includes('life') || lowerMessage.includes('story') || lowerMessage.includes('school') || lowerMessage.includes('navodaya') || lowerMessage.includes('hobby') || lowerMessage.includes('जीवन') || lowerMessage.includes('कहानी') || lowerMessage.includes('स्कूल') || lowerMessage.includes('नवोदय') || lowerMessage.includes('शौक')) {
-      return 'personal';
+      return { category: 'personal' };
     } else {
-      return 'general';
+      return { category: 'general' };
     }
   }
 
@@ -688,7 +723,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
   async function saveEditedMessage(id) {
     if (editedText.trim()) {
       window.messages = window.messages.map(function(message) {
-        return message.id === id ? { ...message, text: editedText, timestamp: new Date().toISOString(), category: categorizeMessage(editedText) } : message;
+        return message.id === id ? { ...message, text: editedText, timestamp: new Date().toISOString(), category: categorizeMessage(editedText).category } : message;
       });
       editingMessageId = null;
       const editedMessageText = editedText;
@@ -856,7 +891,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
 
   function toggleRecording() {
     if (!recognition) {
-      alert(currentLang === 'hi' ? 'क्ष inequity करें, आपके ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।' : 'Sorry, voice input is not supported in your browser.');
+      alert(currentLang === 'hi' ? 'क्षमा करें, आपके ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।' : 'Sorry, voice input is not supported in your browser.');
       return;
     }
     if (isRecording) {
@@ -880,7 +915,7 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
         const voiceBtn = document.querySelector('.voice-btn');
         if (voiceBtn) voiceBtn.classList.remove('recording');
         const messageId = Date.now();
-        window.messages.push({ sender: 'user', text: transcript, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(transcript), reactions: [], isPinned: false });
+        window.messages.push({ sender: 'user', text: transcript, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(transcript).category, reactions: [], isPinned: false });
         renderMessages();
         showTonePicker(transcript, messageId);
       }
