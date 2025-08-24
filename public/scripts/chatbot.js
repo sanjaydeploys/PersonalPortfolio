@@ -953,27 +953,20 @@ Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparatio
     const themeBtn = document.querySelector('.theme-btn');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-      const langToggle = document.querySelector('.lang-toggle');
+    const langToggle = document.querySelector('.lang-toggle');
     if (langToggle) {
-      langToggle.setAttribute('data-lang', currentLang === 'hi' ? 'en' : 'hi');
-      langToggle.querySelector('.lang-hidden').textContent = currentLang === 'hi' ? 'Switch to English' : 'Switch to Hindi';
-      langToggle.querySelector('.lang-visible').textContent = currentLang === 'hi' ? 'Switch to Hindi' : 'Switch to English';
-      langToggle.setAttribute('aria-label', currentLang === 'hi' ? 'Switch to English' : 'Switch to Hindi');
       langToggle.addEventListener('click', function() {
         currentLang = currentLang === 'en' ? 'hi' : 'en';
         localStorage.setItem('chat-lang', currentLang);
         document.getElementById('chatbot-container').setAttribute('lang', currentLang);
         langToggle.setAttribute('data-lang', currentLang === 'en' ? 'hi' : 'en');
-        langToggle.querySelector('.lang-hidden').textContent = currentLang === 'hi' ? 'Switch to English' : 'Switch to Hindi';
-        langToggle.querySelector('.lang-visible').textContent = currentLang === 'hi' ? 'Switch to Hindi' : 'Switch to English';
-        langToggle.setAttribute('aria-label', currentLang === 'hi' ? 'Switch to English' : 'Switch to Hindi');
         const chatInput = document.getElementById('chat-input');
         if (chatInput) {
-          chatInput.placeholder = currentLang === 'hi' ? 'संजय के प्रोजेक्ट्स या स्किल्स के बारे में पूछें...' : 'Ask about Sanjay\'s projects or skills...';
+          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
         }
         const searchBar = document.getElementById('search-bar');
         if (searchBar) {
-          searchBar.placeholder = currentLang === 'hi' ? 'संदेश खोजें' : 'Search Messages';
+          searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search Messages';
         }
         handleInputChange(document.getElementById('chat-input').value);
         filteredSuggestions = suggestedPrompts[currentLang];
