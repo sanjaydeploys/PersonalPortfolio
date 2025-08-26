@@ -1,11 +1,14 @@
 (function() {
+  // Move currentLang up here so it's available for default messages
   let currentLang = localStorage.getItem('chat-lang') || 'hi';
-  window.messages = JSON.parse(localStorage.getItem('lic-chat')) || [
+
+  // Now initialize messages, using currentLang for default welcome text
+  window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
     {
       sender: 'ai',
       text: currentLang === 'hi' 
-        ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-        : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"',
+        ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
+        : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
@@ -14,36 +17,37 @@
     }
   ];
 
+  // Validate and reset messages if corrupted, using currentLang for welcome
   try {
     if (!Array.isArray(window.messages)) {
       console.warn('Invalid localStorage data, resetting messages');
       window.messages = [{
         sender: 'ai',
         text: currentLang === 'hi' 
-          ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-          : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"',
+          ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
+          : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
         id: 'welcome',
         timestamp: new Date().toISOString(),
         category: 'welcome',
         reactions: [],
         isPinned: false
       }];
-      localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+      localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     }
   } catch (e) {
     console.error('Error parsing localStorage:', e);
     window.messages = [{
       sender: 'ai',
       text: currentLang === 'hi' 
-        ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-        : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"',
+        ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
+        : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
       reactions: [],
       isPinned: false
     }];
-    localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
   }
 
   let isLoading = false;
@@ -63,76 +67,194 @@
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
   const suggestedPrompts = {
     en: [
-      'What are LIC Neemuch’s services?',
-      'Tell me about life insurance plans.',
-      'How can I pay my LIC premium online?',
-      'What is the LIC digital platform?',
-      'How to file an insurance claim with LIC?',
-      'What are the benefits of LIC policies?',
-      'Explain LIC’s term insurance plans.',
-      'How does LIC’s customer support work?',
-      'What documents are needed for LIC policies?',
-      'Tell me about LIC’s investment plans.'
+      'Who is Sanjay Patidar?',
+      'What are Sanjay’s projects?',
+      'Tell me about LIC Neemuch.',
+      'What is Zedemy LMS?',
+      'How does ConnectNow work?',
+      'What is EventEase?',
+      'What frontend skills does Sanjay have?',
+      'What backend skills does Sanjay specialize in?',
+      'What are Sanjay’s cloud computing skills?',
+      'How does Sanjay optimize apps for SEO?',
+      'What are Sanjay’s key achievements?',
+      'How has Sanjay improved page load times?',
+      'How can I contact Sanjay for collaboration?',
+      'How did Sanjay handle a tight deadline?',
+      'What challenges did Sanjay face in ConnectNow?',
+      'How did Sanjay overcome academic setbacks?',
+      'How does Sanjay learn new technologies?',
+      'How does Sanjay handle team conflicts?',
+      'What’s Sanjay’s experience with CI/CD?',
+      'How does Sanjay ensure app security?',
+      'Tell me a funny story from Sanjay’s school days!',
+      'What was Sanjay’s Navodaya experience like?',
+      'What’s Sanjay’s favorite hobby?',
+      'Share a memorable moment from Sanjay’s life.'
     ],
     hi: [
-      'LIC नीमच की सेवाएँ क्या हैं?',
-      'जीवन बीमा योजनाओं के बारे में बताएं।',
-      'मैं LIC प्रीमियम ऑनलाइन कैसे भर सकता हूँ?',
-      'LIC का डिजिटल प्लेटफॉर्म क्या है?',
-      'LIC के साथ बीमा क्लेम कैसे फाइल करें?',
-      'LIC पॉलिसियों के लाभ क्या हैं?',
-      'LIC की टर्म इंश्योरेंस योजनाएँ समझाएँ।',
-      'LIC का कस्टमर सपोर्ट कैसे काम करता है?',
-      'LIC पॉलिसी के लिए कौन से दस्तावेज़ चाहिए?',
-      'LIC की निवेश योजनाओं के बारे में बताएं।'
+      'संजय पाटीदार कौन हैं?',
+      'संजय के प्रोजेक्ट्स क्या हैं?',
+      'LIC नीमच के बारे में बताएं।',
+      'Zedemy LMS क्या है?',
+      'ConnectNow कैसे काम करता है?',
+      'EventEase क्या है?',
+      'संजय के फ्रंटएंड स्किल्स क्या हैं?',
+      'संजय किन बैकएंड स्किल्स में विशेषज्ञ हैं?',
+      'संजय की क्लाउड कंप्यूटिंग स्किल्स क्या हैं?',
+      'संजय ऐप्स को SEO के लिए कैसे ऑप्टिमाइज करते हैं?',
+      'संजय की प्रमुख उपलब्धियां क्या हैं?',
+      'संजय ने पेज लोड टाइम्स कैसे सुधारे?',
+      'सहयोग के लिए संजय से कैसे संपर्क कर सकता हूं?',
+      'संजय ने टाइट डेडलाइन को कैसे हैंडल किया?',
+      'ConnectNow में संजय को क्या चुनौतियां आईं?',
+      'संजय ने अकादमिक असफलताओं को कैसे पार किया?',
+      'संजय नई तकनीकों को कैसे सीखते हैं?',
+      'संजय टीम संघर्षों को कैसे हैंडल करते हैं?',
+      'संजय का CI/CD में क्या अनुभव है?',
+      'संजय ऐप सिक्योरिटी कैसे सुनिश्चित करते हैं?',
+      'संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!',
+      'संजय का नवोदय अनुभव कैसा था?',
+      'संजय का पसंदीदा शौक क्या है?',
+      'संजय के जीवन का एक यादगार पल साझा करें।'
     ]
   };
   let filteredSuggestions = suggestedPrompts[currentLang];
-  const emojiOptions = ['👍', '😄', '💼', '📜', '👏'];
+  const emojiOptions = ['👍', '😄', '⚽', '🍲', '👏'];
   const primaryApiKey = 'AIzaSyA6R5mEyZM7Vz61fisMnFaYedGptHv8B4I';
   const fallbackApiKey = 'AIzaSyCP0zYjRT5Gkdb2PQjSmVi6-TnO2a7ldAA';
   const imageContext = {
-    "lic-office": {
+    "six-pack-abs": {
       urls: [
         {
-          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/lic-office-neemuch.jpg",
-          alt: "LIC Neemuch office exterior, showcasing its digital transformation"
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/468014411_2009682226215316_3169123021096312149_n_17842587129367608.webp",
+          alt: "Sanjay Patidar standing next to Hrithik Roshan, showcasing six-pack abs from Navodaya football days"
+        },
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/412545366_1110668996980205_1019140475763798870_n_18209282047272856.webp",
+          alt: "Sanjay Patidar flexing his six-pack abs from Navodaya football days"
         }
       ],
-      keywords: ["lic office", "neemuch office", "digital platform", "lic digital", "एलआईसी कार्यालय", "नीमच कार्यालय", "डिजिटल प्लेटफॉर्म"]
+      keywords: ["body", "abs", "six pack", "six-pack", "tagdi", "fitness", "hrithik", "bodybuilding"]
     },
-    "lic-services": {
+    "gora-smart-ladka": {
       urls: [
         {
-          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/lic-services-portal.jpg",
-          alt: "LIC Neemuch digital services portal interface"
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/IMG_20250220_112646_458.webp",
+          alt: "Sanjay Patidar as the charming gora smart ladka from Navodaya hostel days"
         }
       ],
-      keywords: ["services", "digital services", "online portal", "lic portal", "सेवाएँ", "डिजिटल सेवाएँ", "ऑनलाइन पोर्टल"]
+      keywords: ["gora", "smart ladka", "charming", "hostel look", "sanjay look"]
     }
   };
-  const licContext = `
-**LIC Neemuch Digital Platform Overview**:
-- **Background**: The Life Insurance Corporation (LIC) office in Neemuch, a 60-year-old government institution, lacked a digital presence, relying on pamphlets and WhatsApp forwards for outreach. Sanjay Patidar developed a serverless platform to digitize operations.
-- **Solution**: Built with React, Tailwind CSS, Vite, React Helmet (frontend); AWS Lambda, API Gateway, MongoDB Atlas (backend); AWS S3, CloudFront, SSL via ACM, Cloudflare DNS (infrastructure); and CloudWatch Logs (monitoring).
-- **Outcomes**: Achieved 100/100 Lighthouse score, ranked pages within days via SEO (React Helmet, pre-rendering), and increased inquiry submissions by 3x in two months.
-- **Services**: Online premium payments, policy inquiries, claim filing, and customer support through a responsive web interface.
-- **Key Features**: Mobile-first design, SEO-optimized pages, secure payment gateway integration, and real-time policy status updates.
-- **Contact**: Email: lic.neemuch.support@gmail.com | Phone: +91-7423-XXXXXX
-  `;
-  const hindiLicContext = `
-**LIC नीमच डिजिटल प्लेटफॉर्म अवलोकन**:
-- **पृष्ठभूमि**: नीमच का जीवन बीमा निगम (LIC) कार्यालय, एक 60 साल पुरानी सरकारी संस्था, के पास कोई डिजिटल उपस्थिति नहीं थी, जो प्रचार के लिए पैंफलेट और व्हाट्सएप फॉरवर्ड पर निर्भर थी। संजय पाटीदार ने संचालन को डिजिटाइज़ करने के लिए एक सर्वरलेस प्लेटफॉर्म विकसित किया।
-- **समाधान**: React, Tailwind CSS, Vite, React Helmet (फ्रंटएंड); AWS Lambda, API Gateway, MongoDB Atlas (बैकएंड); AWS S3, CloudFront, SSL via ACM, Cloudflare DNS (इंफ्रास्ट्रक्चर); और CloudWatch Logs (मॉनिटरिंग) के साथ बनाया गया।
-- **परिणाम**: 100/100 लाइटहाउस स्कोर प्राप्त किया, SEO (React Helmet, प्री-रेंडरिंग) के माध्यम से कुछ दिनों में पेज रैंकिंग, और दो महीनों में पूछताछ 3 गुना बढ़ी।
-- **सेवाएँ**: ऑनलाइन प्रीमियम भुगतान, पॉलिसी पूछताछ, क्लेम फाइलिंग, और एक रिस्पॉन्सिव वेब इंटरफेस के माध्यम से कस्टमर सपोर्ट।
-- **मुख्य विशेषताएँ**: मोबाइल-फर्स्ट डिज़ाइन, SEO-अनुकूलित पेज, सुरक्षित पेमेंट गेटवे एकीकरण, और रियल-टाइम पॉलिसी स्टेटस अपडेट।
-- **संपर्क**: ईमेल: lic.neemuch.support@gmail.com | फोन: +91-7423-XXXXXX
-  `;
+const context = `
+Sanjay Patidar is a Serverless Full-Stack SaaS Engineer recognized by Amazon and Microsoft hiring managers for building production-grade platforms and tech content. He has delivered 12+ real-world applications across insurance, education, communication, and event management, with global reach in 127 countries.
+
+### School Life
+Sanjay’s school journey began at Jagrati Madhyamic Vidhyalaya, where he consistently scored above 90% through 5th grade, topping his class with 93% in 5th and impressing a classmate who later joined him at Jawahar Navodaya Vidyalaya, Rampura (Neemuch). His seven years at Navodaya (6th to 12th grade) were a vibrant mix of academics, pranks, and leadership in the scenic Aravali Sadan hostel, nestled near the Aravali hills and Chambal River.
+
+#### Navodaya Journey
+- **Admission and Aravali Sadan**: At age 10, Sanjay joined Navodaya, a government boarding school with strict rules. On admission day, like a desi Harry Potter, he insisted on joining Aravali Sadan (despite being assigned Udaigiri) after hearing its reputation, proudly choosing his “house” for the next seven years.
+- **Daily Life**: Life at Navodaya was a disciplined adventure. Sanjay woke up at 6 AM for chores (washing clothes, bathing daily—though he, a “smart gora ladka,” questioned the need for daily baths!). Morning exercises preceded a 7 AM breakfast siren, triggering a sprint for his favorite pohe-jalebi, earning him the nickname “pohe paglu.”
+- **School and Sports**: School ran from 8 AM to 2 PM with prayers, studies, and masti. Lunch (featuring Sanjay’s beloved ful gobhi, bhindi, and sev ki sabji) was a highlight, followed by rest and more classes until 5 PM. The golden hour was 5–6 PM sports time, where Sanjay’s passion for football shone. Despite strict rules banning outside items, he sneaked in a football, only for it to be confiscated by the PT teacher—leading to dramatic tears until it was returned.
+- **Hostel Antics**: Evenings included 6 PM prayers, snacks (samosa or sevfal), and evening classes until 8 PM, followed by dinner while watching TV. Sanjay’s mischievous side peaked in 11th grade, when he and friends climbed hostel windows at 3 AM and cooked gulab jamun using a heater coil on a brick. Caught by the house master, Sanjay escaped punishment with his charm—the master even ate two jamuns, jokingly asking for better ones next time!
+- **Leadership Roles**: By 8th grade, Sanjay’s good conduct and athletic build earned him the role of Junior Aravali Sadan Captain. In 11th grade, he became Senior Captain, TV In-Charge, and Sports In-Charge, holding keys to the TV and gym. As Student on Duty, he managed mess supplies, sneaked extra pohe-jalebi, and enjoyed TV all day. His football obsession sculpted a six-pack, which he proudly showed off to impress classmates.
+- **Memorable Moments**: Diwali’s month-long holidays brought joy, with late-night packing for home. In 11th grade, Sanjay shed his innocence for full-on Navodaya masti, pulling off legendary pranks. By 12th grade, CBSE boards demanded focus, but football remained his constant. After seven years, Sanjay graduated, leaving behind a legacy of leadership and laughter.
+
+#### Transition to Career
+Post-Navodaya, Sanjay’s father sent him to Kota, Rajasthan, for IIT preparation, shifting his focus from childhood pranks to a career-driven path, though his love for football and pohe endures.
+
+### Projects
+- **Digitizing a 60-Year-Old Insurance Office**:
+  - **Problem**: A government insurance office in Neemuch had no digital presence, relying on pamphlets and WhatsApp forwards, with no system for online leads and poor search visibility.
+  - **Solution**: Sanjay built a serverless platform with React, Tailwind CSS, Vite, React Helmet (frontend); AWS Lambda, API Gateway, MongoDB Atlas (backend); AWS S3, CloudFront, SSL via ACM, Cloudflare DNS (infrastructure); and CloudWatch Logs (monitoring).
+  - **Outcomes**: Achieved 100/100 Lighthouse score, ranked pages within days via SEO (React Helmet, pre-rendering), and increased inquiry submissions by 3x in two months.
+  - **Proof**: Paid freelance project (₹50,000) with signed Letter of Engagement and SRS document.
+- **Zedemy LMS**: A serverless learning management system with markdown-to-HTML rendering, author dashboards, and UUID-based certificates. Built with React, Tailwind, Node.js, Express, DynamoDB, and Google OAuth2. Achieved 100/100 Lighthouse score, indexed 12+ blogs in 72 hours, and supports scalable CMS for bootcamps.
+- **ConnectNow**: A peer-to-peer audio-video platform using raw WebRTC, Express, and Socket.IO for custom signaling. Features dynamic room creation, STUN/TURN fallback, and zero third-party SDKs. Handled 20+ test sessions with secure, ephemeral rooms.
+- **EventEase**: A no-code event publishing SaaS with Google Calendar API integration, React + FullCalendar UI, and MongoDB Atlas backend. Indexed event pages in 48 hours, achieved 98+ Lighthouse score, and empowered 10+ admins to publish events without training.
+
+### Skills
+- **Frontend**: Proficient in React, Next.js, TypeScript, Tailwind CSS; builds responsive, accessible UIs with lazy loading and code splitting.
+- **Backend**: Expertise in Node.js, Express, MongoDB, serverless (AWS Lambda, API Gateway, DynamoDB); designs scalable REST and GraphQL APIs.
+- **Cloud**: AWS Certified, specializing in serverless (Lambda, Step Functions, SQS), CloudFormation, CDK, and CI/CD with GitHub Actions.
+- **SEO**: Advanced skills in JSON-LD schemas, SSR, structured data, mobile-first optimization; improved load times by 40% and search rankings.
+- **Other**: Experienced with WebRTC, Socket.io, Google Calendar API, Jest, GitHub, and accessibility (semantic HTML, alt tags).
+
+### Achievements
+- Delivered 12+ applications across multiple domains.
+- Achieved 500K+ impressions and 20K+ clicks on EduXcel.
+- Reduced Zedemy costs by 40% and insurance office load times by 70%.
+- Recognized by Amazon and Microsoft hiring managers for platforms and content.
+- Led Aravali Sadan as captain, managing hostel duties and sports.
+
+### Challenges Overcome
+- Overcame academic detention by proving project impact.
+- Resolved EventEase design disputes with data-driven A/B testing.
+- Met insurance office’s 3-week deadline with CI/CD and milestones.
+- Self-taught Google Calendar API and WebRTC under pressure.
+- Balanced hostel pranks (e.g., midnight cooking) with leadership roles.
+
+### Contact
+- Email: sanjay.awsindia@gmail.com
+- LinkedIn: linkedin.com/in/sanjay-patidar
+`;
+  const hindiContext = `
+संजय पाटीदार एक सर्वरलेस फुल-स्टैक SaaS इंजीनियर हैं, जिन्हें अमेज़न और माइक्रोसॉफ्ट के हायरिंग मैनेजरों द्वारा प्रोडक्शन-ग्रेड प्लेटफॉर्म और टेक कंटेंट बनाने के लिए मान्यता प्राप्त है। उन्होंने बीमा, शिक्षा, संचार और इवेंट मैनेजमेंट में 12+ रियल-वर्ल्ड एप्लिकेशन डिलीवर किए हैं, जो 127 देशों में ग्लोबल पहुंच रखते हैं।
+
+### स्कूल जीवन
+संजय ने जागृति माध्यमिक विद्यालय में 5वीं कक्षा तक पढ़ाई की, जहां उन्होंने हर कक्षा में 90% से अधिक अंक प्राप्त किए और 5वीं में 93% लाकर स्कूल टॉपर बने, जिससे एक सहपाठी प्रभावित हुई, जो बाद में उनके साथ जवाहर नवोदय विद्यालय, रामपुरा (नीमच) में शामिल हुई। नवोदय में सात साल (6वीं से 12वीं) अरावली सदन हॉस्टल में रहे, जो अरावली पहाड़ियों और चंबल नदी के पास एक खूबसूरत जगह थी।
+
+#### नवोदय यात्रा
+- **दाखिला और अरावली सदन**: 10 साल की उम्र में संजय ने नवोदय में दाखिला लिया, एक सख्त नियमों वाला सरकारी बोर्डिंग स्कूल। दाखिले के दिन, देसी हैरी पॉटर की तरह, उन्होंने अरावली सदन की तारीफ सुनकर उसी में शामिल होने की जिद की (हालांकि उन्हें उदयगिरी में चुना गया था), और अगले सात साल तक गर्व से अपने “हाउस” का हिस्सा रहे।
+- **दैनिक जीवन**: नवोदय में जीवन अनुशासित मगर रोमांचक था। सुबह 6 बजे उठकर संजय कपड़े धोते, नहाते (हालांकि “स्मार्ट गोरा लड़का” होने के नाते वे रोज नहाने की जरूरत पर सवाल उठाते!)। सुबह की कसरत के बाद 7 बजे नाश्ते का सायरन बजते ही वे अपने पसंदीदा पोहा-जलेबी के लिए दौड़ पड़ते, जिसके चलते उन्हें “पोहा पगलु” का खिताब मिला।
+- **स्कूल और खेल**: स्कूल सुबह 8 बजे प्रार्थना से शुरू होकर दोपहर 2 बजे तक चलता, जिसमें पढ़ाई और मस्ती दोनों शामिल थे। दोपहर के भोजन में फूल गोभी, भिंडी और सेव की सब्जी संजय को बहुत पसंद थी। 1 घंटे आराम के बाद दोबारा स्कूल जाना पड़ता, जब नींद सबसे ज्यादा सताती। शाम 5 बजे छुट्टी के बाद 1 घंटे का खेल का समय सबसे शानदार था। फुटबॉल के दीवाने संजय ने पापा से जिद करके फुटबॉल खरीदा, लेकिन स्कूल के सख्त नियमों के कारण इसे छिपाकर रखना पड़ा। एक बार पीटी टीचर ने इसे जब्त कर लिया, जिससे संजय इतना रोए जैसे उनका पहला प्यार चला गया हो, पर बाद में फुटबॉल वापस मिल गया। 6वीं, 7वीं और 8वीं में उन्होंने जमकर फुटबॉल खेला।
+- **हॉस्टल की शरारतें**: शाम 6 बजे प्रार्थना, फिर नाश्ता (समोसा या सेवफल), और 8 बजे तक शाम की कक्षाएं। रात का खाना टीवी देखते हुए खाया जाता। 11वीं कक्षा में संजय की शरारतें चरम पर थीं, जैसे रात 3 बजे खिड़कियों से चढ़ना और ईंट पर हीटर कॉइल लगाकर गुलाब जामुन बनाना। एक बार बिना दरवाजा बंद किए गुलाब जामुन बनाते पकड़े गए, लेकिन हाउस मास्टर ने सिर्फ दो जामुन खाए और मजाक में कहा, “अगली बार अच्छे बनाना!” संजय का अच्छा स्वभाव उन्हें बचा ले गया।
+- **नेतृत्व भूमिकाएं**: 8वीं तक अपने अच्छे व्यवहार और मजबूत कद-काठी के कारण संजय को जूनियर अरावली सादन कैप्टन बनाया गया। 11वीं में सीनियर कैप्टन, टीवी इंचार्ज और स्पोर्ट्स इंचार्ज बने, जिनके पास टीवी और जिम की चाबियां थीं। स्टूडेंट ऑन ड्यूटी के रूप में, वे मेस की सप्लाई का हिसाब रखते, चुपके से पोहा-जलेबी बचाते, और दिनभर टीवी देखते। फुटबॉल की लत ने उनकी सिक्स-पैक बॉडी बनाई, जिसे वे जानबूझकर दिखाते ताकि सहपाठी प्रभावित हों।
+- **यादगार पल**: दीवाली की एक महीने की छुट्टियों में रात को घर जाने की खुशी में सामान पैक करना यादगार था। 11वीं में संजय ने मासूमियत छोड़कर नवोदय का पूरा लुत्फ उठाया, ऐतिहासिक शरारतें कीं। 12वीं में CBSE बोर्ड के लिए पढ़ाई पर फोकस किया, पर फुटबॉल कभी नहीं छोड़ा। सात साल बाद, संजय ने नवोदय से विदाई ली, नेतृत्व और हंसी की विरासत छोड़कर।
+
+#### कैरियर की शुरुआत
+नवोदय के बाद, संजय के पिता ने उन्हें IIT की तैयारी के लिए कोटा, राजस्थान भेजा, जिसने उनके बचपन की मस्ती को करियर की दौड़ में बदल दिया, हालांकि फुटबॉल और पोहे का प्यार आज भी बरकरार है।
+
+### प्रोजेक्ट्स
+- **60 साल पुराने बीमा कार्यालय का डिजिटलाइजेशन**:
+  - **समस्या**: नीमच जिले का एक सरकारी बीमा कार्यालय पूरी तरह एनालॉग था, जिसमें कोई वेबसाइट, ऑनलाइन लीड सिस्टम, या सर्च दृश्यता नहीं थी।
+  - **समाधान**: संजय ने फ्रंटएंड (React, Tailwind CSS, Vite, React Helmet), बैकएंड (AWS Lambda, API Gateway, MongoDB Atlas), इंफ्रास्ट्रक्चर (AWS S3, CloudFront, SSL via ACM, Cloudflare DNS), और मॉनिटरिंग (CloudWatch Logs) के साथ एक सर्वरलेस प्लेटफॉर्म बनाया।
+  - **परिणाम**: 100/100 लाइटहाउस स्कोर, SEO (React Helmet, प्री-रेंडरिंग) से कुछ दिनों में रैंकिंग, और दो महीनों में पूछताछ 3 गुना बढ़ी।
+  - **प्रमाण**: ₹50,000 की पेड फ्रीलांस परियोजना, जिसमें साइन किया गया लेटर ऑफ एंगेजमेंट और SRS दस्तावेज।
+- **Zedemy LMS**: मार्कडाउन-टू-HTML रेंडरिंग, ऑथर डैशबोर्ड, और UUID-बेस्ड सर्टिफिकेट्स के साथ सर्वरलेस लर्निंग मैनेजमेंट सिस्टम। React, Tailwind, Node.js, Express, DynamoDB, और Google OAuth2 से बना। 100/100 लाइटहाउस स्कोर, 72 घंटों में 12+ ब्लॉग इंडेक्स, और बूटकैंप्स के लिए स्केलेबल CMS।
+- **ConnectNow**: रॉ WebRTC, Express, और Socket.IO के साथ पीयर-टू-पीयर ऑडियो-वीडियो प्लेटफॉर्म। डायनामिक रूम क्रिएशन, STUN/TURN फॉलबैक, और जीरो थर्ड-पार्टी SDKs। 20+ टेस्ट सेशन हैंडल किए।
+- **EventEase**: Google Calendar API इंटीग्रेशन, React + FullCalendar UI, और MongoDB Atlas बैकएंड के साथ नो-कोड इवेंट पब्लिशिंग SaaS। 48 घंटों में इवेंट पेज इंडेक्स, 98+ लाइटहाउस स्कोर, और 10+ एडमिन्स को बिना ट्रेनिंग के इवेंट पब्लिश करने में सक्षम बनाया।
+
+### स्किल्स
+- **फ्रंटएंड**: React, Next.js, TypeScript, Tailwind CSS में कुशल; लेजी लोडिंग और कोड स्प्लिटिंग के साथ रिस्पॉन्सिव, एक्सेसिबल UI बनाते हैं।
+- **बैकएंड**: Node.js, Express, MongoDB, सर्वरलेस (AWS Lambda, API Gateway, DynamoDB) में विशेषज्ञता; स्केलेबल REST और GraphQL API डिजाइन करते हैं।
+- **क्लाउड**: AWS प्रमाणित, सर्वरलेस (Lambda, Step Functions, SQS), CloudFormation, CDK, और GitHub Actions के साथ CI/CD में विशेषज्ञ।
+- **SEO**: JSON-LD स्कीमास, SSR, स्ट्रक्चर्ड डेटा, मोबाइल-फर्स्ट ऑप्टिमाइजेशन में उन्नत स्किल्स; लोड टाइम्स को 40% बेहतर बनाया और सर्च रैंकिंग्स सुधारी।
+- **अन्य**: WebRTC, Socket.io, Google Calendar API, Jest, GitHub, और एक्सेसिबिलिटी (सिमेंटिक HTML, alt टैग्स) में अनुभवी।
+
+### उपलब्धियां
+- कई डोमेन में 12+ एप्लिकेशन डिलीवर किए।
+- EduXcel पर 500K+ इंप्रेशन्स और 20K+ क्लिक्स प्राप्त किए।
+- Zedemy की लागतों को 40% कम किया और बीमा कार्यालय के लोड टाइम्स को 70%।
+- अमेज़न और माइक्रोसॉफ्ट के हायरिंग मैनेजरों द्वारा प्लेटफॉर्म और कंटेंट के लिए मान्यता प्राप्त।
+- अरावली सादन के कैप्टन के रूप में हॉस्टल और स्पोर्ट्स का नेतृत्व किया।
+
+### चुनौतियां पार कीं
+- प्रोजेक्ट प्रभाव साबित करके अकादमिक डिटेंशन से पार पाया।
+- डेटा-ड्रिवन A/B टेस्टिंग से EventEase डिजाइन विवादों को हल किया।
+- CI/CD और माइलस्टोन्स से बीमा कार्यालय की 3-वीक डेडलाइन पूरी की।
+- दबाव में Google Calendar API और WebRTC सेल्फ-टॉट।
+- रात के खाना पकाने जैसे हॉस्टल शरारतों को नेतृत्व के साथ संतुलित किया।
+
+### संपर्क
+- ईमेल: sanjay.awsindia@gmail.com
+- LinkedIn: linkedin.com/in/sanjay-patidar
+`;
   const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
 
   function getContext() {
-    return currentLang === 'hi' ? hindiLicContext : licContext;
+    return currentLang === 'hi' ? hindiContext : context;
   }
 
   function showTonePicker(message, messageId) {
@@ -162,11 +284,12 @@
     interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
 
     let aiResponse;
+    let projectDetails = null;
     let quickReplies = [];
     const toneInstruction = tone === 'funny'
-      ? 'Respond in a funny, engaging, and heartfelt tone suitable for an Indian audience. Use culturally relevant, non-technical humor (e.g., references to local culture or insurance scenarios). Avoid tech jargon (e.g., serverless, API) and movie references (e.g., Bollywood). Keep it family-friendly and relatable.'
-      : 'Respond in a professional, concise, and informative tone suitable for customers seeking insurance information. Focus on LIC Neemuch’s services, plans, or digital platform.';
-    const fullPrompt = `You are an AI assistant for LIC Neemuch's digital platform. ${toneInstruction} Use the following context to answer questions about LIC Neemuch's services, plans, or digital platform. For general insurance questions, provide accurate answers based on standard LIC offerings. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
+      ? 'Respond in a funny, engaging, and heartfelt tone suitable for an Indian audience. Use culturally relevant, non-technical humor (e.g., references to school life, hostel pranks, or food like pohe-jalebi). Avoid tech jargon (e.g., serverless, API) and movie references (e.g., Bollywood, SRK). Keep it family-friendly and relatable.'
+      : 'Respond in a professional, concise, and technical tone suitable for a tech audience. Include brief personal context (e.g., school discipline) where relevant, but focus on career achievements and skills.';
+    const fullPrompt = `You are an AI assistant for Sanjay Patidar's portfolio. ${toneInstruction} Use the following context to answer questions about Sanjay's work, skills, or personal life. For general questions outside this context, provide accurate and relevant answers based on general knowledge. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear, well-educated response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
 
     async function tryApiRequest(apiKey) {
       try {
@@ -191,61 +314,59 @@
         aiResponse = await tryApiRequest(fallbackApiKey);
       }
       if (!aiResponse || aiResponse.includes('I don\'t have enough information')) {
-        aiResponse = currentLang === 'hi' 
-          ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। LIC नीमच की सेवाओं, योजनाओं, या डिजिटल प्लेटफॉर्म के बारे में पूछें!'
-          : 'Sorry, I couldn\'t find specific information. Try asking about LIC Neemuch’s services, plans, or digital platform!';
+        const searchResults = await performWebSearch(message);
+        aiResponse = searchResults || (currentLang === 'hi' ? 'क्षमा करें, मुझे विशिष्ट जानकारी नहीं मिली। संजय के प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के बारे में पूछें!' : 'Sorry, I couldn\'t find specific information. Try asking about Sanjay’s projects, skills, or school stories!');
       }
       quickReplies = currentLang === 'hi'
-        ? ['प्रीमियम भुगतान कैसे करें?', 'क्लेम प्रक्रिया क्या है?', 'LIC नीमच से संपर्क कैसे करें?']
-        : ['How to pay premiums?', 'What is the claim process?', 'How to contact LIC Neemuch?'];
+        ? ['इस पर और विस्तार से बताएं?', 'संजय के स्कूल के दिन कैसे थे?', 'संजय की एक मज़ेदार कहानी बताएं!']
+        : ['Can you elaborate on this?', 'What were Sanjay’s school days like?', 'Tell me a funny story about Sanjay!'];
     } catch (error) {
       console.error('Both API requests failed:', error.message);
-      aiResponse = currentLang === 'hi' 
-        ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या LIC नीमच की सेवाओं, योजनाओं, या डिजिटल प्लेटफॉर्म के बारे में पूछें!'
-        : 'Something went wrong. Please try again or ask about LIC Neemuch’s services, plans, or digital platform!';
+      const searchResults = await performWebSearch(message);
+      aiResponse = searchResults || (currentLang === 'hi' ? 'कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें या संजय के प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के बारे में पूछें!' : 'Something went wrong. Please try again or ask about Sanjay’s projects, skills, or school stories!');
       quickReplies = currentLang === 'hi'
-        ? ['दूसरा प्रश्न पूछें', 'LIC की योजनाएँ बताएँ', 'डिजिटल प्लेटफॉर्म की जानकारी दें']
-        : ['Try another question', 'Tell me about LIC plans', 'Explain the digital platform'];
+        ? ['दूसरा प्रश्न पूछें', 'संजय के प्रोजेक्ट्स के बारे में पूछें', 'संजय की स्कूल की कहानी बताएं']
+        : ['Try another question', 'Ask about Sanjay’s projects', 'Tell me a school story about Sanjay'];
     }
 
     const responseId = Date.now();
+    // Select a random image from the category if imageKey exists
     const imageData = imageKey && imageContext[imageKey] && tone === 'funny'
       ? imageContext[imageKey].urls[Math.floor(Math.random() * imageContext[imageKey].urls.length)]
       : null;
     window.messages.push({
       sender: 'ai',
-      text: aiResponse,
+      text: '',
       id: responseId,
       timestamp: new Date().toISOString(),
-      category: category,
+      category: projectDetails ? 'project' : category,
       reactions: [],
       isPinned: false,
       imageUrl: imageData?.url,
-      imageAlt: imageData?.alt,
-      quickReplies: quickReplies
+      imageAlt: imageData?.alt
     });
-    renderMessages();
-    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
-      window.speakMessage(responseId, aiResponse, currentLang);
-      interactionAnalytics.speechUsed++;
-    }
+    await typeMessage(aiResponse, responseId, projectDetails, quickReplies);
 
     if (isAutoReplyEnabled) {
       setTimeout(function() {
         const followUpId = Date.now() + 1;
         window.messages.push({
           sender: 'ai',
-          text: currentLang === 'hi' ? 'LIC नीमच की सेवाओं, योजनाओं, या डिजिटल प्लेटफॉर्म के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about LIC Neemuch’s services, plans, or digital platform?',
+          text: '',
           id: followUpId,
           timestamp: new Date().toISOString(),
           category: 'follow-up',
           reactions: [],
-          isPinned: false,
-          quickReplies: currentLang === 'hi'
-            ? ['प्रीमियम भुगतान कैसे करें?', 'क्लेम प्रक्रिया क्या है?', 'LIC नीमच से संपर्क कैसे करें?']
-            : ['How to pay premiums?', 'What is the claim process?', 'How to contact LIC Neemuch?']
+          isPinned: false
         });
-        renderMessages();
+        typeMessage(
+          currentLang === 'hi' ? 'संजय के काम, स्किल्स, या स्कूल की कहानियों के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about Sanjay’s work, skills, or school stories?',
+          followUpId,
+          null,
+          currentLang === 'hi'
+            ? ['संजय के प्रोजेक्ट्स क्या हैं?', 'संजय की स्किल्स क्या हैं?', 'संजय की स्कूल की मज़ेदार कहानी बताएं']
+            : ['What are Sanjay’s projects?', 'What skills does Sanjay have?', 'Tell me a funny school story about Sanjay']
+        );
       }, 2000);
     }
 
@@ -267,6 +388,7 @@
       : window.messages;
 
     if (filteredMessages.length === 0) {
+      console.warn('No messages to render');
       chatMessages.innerHTML = '<div class="no-messages">No messages found</div>';
     }
 
@@ -287,6 +409,9 @@
       messageContent.className = 'message-content';
       messageContent.style.fontSize = `${fontSize}px`;
       let formattedText = formatMarkdown(message.text);
+      if (message.category === 'project' && message.projectDetails) {
+        formattedText = renderProjectCard(message.text, message.projectDetails);
+      }
       if (editingMessageId === message.id) {
         messageContent.innerHTML =
           '<div class="edit-message flex items-center gap-2">' +
@@ -297,7 +422,7 @@
       } else {
         messageContent.innerHTML = formattedText;
         if (message.imageUrl) {
-          messageContent.innerHTML += `<img src="${message.imageUrl}" alt="${message.imageAlt || 'Image related to LIC Neemuch'}" class="message-image" loading="lazy">`;
+          messageContent.innerHTML += `<img src="${message.imageUrl}" alt="${message.imageAlt || 'Image related to Sanjay Patidar'}" class="message-image" loading="lazy">`;
         }
         if (showTimestamps) {
           const timeSpan = document.createElement('span');
@@ -326,18 +451,6 @@
             processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
             renderMessages();
           });
-        }
-        if (message.quickReplies && message.quickReplies.length > 0) {
-          const replyButtons = document.createElement('div');
-          replyButtons.className = 'quick-replies flex gap-2 mt-2';
-          message.quickReplies.forEach(reply => {
-            const btn = document.createElement('button');
-            btn.className = 'quick-reply-btn bg-[var(--chat-border-light)] dark:bg-[var(--chat-border-dark)] text-white dark:text-[var(--chat-text-dark)] p-2 rounded-lg text-sm';
-            btn.textContent = reply;
-            btn.addEventListener('click', () => handleQuickReply(reply));
-            replyButtons.appendChild(btn);
-          });
-          messageContent.appendChild(replyButtons);
         }
       }
       if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
@@ -392,31 +505,15 @@
       chatMessages.appendChild(loadingDiv);
     }
 
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    try {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (e) {
+      console.error('Error scrolling chat messages:', e);
+    }
     updateTimestamps();
     updateButtonStates();
-    localStorage.setItem('lic-chat', JSON.stringify(window.messages));
-
-    // Setup MutationObserver for edit input
-    if (editingMessageId) {
-      const observer = new MutationObserver((mutations, obs) => {
-        const editInput = document.querySelector(`[data-message-id="${editingMessageId}"] .edit-message-input`);
-        if (editInput) {
-          console.log(`Edit input found for message ID: ${editingMessageId}`);
-          editInput.focus();
-          editInput.addEventListener('input', (e) => editedText = e.target.value);
-          editInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') saveEditedMessage(editingMessageId);
-          });
-          const saveBtn = document.querySelector(`[data-message-id="${editingMessageId}"] .edit-message-button`);
-          if (saveBtn) saveBtn.addEventListener('click', () => saveEditedMessage(editingMessageId));
-          const cancelBtn = document.querySelector(`[data-message-id="${editingMessageId}"] .cancel-btn`);
-          if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
-          obs.disconnect();
-        }
-      });
-      observer.observe(chatMessages, { childList: true, subtree: true });
-    }
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
+    console.log('Messages rendered:', window.messages.length);
   }
 
   function formatMarkdown(text) {
@@ -428,6 +525,19 @@
       .replace(/^- (.*)$/gm, '<li>$1</li>')
       .replace(/(\n<li>.*<\/li>)+/g, '<ul class="list-disc pl-5">$&</ul>')
       .replace(/\n/g, '<br>');
+  }
+
+  function renderProjectCard(text, details = {}) {
+    if (!details) return formatMarkdown(text);
+    return `
+      <div class="project-card-content p-3 bg-blue-50 dark:bg-[#2A3942] rounded-lg">
+        <h4 class="text-base font-bold">${details.name || 'Project'}</h4>
+        <p>${formatMarkdown(text)}</p>
+        ${details.metrics ? `<p><strong>Metrics:</strong> ${details.metrics}</p>` : ''}
+        ${details.tech ? `<p><strong>Tech:</strong> ${details.tech}</p>` : ''}
+        ${details.link ? `<a href="${details.link}" target="_blank" rel="noopener" class="text-blue-500 underline">Learn More</a>` : ''}
+      </div>
+    `;
   }
 
   function updateTimestamps() {
@@ -449,6 +559,22 @@
     document.querySelectorAll('.suggestion-btn').forEach(function(btn) { btn.disabled = isLoading; });
   }
 
+  async function typeMessage(text, messageId, projectDetails = null, quickReplies = []) {
+    const message = window.messages.find(m => m.id === messageId);
+    if (!message) {
+      console.error('Message not found for ID:', messageId);
+      return;
+    }
+    message.text = text;
+    if (projectDetails) message.projectDetails = projectDetails;
+    if (quickReplies.length > 0) message.quickReplies = quickReplies;
+    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
+      window.speakMessage(messageId, text, currentLang);
+      interactionAnalytics.speechUsed++;
+    }
+    renderMessages();
+  }
+
   async function sendMessage() {
     const input = document.getElementById('chat-input');
     if (!input) {
@@ -465,23 +591,37 @@
     showTonePicker(message, messageId);
   }
 
+  async function performWebSearch(query) {
+    const lowerQuery = query.toLowerCase();
+    if (lowerQuery.includes('sanjay patidar')) {
+      return currentLang === 'hi'
+        ? `संजय पाटीदार एक फुल-स्टैक इंजीनियर हैं, जो अरावली सादन के कैप्टन और पोहे के दीवाने रहे। अधिक जानकारी के लिए उनका [LinkedIn](https://linkedin.com/in/sanjay-patidar) देखें।`
+        : `Sanjay Patidar is a Full-Stack Engineer, once the captain of Aravali Sadan and a pohe enthusiast. Check his [LinkedIn](https://linkedin.com/in/sanjay-patidar) for more details.`;
+    }
+    return currentLang === 'hi'
+      ? `"${query}" पर सामान्य जानकारी: अधिक संदर्भ प्रदान करें या संजय के प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के लिए पूछें।`
+      : `General information on "${query}": Please provide more context or ask about Sanjay’s projects, skills, or school stories.`;
+  }
+
   function categorizeMessage(message) {
     const lowerMessage = message.toLowerCase();
     for (const [imageKey, { keywords }] of Object.entries(imageContext)) {
       if (keywords.some(keyword => lowerMessage.includes(keyword))) {
-        return { category: 'services', imageKey };
+        return { category: 'personal', imageKey };
       }
     }
-    if (lowerMessage.includes('service') || lowerMessage.includes('सेवा') || lowerMessage.includes('digital') || lowerMessage.includes('डिजिटल') || lowerMessage.includes('platform') || lowerMessage.includes('प्लेटफॉर्म')) {
-      return { category: 'services' };
-    } else if (lowerMessage.includes('plan') || lowerMessage.includes('policy') || lowerMessage.includes('insurance') || lowerMessage.includes('योजना') || lowerMessage.includes('पॉलिसी') || lowerMessage.includes('बीमा')) {
-      return { category: 'plans' };
-    } else if (lowerMessage.includes('premium') || lowerMessage.includes('payment') || lowerMessage.includes('प्रीमियम') || lowerMessage.includes('भुगतान')) {
-      return { category: 'premiums' };
-    } else if (lowerMessage.includes('claim') || lowerMessage.includes('क्लेम')) {
-      return { category: 'claims' };
-    } else if (lowerMessage.includes('contact') || lowerMessage.includes('support') || lowerMessage.includes('संपर्क') || lowerMessage.includes('सपोर्ट')) {
+    if (lowerMessage.includes('project') || lowerMessage.includes('lic neemuch') || lowerMessage.includes('zedemy') || lowerMessage.includes('connectnow') || lowerMessage.includes('eventease') || lowerMessage.includes('eduxcel') || lowerMessage.includes('प्रोजेक्ट') || lowerMessage.includes('lic नीमच') || lowerMessage.includes('जेडेमी') || lowerMessage.includes('कनेक्टनाउ') || lowerMessage.includes('इवेंटईज') || lowerMessage.includes('एडुक्सेल')) {
+      return { category: 'project' };
+    } else if (lowerMessage.includes('skill') || lowerMessage.includes('frontend') || lowerMessage.includes('backend') || lowerMessage.includes('cloud') || lowerMessage.includes('seo') || lowerMessage.includes('ci/cd') || lowerMessage.includes('security') || lowerMessage.includes('स्किल') || lowerMessage.includes('फ्रंटएंड') || lowerMessage.includes('बैकएंड') || lowerMessage.includes('क्लाउड') || lowerMessage.includes('एसईओ') || lowerMessage.includes('सीआई/सीडी') || lowerMessage.includes('सुरक्षा')) {
+      return { category: 'skills' };
+    } else if (lowerMessage.includes('achievement') || lowerMessage.includes('load time') || lowerMessage.includes('impression') || lowerMessage.includes('उपलब्धि') || lowerMessage.includes('लोड टाइम') || lowerMessage.includes('इंप्रेशन')) {
+      return { category: 'achievements' };
+    } else if (lowerMessage.includes('contact') || lowerMessage.includes('collaboration') || lowerMessage.includes('संपर्क') || lowerMessage.includes('सहयोग')) {
       return { category: 'contact' };
+    } else if (lowerMessage.includes('challenge') || lowerMessage.includes('deadline') || lowerMessage.includes('setback') || lowerMessage.includes('conflict') || lowerMessage.includes('learn') || lowerMessage.includes('चुनौती') || lowerMessage.includes('डेडलाइन') || lowerMessage.includes('असफलता') || lowerMessage.includes('संघर्ष') || lowerMessage.includes('सीखना')) {
+      return { category: 'challenges' };
+    } else if (lowerMessage.includes('who is sanjay') || lowerMessage.includes('संजय कौन') || lowerMessage.includes('life') || lowerMessage.includes('story') || lowerMessage.includes('school') || lowerMessage.includes('navodaya') || lowerMessage.includes('hobby') || lowerMessage.includes('जीवन') || lowerMessage.includes('कहानी') || lowerMessage.includes('स्कूल') || lowerMessage.includes('नवोदय') || lowerMessage.includes('शौक')) {
+      return { category: 'personal' };
     } else {
       return { category: 'general' };
     }
@@ -556,7 +696,7 @@
         message.reactions.push(emoji);
         interactionAnalytics.reactionsUsed++;
         renderMessages();
-        localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+        localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
       }
     }
   }
@@ -566,34 +706,38 @@
     if (message) {
       message.isPinned = !message.isPinned;
       renderMessages();
-      localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+      localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     }
   }
 
   function startEditing(id, text) {
-    console.log(`Starting edit for message ID: ${id} with text: ${text}`);
     editingMessageId = id;
     editedText = text;
     renderMessages();
+    const editInput = document.querySelector('.edit-message-input');
+    if (editInput) {
+      editInput.focus();
+      editInput.addEventListener('input', (e) => editedText = e.target.value);
+      editInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') saveEditedMessage(id);
+      });
+    }
+    const saveBtn = document.querySelector('.edit-message-button');
+    if (saveBtn) saveBtn.addEventListener('click', () => saveEditedMessage(id));
+    const cancelBtn = document.querySelector('.cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
   }
 
-  function saveEditedMessage(id) {
+  async function saveEditedMessage(id) {
     if (editedText.trim()) {
-      const newMessageId = Date.now();
-      window.messages = window.messages.filter(m => m.id !== id); // Remove old message
-      window.messages.push({
-        sender: 'user',
-        text: editedText,
-        id: newMessageId,
-        timestamp: new Date().toISOString(),
-        category: categorizeMessage(editedText).category,
-        reactions: [],
-        isPinned: false
+      window.messages = window.messages.map(function(message) {
+        return message.id === id ? { ...message, text: editedText, timestamp: new Date().toISOString(), category: categorizeMessage(editedText).category } : message;
       });
       editingMessageId = null;
+      const editedMessageText = editedText;
       editedText = '';
       renderMessages();
-      showTonePicker(editedText, newMessageId); // Treat as new query
+      showTonePicker(editedMessageText, id);
     } else {
       editingMessageId = null;
       editedText = '';
@@ -612,9 +756,7 @@
     if (window.messages.length === 0) {
       window.messages.push({
         sender: 'ai',
-        text: currentLang === 'hi' 
-          ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-          : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"',
+        text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय की स्कूल की मज़ेदार कहानी बताएं!"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or school stories, like "Who is Sanjay Patidar?" or "Tell me a funny school story about Sanjay!"',
         id: 'welcome',
         timestamp: new Date().toISOString(),
         category: 'welcome',
@@ -623,7 +765,7 @@
       });
     }
     renderMessages();
-    localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
   }
 
   function copyMessage(text) {
@@ -743,16 +885,14 @@
   function clearChat() {
     window.messages = [{
       sender: 'ai',
-      text: currentLang === 'hi' 
-        ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-        : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"',
+      text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय की स्कूल की मज़ेदार कहानी बताएं!"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or school stories, like "Who is Sanjay Patidar?" or "Tell me a funny school story about Sanjay!"',
       id: 'welcome',
       timestamp: new Date().toISOString(),
       category: 'welcome',
       reactions: [],
       isPinned: false
     }];
-    localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+    localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     renderMessages();
     document.querySelectorAll('.confirm-popup').forEach(p => p.remove());
   }
@@ -830,18 +970,19 @@
         langToggle.setAttribute('data-lang', currentLang === 'en' ? 'hi' : 'en');
         const chatInput = document.getElementById('chat-input');
         if (chatInput) {
-          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about LIC Neemuch’s services or plans...';
+          chatInput.placeholder = currentLang === 'hi' ? chatInput.dataset.placeholderHi : 'Ask about Sanjay\'s projects or skills...';
         }
         const searchBar = document.getElementById('search-bar');
         if (searchBar) {
           searchBar.placeholder = currentLang === 'hi' ? searchBar.dataset.placeholderHi : 'Search Messages';
         }
+        // Explicitly update the welcome message text on lang toggle
         const welcomeMsg = window.messages.find(m => m.id === 'welcome');
         if (welcomeMsg) {
           welcomeMsg.text = currentLang === 'hi' 
-            ? 'हाय! मैं LIC नीमच चैटबॉट हूँ। बीमा योजनाओं, प्रीमियम, या डिजिटल सेवाओं के बारे में पूछें, जैसे "LIC नीमच की सेवाएँ क्या हैं?" या "मुझे जीवन बीमा योजना के बारे में बताएं!"'
-            : 'Hi! I\'m the LIC Neemuch chatbot. Ask about insurance plans, premiums, or digital services, like "What are LIC Neemuch’s services?" or "Tell me about life insurance plans!"';
-          localStorage.setItem('lic-chat', JSON.stringify(window.messages));
+            ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
+            : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"';
+          localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
         }
         handleInputChange(document.getElementById('chat-input').value);
         filteredSuggestions = suggestedPrompts[currentLang];
