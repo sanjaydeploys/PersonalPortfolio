@@ -58,6 +58,8 @@
   let showTimestamps = true;
   let searchQuery = '';
   let selectedCategory = '';
+  let pendingMessage = null;
+  let pendingMessageId = null;
   let interactionAnalytics = { questionsAsked: 0, speechUsed: 0, categories: {}, reactionsUsed: 0 };
   const suggestedPrompts = {
     en: [
@@ -89,6 +91,26 @@
   const emojiOptions = ['👍', '😄', '💼', '📜', '👏'];
   const primaryApiKey = 'AIzaSyA6R5mEyZM7Vz61fisMnFaYedGptHv8B4I';
   const fallbackApiKey = 'AIzaSyCP0zYjRT5Gkdb2PQjSmVi6-TnO2a7ldAA';
+  const imageContext = {
+    "lic-office": {
+      urls: [
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/lic-office-neemuch.jpg",
+          alt: "LIC Neemuch office exterior, showcasing its digital transformation"
+        }
+      ],
+      keywords: ["lic office", "neemuch office", "digital platform", "lic digital", "एलआईसी कार्यालय", "नीमच कार्यालय", "डिजिटल प्लेटफॉर्म"]
+    },
+    "lic-services": {
+      urls: [
+        {
+          url: "https://mys3resources.s3.ap-south-1.amazonaws.com/chatbot_images/lic-services-portal.jpg",
+          alt: "LIC Neemuch digital services portal interface"
+        }
+      ],
+      keywords: ["services", "digital services", "online portal", "lic portal", "सेवाएँ", "डिजिटल सेवाएँ", "ऑनलाइन पोर्टल"]
+    }
+  };
   const licContext = `
 **LIC Neemuch Digital Platform Overview**:
 - **Background**: The Life Insurance Corporation (LIC) office in Neemuch, a 60-year-old government institution, lacked a digital presence, relying on pamphlets and WhatsApp forwards for outreach. Sanjay Patidar developed a serverless platform to digitize operations.
@@ -113,15 +135,38 @@
     return currentLang === 'hi' ? hindiLicContext : licContext;
   }
 
-  async function processMessage(message, messageId) {
+  function showTonePicker(message, messageId) {
+    const tonePromptText = currentLang === 'hi' ? 'आप कौन सा लहजा सुनना चाहेंगे?' : 'Which tone would you like to hear?';
+    const tonePromptId = Date.now();
+    pendingMessage = message;
+    pendingMessageId = messageId;
+    window.messages.push({
+      sender: 'ai',
+      text: tonePromptText,
+      id: tonePromptId,
+      timestamp: new Date().toISOString(),
+      category: 'tone_prompt',
+      reactions: [],
+      isPinned: false
+    });
+    renderMessages();
+    if (typeof window.speakMessage === 'function') {
+      window.speakMessage(tonePromptId, tonePromptText, currentLang);
+    }
+  }
+
+  async function processMessageWithTone(message, messageId, tone) {
     isLoading = true;
     interactionAnalytics.questionsAsked++;
-    const { category } = categorizeMessage(message);
+    const { category, imageKey } = categorizeMessage(message);
     interactionAnalytics.categories[category] = (interactionAnalytics.categories[category] || 0) + 1;
 
     let aiResponse;
     let quickReplies = [];
-    const fullPrompt = `You are an AI assistant for LIC Neemuch's digital platform. Respond in a professional, concise, and helpful tone suitable for customers seeking insurance information. Use the following context to answer questions about LIC Neemuch's services, plans, or digital platform. For general insurance questions, provide accurate answers based on standard LIC offerings. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
+    const toneInstruction = tone === 'funny'
+      ? 'Respond in a funny, engaging, and heartfelt tone suitable for an Indian audience. Use culturally relevant, non-technical humor (e.g., references to local culture or insurance scenarios). Avoid tech jargon (e.g., serverless, API) and movie references (e.g., Bollywood). Keep it family-friendly and relatable.'
+      : 'Respond in a professional, concise, and informative tone suitable for customers seeking insurance information. Focus on LIC Neemuch’s services, plans, or digital platform.';
+    const fullPrompt = `You are an AI assistant for LIC Neemuch's digital platform. ${toneInstruction} Use the following context to answer questions about LIC Neemuch's services, plans, or digital platform. For general insurance questions, provide accurate answers based on standard LIC offerings. Context: ${getContext()}\n\nUser question: ${message}\n\nProvide a clear response in ${currentLang === 'hi' ? 'Hindi' : 'English'}.`;
 
     async function tryApiRequest(apiKey) {
       try {
@@ -164,6 +209,9 @@
     }
 
     const responseId = Date.now();
+    const imageData = imageKey && imageContext[imageKey] && tone === 'funny'
+      ? imageContext[imageKey].urls[Math.floor(Math.random() * imageContext[imageKey].urls.length)]
+      : null;
     window.messages.push({
       sender: 'ai',
       text: '',
@@ -171,7 +219,9 @@
       timestamp: new Date().toISOString(),
       category: category,
       reactions: [],
-      isPinned: false
+      isPinned: false,
+      imageUrl: imageData?.url,
+      imageAlt: imageData?.alt
     });
     await typeMessage(aiResponse, responseId, null, quickReplies);
 
@@ -246,6 +296,9 @@
           '</div>';
       } else {
         messageContent.innerHTML = formattedText;
+        if (message.imageUrl) {
+          messageContent.innerHTML += `<img src="${message.imageUrl}" alt="${message.imageAlt || 'Image related to LIC Neemuch'}" class="message-image" loading="lazy">`;
+        }
         if (showTimestamps) {
           const timeSpan = document.createElement('span');
           timeSpan.className = 'message-timestamp';
@@ -254,6 +307,25 @@
         }
         if (message.reactions.length > 0) {
           messageContent.innerHTML += '<div class="message-reactions flex flex-wrap gap-1 mt-1">' + message.reactions.map(r => `<span class="reaction-tag bg-[#F5F5F5] dark:bg-[#2A3942] rounded-full px-2 py-1 text-sm">${r}</span>`).join('') + '</div>';
+        }
+        if (message.category === 'tone_prompt') {
+          const toneButtons = document.createElement('div');
+          toneButtons.className = 'tone-buttons flex gap-2 mt-2';
+          toneButtons.innerHTML = `
+            <button class="tone-btn funny-btn bg-[var(--chat-border-light)] dark:bg-[var(--chat-border-dark)] text-white dark:text-[var(--chat-text-dark)] p-2 rounded-lg text-sm">${currentLang === 'hi' ? 'मज़ेदार' : 'Funny'}</button>
+            <button class="tone-btn professional-btn bg-[var(--chat-border-light)] dark:bg-[var(--chat-border-dark)] text-white dark:text-[var(--chat-text-dark)] p-2 rounded-lg text-sm">${currentLang === 'hi' ? 'पेशेवर' : 'Professional'}</button>
+          `;
+          messageContent.appendChild(toneButtons);
+          toneButtons.querySelector('.funny-btn').addEventListener('click', () => {
+            window.messages = window.messages.filter(m => m.id !== message.id);
+            processMessageWithTone(pendingMessage, pendingMessageId, 'funny');
+            renderMessages();
+          });
+          toneButtons.querySelector('.professional-btn').addEventListener('click', () => {
+            window.messages = window.messages.filter(m => m.id !== message.id);
+            processMessageWithTone(pendingMessage, pendingMessageId, 'professional');
+            renderMessages();
+          });
         }
         if (message.quickReplies && message.quickReplies.length > 0) {
           const replyButtons = document.createElement('div');
@@ -268,7 +340,7 @@
           messageContent.appendChild(replyButtons);
         }
       }
-      if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function') {
+      if (message.sender === 'ai' && message.text && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
         const speakBtn = document.createElement('button');
         speakBtn.className = 'speak-btn';
         speakBtn.setAttribute('aria-label', 'Play or pause message');
@@ -370,7 +442,7 @@
     message.text = text;
     if (projectDetails) message.projectDetails = projectDetails;
     if (quickReplies.length > 0) message.quickReplies = quickReplies;
-    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function') {
+    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
       window.speakMessage(messageId, text, currentLang);
       interactionAnalytics.speechUsed++;
     }
@@ -390,11 +462,16 @@
     window.messages.push({ sender: 'user', text: message, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(message).category, reactions: [], isPinned: false });
     input.value = '';
     renderMessages();
-    await processMessage(message, messageId);
+    showTonePicker(message, messageId);
   }
 
   function categorizeMessage(message) {
     const lowerMessage = message.toLowerCase();
+    for (const [imageKey, { keywords }] of Object.entries(imageContext)) {
+      if (keywords.some(keyword => lowerMessage.includes(keyword))) {
+        return { category: 'services', imageKey };
+      }
+    }
     if (lowerMessage.includes('service') || lowerMessage.includes('सेवा') || lowerMessage.includes('digital') || lowerMessage.includes('डिजिटल') || lowerMessage.includes('platform') || lowerMessage.includes('प्लेटफॉर्म')) {
       return { category: 'services' };
     } else if (lowerMessage.includes('plan') || lowerMessage.includes('policy') || lowerMessage.includes('insurance') || lowerMessage.includes('योजना') || lowerMessage.includes('पॉलिसी') || lowerMessage.includes('बीमा')) {
@@ -520,6 +597,7 @@
   }
 
   function startEditing(id, text) {
+    console.log(`Starting edit for message ID: ${id} with text: ${text}`);
     editingMessageId = id;
     editedText = text;
     renderMessages();
@@ -537,7 +615,7 @@
       const editedMessageText = editedText;
       editedText = '';
       renderMessages();
-      await processMessage(editedMessageText, id);
+      showTonePicker(editedMessageText, id);
     } else {
       editingMessageId = null;
       editedText = '';
@@ -729,7 +807,7 @@
         const messageId = Date.now();
         window.messages.push({ sender: 'user', text: transcript, id: messageId, timestamp: new Date().toISOString(), category: categorizeMessage(transcript).category, reactions: [], isPinned: false });
         renderMessages();
-        processMessage(transcript, messageId);
+        showTonePicker(transcript, messageId);
       }
     };
     recognition.onend = function() {
