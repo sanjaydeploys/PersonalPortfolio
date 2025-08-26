@@ -214,37 +214,38 @@
       : null;
     window.messages.push({
       sender: 'ai',
-      text: '',
+      text: aiResponse,
       id: responseId,
       timestamp: new Date().toISOString(),
       category: category,
       reactions: [],
       isPinned: false,
       imageUrl: imageData?.url,
-      imageAlt: imageData?.alt
+      imageAlt: imageData?.alt,
+      quickReplies: quickReplies
     });
-    await typeMessage(aiResponse, responseId, null, quickReplies);
+    renderMessages();
+    if (isAutoSpeakEnabled && typeof window.speakMessage === 'function') {
+      window.speakMessage(responseId, aiResponse, currentLang);
+      interactionAnalytics.speechUsed++;
+    }
 
     if (isAutoReplyEnabled) {
       setTimeout(function() {
         const followUpId = Date.now() + 1;
         window.messages.push({
           sender: 'ai',
-          text: '',
+          text: currentLang === 'hi' ? 'LIC नीमच की सेवाओं, योजनाओं, या डिजिटल प्लेटफॉर्म के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about LIC Neemuch’s services, plans, or digital platform?',
           id: followUpId,
           timestamp: new Date().toISOString(),
           category: 'follow-up',
           reactions: [],
-          isPinned: false
-        });
-        typeMessage(
-          currentLang === 'hi' ? 'LIC नीमच की सेवाओं, योजनाओं, या डिजिटल प्लेटफॉर्म के बारे में और कोई प्रश्न हैं?' : 'Do you have any more questions about LIC Neemuch’s services, plans, or digital platform?',
-          followUpId,
-          null,
-          currentLang === 'hi'
+          isPinned: false,
+          quickReplies: currentLang === 'hi'
             ? ['प्रीमियम भुगतान कैसे करें?', 'क्लेम प्रक्रिया क्या है?', 'LIC नीमच से संपर्क कैसे करें?']
             : ['How to pay premiums?', 'What is the claim process?', 'How to contact LIC Neemuch?']
-        );
+        });
+        renderMessages();
       }, 2000);
     }
 
@@ -266,7 +267,6 @@
       : window.messages;
 
     if (filteredMessages.length === 0) {
-      console.warn('No messages to render');
       chatMessages.innerHTML = '<div class="no-messages">No messages found</div>';
     }
 
@@ -392,15 +392,31 @@
       chatMessages.appendChild(loadingDiv);
     }
 
-    try {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    } catch (e) {
-      console.error('Error scrolling chat messages:', e);
-    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
     updateTimestamps();
     updateButtonStates();
     localStorage.setItem('lic-chat', JSON.stringify(window.messages));
-    console.log('Messages rendered:', window.messages.length);
+
+    // Setup MutationObserver for edit input
+    if (editingMessageId) {
+      const observer = new MutationObserver((mutations, obs) => {
+        const editInput = document.querySelector(`[data-message-id="${editingMessageId}"] .edit-message-input`);
+        if (editInput) {
+          console.log(`Edit input found for message ID: ${editingMessageId}`);
+          editInput.focus();
+          editInput.addEventListener('input', (e) => editedText = e.target.value);
+          editInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveEditedMessage(editingMessageId);
+          });
+          const saveBtn = document.querySelector(`[data-message-id="${editingMessageId}"] .edit-message-button`);
+          if (saveBtn) saveBtn.addEventListener('click', () => saveEditedMessage(editingMessageId));
+          const cancelBtn = document.querySelector(`[data-message-id="${editingMessageId}"] .cancel-btn`);
+          if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
+          obs.disconnect();
+        }
+      });
+      observer.observe(chatMessages, { childList: true, subtree: true });
+    }
   }
 
   function formatMarkdown(text) {
@@ -431,22 +447,6 @@
     const voiceBtn = document.querySelector('.voice-btn');
     if (voiceBtn) voiceBtn.disabled = isLoading || !recognition;
     document.querySelectorAll('.suggestion-btn').forEach(function(btn) { btn.disabled = isLoading; });
-  }
-
-  async function typeMessage(text, messageId, projectDetails = null, quickReplies = []) {
-    const message = window.messages.find(m => m.id === messageId);
-    if (!message) {
-      console.error('Message not found for ID:', messageId);
-      return;
-    }
-    message.text = text;
-    if (projectDetails) message.projectDetails = projectDetails;
-    if (quickReplies.length > 0) message.quickReplies = quickReplies;
-    if (isAutoSpeakEnabled && message.sender === 'ai' && typeof window.speakMessage === 'function' && message.category !== 'tone_prompt') {
-      window.speakMessage(messageId, text, currentLang);
-      interactionAnalytics.speechUsed++;
-    }
-    renderMessages();
   }
 
   async function sendMessage() {
@@ -570,52 +570,30 @@
     }
   }
 
-  function tryFindEditInput(messageId, attempt = 1, maxAttempts = 3) {
-    const editInput = document.querySelector(`[data-message-id="${messageId}"] .edit-message-input`);
-    if (editInput) {
-      editInput.focus();
-      editInput.addEventListener('input', (e) => editedText = e.target.value);
-      editInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') saveEditedMessage(messageId);
-      });
-      const saveBtn = document.querySelector(`[data-message-id="${messageId}"] .edit-message-button`);
-      if (saveBtn) saveBtn.addEventListener('click', () => saveEditedMessage(messageId));
-      const cancelBtn = document.querySelector(`[data-message-id="${messageId}"] .cancel-btn`);
-      if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
-      return true;
-    } else if (attempt < maxAttempts) {
-      console.warn(`Edit input not found for message ID: ${messageId}, attempt ${attempt}/${maxAttempts}`);
-      setTimeout(() => tryFindEditInput(messageId, attempt + 1, maxAttempts), 100);
-      return false;
-    } else {
-      console.error(`Failed to find edit input for message ID: ${messageId} after ${maxAttempts} attempts`);
-      editingMessageId = null;
-      editedText = '';
-      renderMessages();
-      return false;
-    }
-  }
-
   function startEditing(id, text) {
     console.log(`Starting edit for message ID: ${id} with text: ${text}`);
     editingMessageId = id;
     editedText = text;
     renderMessages();
-    requestAnimationFrame(() => {
-      tryFindEditInput(id);
-    });
   }
 
-  async function saveEditedMessage(id) {
+  function saveEditedMessage(id) {
     if (editedText.trim()) {
-      window.messages = window.messages.map(function(message) {
-        return message.id === id ? { ...message, text: editedText, timestamp: new Date().toISOString(), category: categorizeMessage(editedText).category } : message;
+      const newMessageId = Date.now();
+      window.messages = window.messages.filter(m => m.id !== id); // Remove old message
+      window.messages.push({
+        sender: 'user',
+        text: editedText,
+        id: newMessageId,
+        timestamp: new Date().toISOString(),
+        category: categorizeMessage(editedText).category,
+        reactions: [],
+        isPinned: false
       });
       editingMessageId = null;
-      const editedMessageText = editedText;
       editedText = '';
       renderMessages();
-      showTonePicker(editedMessageText, id);
+      showTonePicker(editedText, newMessageId); // Treat as new query
     } else {
       editingMessageId = null;
       editedText = '';
