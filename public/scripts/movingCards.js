@@ -81,27 +81,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🔥 Tech stack reel infinite scroll (corrected)
-  document.querySelectorAll(".tech-reel").forEach(reel => {
-    const items = Array.from(reel.children);
-    const itemWidth = items[0].offsetWidth + 24; // adjust gap if needed
-    let scrollX = 0;
-    let speed = 1.2;
+document.querySelectorAll(".tech-reel").forEach(reel => {
+  const items = Array.from(reel.children);
+  const itemWidth = items[0].offsetWidth + 24; // gap-aware
+  let scrollX = 0;
 
-    // Clone children for smooth looping
-    items.forEach(item => {
-      const clone = item.cloneNode(true);
-      reel.appendChild(clone);
-    });
+  // ✅ Detect direction (rtl or ltr)
+  const isRTL = reel.classList.contains("rtl");
+  const speed = isRTL ? -1.2 : 1.2;
 
-    const animateReel = () => {
-      scrollX -= speed;
-      if (Math.abs(scrollX) >= itemWidth * items.length) {
-        scrollX = 0;
-      }
-      reel.style.transform = `translateX(${scrollX}px)`;
-      requestAnimationFrame(animateReel);
-    };
-    animateReel();
+  // Clone children for seamless infinite effect
+  items.forEach(item => {
+    const clone = item.cloneNode(true);
+    reel.appendChild(clone);
   });
+
+  const animateReel = () => {
+    scrollX -= speed;
+
+    // reset based on direction
+    if (!isRTL && Math.abs(scrollX) >= itemWidth * items.length) {
+      scrollX = 0;
+    }
+    if (isRTL && scrollX >= 0) {
+      scrollX = -itemWidth * items.length;
+    }
+
+    reel.style.transform = `translateX(${scrollX}px)`;
+    requestAnimationFrame(animateReel);
+  };
+
+  animateReel();
+});
+
 });
