@@ -81,41 +81,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-document.querySelectorAll(".tech-reel").forEach(reel => {
-  const items = Array.from(reel.children);
-  const itemWidth = items[0].offsetWidth + 24; // includes gap
-  let scrollX = 0;
+  /* ---------------- Tech Stack Reels ---------------- */
+  document.querySelectorAll(".tech-reel").forEach(reel => {
+    const items = Array.from(reel.children);
+    const itemWidth = items[0].offsetWidth + 24;
+    let scrollX = 0;
 
-  // ✅ Detect direction from dataset
-  const direction = reel.dataset.direction || "ltr";
-  const isRTL = direction === "rtl";
-  const speed = isRTL ? -1.2 : 1.2;
+    const direction = reel.dataset.direction || "ltr";
+    const isRTL = direction === "rtl";
+    const speed = isRTL ? -1.2 : 1.2;
 
-  // Clone children for seamless infinite effect
-  items.forEach(item => {
-    const clone = item.cloneNode(true);
-    reel.appendChild(clone);
+    // Clone *twice* for seamless loop
+    for (let i = 0; i < 2; i++) {
+      items.forEach(item => {
+        reel.appendChild(item.cloneNode(true));
+      });
+    }
+
+    const totalWidth = itemWidth * items.length;
+
+    const animateReel = () => {
+      scrollX -= speed;
+
+      if (!isRTL && Math.abs(scrollX) >= totalWidth) {
+        scrollX += totalWidth; // seamless wrap
+      }
+      if (isRTL && scrollX >= 0) {
+        scrollX -= totalWidth; // seamless wrap
+      }
+
+      reel.style.transform = `translateX(${scrollX}px)`;
+      requestAnimationFrame(animateReel);
+    };
+
+    animateReel();
   });
-
-  const animateReel = () => {
-    scrollX -= speed;
-
-    // LTR reset
-    if (!isRTL && Math.abs(scrollX) >= itemWidth * items.length) {
-      scrollX = 0;
-    }
-
-    // RTL reset
-    if (isRTL && scrollX >= 0) {
-      scrollX = -itemWidth * items.length;
-    }
-
-    reel.style.transform = `translateX(${scrollX}px)`;
-    requestAnimationFrame(animateReel);
-  };
-
-  animateReel();
-});
-
 
 });
