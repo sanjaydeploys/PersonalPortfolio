@@ -34,24 +34,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const rect = card.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
-        // Store reference to reattach later
         lockedCard = card;
         originalIndex = index;
 
-        // Detach card and place it fixed in container
+        // Create placeholder
         const placeholder = document.createElement("div");
         placeholder.className = "card-placeholder";
         placeholder.style.width = `${card.offsetWidth}px`;
         placeholder.style.height = `${card.offsetHeight}px`;
         card.parentNode.insertBefore(placeholder, card);
 
+        // Pull card above track
         container.appendChild(card);
         card.classList.add("hover-active");
         card.style.position = "absolute";
         card.style.left = `${rect.left - containerRect.left}px`;
         card.style.top = `${rect.top - containerRect.top}px`;
 
-        // Scale down other cards
+        // Scale down others
         track.querySelectorAll(".moving-card").forEach(c => {
           if (c !== card) c.classList.add("scale-down");
         });
@@ -60,17 +60,16 @@ document.addEventListener("DOMContentLoaded", () => {
       card.addEventListener("mouseleave", () => {
         if (!lockedCard) return;
 
-        // Remove absolute positioning
+        // Reset positioning
         lockedCard.style.position = "";
         lockedCard.style.left = "";
         lockedCard.style.top = "";
 
-        // Reattach card back to track
+        // Reattach back into track
         const placeholder = track.querySelector(".card-placeholder");
         track.insertBefore(lockedCard, placeholder);
         placeholder.remove();
 
-        // Reset states
         lockedCard.classList.remove("hover-active");
         track.querySelectorAll(".moving-card").forEach(c => {
           c.classList.remove("scale-down");
@@ -80,5 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
         originalIndex = null;
       });
     });
+  });
+
+  // 🔥 Tech stack reel infinite scroll (kept separate, won’t affect moving-cards)
+  document.querySelectorAll(".tech-reel").forEach(reel => {
+    // Clone nodes to create infinite scroll
+    const clone = reel.cloneNode(true);
+    reel.parentElement.appendChild(clone);
   });
 });
