@@ -83,11 +83,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.querySelectorAll(".tech-reel").forEach(reel => {
   const items = Array.from(reel.children);
-  const itemWidth = items[0].offsetWidth + 24; // gap-aware
+  const itemWidth = items[0].offsetWidth + 24; // includes gap
   let scrollX = 0;
 
-  // ✅ Detect direction (rtl or ltr)
-  const isRTL = reel.classList.contains("rtl");
+  // ✅ Detect direction from dataset
+  const direction = reel.dataset.direction || "ltr";
+  const isRTL = direction === "rtl";
   const speed = isRTL ? -1.2 : 1.2;
 
   // Clone children for seamless infinite effect
@@ -99,10 +100,12 @@ document.querySelectorAll(".tech-reel").forEach(reel => {
   const animateReel = () => {
     scrollX -= speed;
 
-    // reset based on direction
+    // LTR reset
     if (!isRTL && Math.abs(scrollX) >= itemWidth * items.length) {
       scrollX = 0;
     }
+
+    // RTL reset
     if (isRTL && scrollX >= 0) {
       scrollX = -itemWidth * items.length;
     }
@@ -113,5 +116,6 @@ document.querySelectorAll(".tech-reel").forEach(reel => {
 
   animateReel();
 });
+
 
 });
