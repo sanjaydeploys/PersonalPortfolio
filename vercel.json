@@ -78,8 +78,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/institutions"
     },
     {
-      "source": "/cuims-breakdown",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-breakdown"
+      "source": "/cuims-architecture",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-architecture"
     },
        {
       "source": "/cuims-chandigarh-university",
