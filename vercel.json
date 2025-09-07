@@ -145,6 +145,10 @@
       "source": "/agribot",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/agribot"
     },
+       {
+      "source": "/interview-prep",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/interview-prep"
+    },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
