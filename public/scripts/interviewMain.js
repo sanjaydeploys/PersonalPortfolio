@@ -8,7 +8,7 @@ const debounce = (func, wait) => {
 };
 
 const escapeRegExp = (string) => {
-  return string.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
 const highlightText = (text, query) => {
@@ -37,9 +37,6 @@ if (sidebarToggle) {
     sidebarNav.classList.toggle('active');
   });
 }
-
-// FAQ Accordion (Call reinitialize if needed, but faqToggle.js handles)
-window.reinitializeFAQ = window.reinitializeFAQ || (() => {});
 
 // Sidebar Navigation
 const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -84,21 +81,23 @@ const performSearch = () => {
     const answer = item.querySelector('.faq-answer p').textContent.toLowerCase();
     const matches = query === '' || question.includes(query) || answer.includes(query);
     item.style.display = matches ? 'block' : 'none';
+    const questionEl = item.querySelector('.faq-question');
+    const answerEl = item.querySelector('.faq-answer p');
     if (matches && query !== '') {
-      const questionEl = item.querySelector('.faq-question');
-      const answerEl = item.querySelector('.faq-answer p');
       questionEl.innerHTML = highlightText(questionEl.textContent, query);
       answerEl.innerHTML = highlightText(answerEl.textContent, query);
-      // Trigger toggle if needed
-      questionEl.classList.add('active');
-      questionEl.nextElementSibling.classList.add('active');
+      // Preserve existing toggle state instead of forcing active
+      const isExpanded = questionEl.getAttribute('aria-expanded') === 'true';
+      if (!isExpanded) {
+        questionEl.classList.remove('active');
+        answerEl.parentElement.classList.remove('active');
+        answerEl.parentElement.style.maxHeight = '0px';
+      }
     } else {
-      const originalQuestion = item.querySelector('.faq-question').dataset.original || item.querySelector('.faq-question').textContent;
-      const originalAnswer = item.querySelector('.faq-answer p').dataset.original || item.querySelector('.faq-answer p').textContent;
-      item.querySelector('.faq-question').innerHTML = originalQuestion;
-      item.querySelector('.faq-answer p').innerHTML = originalAnswer;
-      item.querySelector('.faq-question').dataset.original = originalQuestion;
-      item.querySelector('.faq-answer p').dataset.original = originalAnswer;
+      questionEl.innerHTML = questionEl.dataset.original || questionEl.textContent;
+      answerEl.innerHTML = answerEl.dataset.original || answerEl.textContent;
+      questionEl.dataset.original = questionEl.dataset.original || questionEl.textContent;
+      answerEl.dataset.original = answerEl.dataset.original || answerEl.textContent;
     }
   });
 };
@@ -119,9 +118,10 @@ if (backToTop) {
   });
 }
 
-// Initialize FAQ on load
-if (typeof window !== 'undefined' && window.reinitializeFAQ) {
+// Initialize FAQ on load only if not already handled
+if (typeof window !== 'undefined' && window.reinitializeFAQ && !window.faqInitialized) {
   window.reinitializeFAQ();
+  window.faqInitialized = true;
 }
 
 // Error Handling
