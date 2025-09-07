@@ -86,13 +86,6 @@ const performSearch = () => {
     if (matches && query !== '') {
       questionEl.innerHTML = highlightText(questionEl.textContent, query);
       answerEl.innerHTML = highlightText(answerEl.textContent, query);
-      // Preserve existing toggle state instead of forcing active
-      const isExpanded = questionEl.getAttribute('aria-expanded') === 'true';
-      if (!isExpanded) {
-        questionEl.classList.remove('active');
-        answerEl.parentElement.classList.remove('active');
-        answerEl.parentElement.style.maxHeight = '0px';
-      }
     } else {
       questionEl.innerHTML = questionEl.dataset.original || questionEl.textContent;
       answerEl.innerHTML = answerEl.dataset.original || answerEl.textContent;
