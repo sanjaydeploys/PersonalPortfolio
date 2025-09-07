@@ -25,13 +25,7 @@
       question.classList.toggle('active', !isExpanded);
       answer.classList.toggle('active', !isExpanded);
 
-      // Ensure transition applies after setting height
       if (!isExpanded) {
-        // Force reflow before setting max-height
-        answer.style.transition = 'none';
-        answer.style.maxHeight = '0px';
-        answer.offsetHeight; // Trigger reflow
-        answer.style.transition = 'max-height 0.4s ease-out, padding 0.4s ease-out';
         answer.style.maxHeight = answer.scrollHeight + 'px';
       } else {
         answer.style.maxHeight = '0px';
@@ -52,15 +46,10 @@
       }
     });
 
-    // Initialize collapsed state with transition disabled initially
+    // Initialize collapsed state
     document.querySelectorAll('.faq-answer').forEach((answer) => {
-      answer.style.transition = 'none';
       answer.style.maxHeight = '0px';
       answer.classList.remove('active');
-      // Re-enable transition after initial setup
-      setTimeout(() => {
-        answer.style.transition = 'max-height 0.4s ease-out, padding 0.4s ease-out';
-      }, 10);
     });
     document.querySelectorAll('.faq-question').forEach((question) => {
       question.setAttribute('aria-expanded', 'false');
