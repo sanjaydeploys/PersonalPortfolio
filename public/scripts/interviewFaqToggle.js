@@ -8,14 +8,10 @@
       return;
     }
 
-    const questions = faqContainer.querySelectorAll('.faq-question');
+    const toggleFAQ = (e) => {
+      const question = e.target.closest('.faq-question');
+      if (!question || e.target.classList.contains('speak-btn')) return;
 
-    if (!questions.length) {
-      console.warn('[faqToggle.js] No FAQ questions found on page.');
-      return;
-    }
-
-    questions.forEach((question) => {
       const answerId = question.getAttribute('aria-controls');
       const answer = document.getElementById(answerId);
 
@@ -24,29 +20,48 @@
         return;
       }
 
-      const toggle = () => {
-        const isExpanded = question.getAttribute('aria-expanded') === 'true';
-        question.setAttribute('aria-expanded', String(!isExpanded));
-        question.classList.toggle('active', !isExpanded);
-        answer.classList.toggle('active', !isExpanded);
+      const isExpanded = question.getAttribute('aria-expanded') === 'true';
+      const newExpanded = !isExpanded;
 
-        console.log(
-          `[faqToggle.js] Toggled FAQ: "${question.textContent.trim()}", expanded: ${!isExpanded}`
-        );
-      };
+      question.setAttribute('aria-expanded', String(newExpanded));
+      question.classList.toggle('active', newExpanded);
+      answer.classList.toggle('active', newExpanded);
 
-      // Prevent duplicate listeners
-      question.removeEventListener('click', toggle);
-      question.addEventListener('click', toggle);
+      if (newExpanded) {
+        answer.style.maxHeight = `${answer.scrollHeight}px`;
+      } else {
+        answer.style.maxHeight = '0px';
+      }
 
-      question.removeEventListener('keydown', handleKeydown);
-      function handleKeydown(e) {
-        if (e.key === 'Enter' || e.key === ' ') {
+      console.log(
+        `[faqToggle.js] Toggled FAQ: "${question.textContent.trim()}", expanded: ${newExpanded}`
+      );
+    };
+
+    // Use delegated event listener to capture all future .faq-question elements
+    faqContainer.removeEventListener('click', toggleFAQ);
+    faqContainer.addEventListener('click', toggleFAQ);
+
+    faqContainer.removeEventListener('keydown', handleKeydown);
+    function handleKeydown(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const question = e.target.closest('.faq-question');
+        if (question) {
           e.preventDefault();
-          toggle();
+          toggleFAQ({ target: question });
         }
       }
-      question.addEventListener('keydown', handleKeydown);
+    }
+    faqContainer.addEventListener('keydown', handleKeydown);
+
+    // Initialize all FAQs as collapsed
+    document.querySelectorAll('.faq-question').forEach((q) => {
+      q.setAttribute('aria-expanded', 'false');
+      q.classList.remove('active');
+    });
+    document.querySelectorAll('.faq-answer').forEach((a) => {
+      a.classList.remove('active');
+      a.style.maxHeight = '0px';
     });
   }
 
