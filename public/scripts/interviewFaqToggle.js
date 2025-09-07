@@ -8,10 +8,14 @@
       return;
     }
 
-    const handleToggle = (e) => {
-      const question = e.target.closest('.faq-question');
-      if (!question || e.target.classList.contains('speak-btn')) return;
+    const questions = faqContainer.querySelectorAll('.faq-question');
 
+    if (!questions.length) {
+      console.warn('[faqToggle.js] No FAQ questions found on page.');
+      return;
+    }
+
+    questions.forEach((question) => {
       const answerId = question.getAttribute('aria-controls');
       const answer = document.getElementById(answerId);
 
@@ -20,40 +24,29 @@
         return;
       }
 
-      const isExpanded = question.getAttribute('aria-expanded') === 'true';
-      question.setAttribute('aria-expanded', String(!isExpanded));
-      question.classList.toggle('active', !isExpanded);
-      answer.classList.toggle('active', !isExpanded);
+      const toggle = () => {
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        question.setAttribute('aria-expanded', String(!isExpanded));
+        question.classList.toggle('active', !isExpanded);
+        answer.classList.toggle('active', !isExpanded);
 
-      if (!isExpanded) {
-        answer.style.maxHeight = answer.scrollHeight + 'px';
-      } else {
-        answer.style.maxHeight = '0px';
+        console.log(
+          `[faqToggle.js] Toggled FAQ: "${question.textContent.trim()}", expanded: ${!isExpanded}`
+        );
+      };
+
+      // Prevent duplicate listeners
+      question.removeEventListener('click', toggle);
+      question.addEventListener('click', toggle);
+
+      question.removeEventListener('keydown', handleKeydown);
+      function handleKeydown(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
       }
-
-      console.log(
-        `[faqToggle.js] Toggled FAQ: "${question.textContent.trim()}", expanded: ${!isExpanded}`
-      );
-    };
-
-    faqContainer.addEventListener('click', handleToggle);
-
-    faqContainer.addEventListener('keydown', (e) => {
-      const question = e.target.closest('.faq-question');
-      if (question && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        handleToggle({ target: question });
-      }
-    });
-
-    // Initialize collapsed state
-    document.querySelectorAll('.faq-answer').forEach((answer) => {
-      answer.style.maxHeight = '0px';
-      answer.classList.remove('active');
-    });
-    document.querySelectorAll('.faq-question').forEach((question) => {
-      question.setAttribute('aria-expanded', 'false');
-      question.classList.remove('active');
+      question.addEventListener('keydown', handleKeydown);
     });
   }
 
