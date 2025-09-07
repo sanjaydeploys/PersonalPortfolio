@@ -86,6 +86,13 @@ const performSearch = () => {
     if (matches && query !== '') {
       questionEl.innerHTML = highlightText(questionEl.textContent, query);
       answerEl.innerHTML = highlightText(answerEl.textContent, query);
+      // Preserve toggle state
+      const isExpanded = questionEl.getAttribute('aria-expanded') === 'true';
+      if (isExpanded) {
+        const answer = item.querySelector('.faq-answer');
+        answer.classList.add('active');
+        answer.style.maxHeight = `${answer.scrollHeight}px`;
+      }
     } else {
       questionEl.innerHTML = questionEl.dataset.original || questionEl.textContent;
       answerEl.innerHTML = answerEl.dataset.original || answerEl.textContent;
