@@ -1,21 +1,18 @@
 (function() {
   // Move currentLang up here so it's available for default messages
-  let currentLang = localStorage.getItem('chat-lang') || 'hi';
+let currentLang = localStorage.getItem('chat-lang') || 'en';
 
-  // Now initialize messages, using currentLang for default welcome text
-  window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
-    {
-      sender: 'ai',
-      text: currentLang === 'hi' 
-        ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
-        : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
-      id: 'welcome',
-      timestamp: new Date().toISOString(),
-      category: 'welcome',
-      reactions: [],
-      isPinned: false
-    }
-  ];
+window.messages = JSON.parse(localStorage.getItem('portfolio-chat')) || [
+  {
+    sender: 'ai',
+    text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
+    id: 'welcome',
+    timestamp: new Date().toISOString(),
+    category: 'welcome',
+    reactions: [],
+    isPinned: false
+  }
+];
 
   // Validate and reset messages if corrupted, using currentLang for welcome
   try {
@@ -36,17 +33,15 @@
     }
   } catch (e) {
     console.error('Error parsing localStorage:', e);
-    window.messages = [{
-      sender: 'ai',
-      text: currentLang === 'hi' 
-        ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या जीवन की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय के स्कूल के दिनों की एक मज़ेदार कहानी बताएं!"'
-        : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
-      id: 'welcome',
-      timestamp: new Date().toISOString(),
-      category: 'welcome',
-      reactions: [],
-      isPinned: false
-    }];
+   window.messages = [{
+  sender: 'ai',
+  text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
+  id: 'welcome',
+  timestamp: new Date().toISOString(),
+  category: 'welcome',
+  reactions: [],
+  isPinned: false
+}];
     localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
   }
 
@@ -925,15 +920,15 @@ Serverless with AWS Lambda across projects gave zero-maintenance infra, cost ali
   }
 
   function clearChat() {
-    window.messages = [{
-      sender: 'ai',
-      text: currentLang === 'hi' ? 'हाय! मैं संजय पाटीदार का पोर्टफोलियो चैटबॉट हूँ। उनके प्रोजेक्ट्स, स्किल्स, या स्कूल की कहानियों के बारे में पूछें, जैसे "संजय पाटीदार कौन हैं?" या "संजय की स्कूल की मज़ेदार कहानी बताएं!"' : 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or school stories, like "Who is Sanjay Patidar?" or "Tell me a funny school story about Sanjay!"',
-      id: 'welcome',
-      timestamp: new Date().toISOString(),
-      category: 'welcome',
-      reactions: [],
-      isPinned: false
-    }];
+window.messages = [{
+  sender: 'ai',
+  text: 'Hi! I\'m Sanjay Patidar\'s portfolio chatbot. Ask about his projects, skills, or life stories, like "Who is Sanjay Patidar?" or "Tell me a funny story from Sanjay’s school days!"',
+  id: 'welcome',
+  timestamp: new Date().toISOString(),
+  category: 'welcome',
+  reactions: [],
+  isPinned: false
+}];
     localStorage.setItem('portfolio-chat', JSON.stringify(window.messages));
     renderMessages();
     document.querySelectorAll('.confirm-popup').forEach(p => p.remove());
