@@ -7,8 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const synth = window.speechSynthesis;
       const faqId = button.dataset.faqId;
       const question = document.querySelector(`[aria-controls="${faqId}"]`).textContent.trim();
-      const answer = document.querySelector(`#${faqId} p`).textContent.trim();
-      const fullText = `${question} ${answer}`;
+      // Collect text from all <p> and <li> elements within the faq-answer
+      const answerElements = document.querySelectorAll(`#${faqId} p, #${faqId} li`);
+      // Map and join text content, adding a period for list items to ensure a pause in speech
+      const answer = Array.from(answerElements)
+        .map((el) => (el.tagName === 'LI' ? el.textContent.trim() + '.' : el.textContent.trim()))
+        .filter((text) => text)
+        .join(' ');
+      const fullText = `${question} ${answer}`.trim() || 'No text available to read.';
 
       if (isSpeaking) {
         synth.cancel();
@@ -22,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
       utterance.volume = 1;
       utterance.rate = 0.9; // Slightly slower for clarity
       utterance.pitch = 1;
-      utterance.text = fullText || 'No text available to read.';
+      utterance.text = fullText;
       utterance.lang = 'en-IN';
 
       isSpeaking = true;
