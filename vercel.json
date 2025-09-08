@@ -78,6 +78,10 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/institutions"
     },
     {
+      "source": "/cuims-faqs",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-faqs"
+    },
+    {
       "source": "/cuims-architecture",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/cuims-architecture"
     },
