@@ -6,23 +6,28 @@
 /* ========== helpers (same style as your interview code) ========== */
 const escapeHTML = (str) => {
   if (!str || typeof str !== 'string') return '';
+  // Escape the important HTML chars for safety, but keep single quote (') visible
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/"/g, '&quot;');
+    // NOTE: do NOT transform single-quote here so text like I'm remains readable
 };
 
 const escapeAttr = (str) => {
   if (!str || typeof str !== 'string') return '';
-  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  // For attributes we still escape both quotes to be safe inside double-quoted attributes
+  return str.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
 };
 
 /* ========== small utilities for dual-language rendering ========== */
 const ensureString = (v) => (typeof v === 'string' ? v : '');
 const getLangText = (obj, enKey, hiKey) => {
-  // Accept several shapes: obj.en / obj.hi, obj.enText / obj.hiText, or fallback to string at obj
   if (!obj) return { en: '', hi: '' };
   if (typeof obj === 'string') return { en: obj, hi: obj };
   const en = obj[enKey] || obj.en || obj.text || obj.q || '';
@@ -31,7 +36,6 @@ const getLangText = (obj, enKey, hiKey) => {
 };
 
 const renderLangSpans = (enText, hiText) => {
-  // returns two spans (en then hi)
   const en = escapeHTML(enText || '');
   const hi = escapeHTML(hiText || enText || '');
   return `<span lang="en" class="lang-hidden">${en}</span><span lang="hi" class="lang-visible">${hi}</span>`;
@@ -53,40 +57,54 @@ const buildParagraphFromPartsDual = (partsEn = [], partsHi = []) => {
 };
 
 const buildULDual = (items = []) => {
-  // items: can be strings, or objects like:
-  // { en: 'text', hi: 'हिंदी', type: 'link', href: '...' } OR { type: 'link', text: 'Email ...', href: 'mailto:...' }
+  // items: each can be:
+  // - string (treated as en==hi fallback)
+  // - { en: 'English', hi: 'हिन्दी' }
+  // - { type:'link', href:'...', en:'Email...', hi:'ईमेल...' }
+  // - { note: 'Note', note_hi: 'नोट' }
   let out = '<ul class="faq-bullets">';
   items.forEach((it) => {
     if (typeof it === 'string') {
-      // duplicate english into hi as fallback
       out += `<li>${renderLangSpans(it, it)}</li>`;
-    } else if (it && it.type === 'link' && it.href) {
-      // link may have multilingual text fields
-      const enText = it.text_en || it.en || it.text || '';
-      const hiText = it.text_hi || it.hi || enText;
+      return;
+    }
+
+    if (!it) {
+      out += `<li>${renderLangSpans('', '')}</li>`;
+      return;
+    }
+
+    if (it.type === 'link' && it.href) {
+      const enText = it.en || it.text_en || it.text || '';
+      const hiText = it.hi || it.text_hi || enText;
       const safeHref = escapeAttr(it.href);
       out += `<li><a href="${safeHref}" target="_blank" rel="noopener noreferrer">${renderLangSpans(enText, hiText)}</a></li>`;
-    } else if (it && it.note) {
-      out += `<li><em>${renderLangSpans(it.note, it.note_hi || it.note)}</em></li>`;
-    } else if (it && (it.en || it.hi)) {
-      // generic multilingual item shape
+      return;
+    }
+
+    if (it.note) {
+      const noteEn = it.note || '';
+      const noteHi = it.note_hi || noteEn;
+      out += `<li><em>${renderLangSpans(noteEn, noteHi)}</em></li>`;
+      return;
+    }
+
+    if (it.en || it.hi) {
       const enText = it.en || it.text || '';
       const hiText = it.hi || it.text_hi || enText;
       out += `<li>${renderLangSpans(enText, hiText)}</li>`;
-    } else {
-      out += `<li>${renderLangSpans(String(it || ''), String((it && it.hi) || String(it || '')))}</li>`;
+      return;
     }
+
+    // fallback
+    out += `<li>${renderLangSpans(String(it), String((it && it.hi) || String(it)))}</li>`;
   });
   out += '</ul>';
   return out;
 };
 
-/* ========== FAQ data (EN by default; HI fallback = EN) ==========
-   You can optionally provide bilingual content by using objects:
-   - For question: { en: 'Who is ...', hi: 'कौन हैं ...' } or q_en / q_hi
-   - For paragraph blocks: { type:'p', parts_en: [...], parts_hi: [...] }
-   - For UL blocks: { type:'ul', items: [ 'one', { en:'E', hi:'H' }, {type:'link', href:'..', text:'E', text_hi:'H'} ] }
-   For now, existing English-only items are left as-is and will render English in both lang spans.
+/* ========== FAQ data (EN & HI) ==========
+   All list items now explicitly provide en/hi so both lang spans are present.
 */
 const portfolioQA = [
   {
@@ -98,9 +116,9 @@ const portfolioQA = [
         "मैं संजय पाटीदार हूँ, एक फुल-स्टैक प्रोडक्ट इंजीनियर जो इंजीनियरिंग सटीकता को व्यावसायिक परिणामों के साथ जोड़ने वाले डिजिटल प्लेटफॉर्म बनाते हैं। मेरा फोकस व्यावहारिक और मापनीय समाधान बनाने पर रहा है।"
       ]},
       { type: 'ul', items: [
-        "Delivered 12+ production-ready applications across insurance, education, events, and communication domains.",
-        "Recognized by hiring managers at Amazon and Microsoft for shipping production-grade work.",
-        "Focused on measurable outcomes: faster load times, improved SEO visibility, and scalable systems."
+        { en: "Delivered 12+ production-ready applications across insurance, education, events, and communication domains.", hi: "बीमा, शिक्षा, इवेंट और संचार जैसे क्षेत्रों में 12+ प्रोडक्शन-रेडी एप्लिकेशन डिलीवर किए।" },
+        { en: "Recognized by hiring managers at Amazon and Microsoft for shipping production-grade work.", hi: "उत्पादन-स्तर का काम देने के लिए Amazon और Microsoft के हायरिंग मैनेजर्स द्वारा मान्यता प्राप्त।" },
+        { en: "Focused on measurable outcomes: faster load times, improved SEO visibility, and scalable systems.", hi: "मापनीय परिणामों पर फोकस: तेज़ लोड समय, बेहतर SEO दृश्यता, और स्केलेबल सिस्टम।" }
       ]}
     ]
   },
@@ -114,10 +132,10 @@ const portfolioQA = [
         "मेरी परियोजनाएँ अक्षमताओं को हल करने और स्केलेबल, सर्वरलेस उत्पाद बनाने के इर्द-गिर्द केंद्रित हैं। हर परियोजना में इंजीनियरिंग निर्णय सीधे व्यावसायिक परिणामों से जुड़े होते हैं।"
       ]},
       { type: 'ul', items: [
-        "Govt. Insurance CRM — a serverless lead-generation portal that achieved top Google rankings and inquiry growth.",
-        "Zedemy — a serverless learning platform with UUID-backed certificate verification and automated workflows.",
-        "AgriBot — a bilingual Android chatbot for farmers with voice support, offline fallback, and LLM orchestration.",
-        "EventEase — a MERN event dashboard with role-based authentication and calendar sync."
+        { en: "Govt. Insurance CRM — a serverless lead-generation portal that achieved top Google rankings and inquiry growth.", hi: "Govt. Insurance CRM — एक सर्वरलेस लीड-जनरेशन पोर्टल जिसने Google रैंकिंग में शीर्ष स्थान और पूछताछों में वृद्धि हासिल की।" },
+        { en: "Zedemy — a serverless learning platform with UUID-backed certificate verification and automated workflows.", hi: "Zedemy — UUID-समर्थित प्रमाणपत्र सत्यापन और स्वचालित वर्कफ़्लो के साथ एक सर्वरलेस लर्निंग प्लेटफ़ॉर्म।" },
+        { en: "AgriBot — a bilingual Android chatbot for farmers with voice support, offline fallback, and LLM orchestration.", hi: "AgriBot — किसानों के लिए वॉयस सपोर्ट, ऑफ़लाइन फॉलबैक और LLM ऑर्केस्ट्रेशन के साथ द्विभाषी Android चैटबॉट।" },
+        { en: "EventEase — a MERN event dashboard with role-based authentication and calendar sync.", hi: "EventEase — रोल-आधारित प्रमाणीकरण और कैलेंडर सिंक के साथ MERN इवेंट डैशबोर्ड।" }
       ]}
     ]
   },
@@ -131,9 +149,9 @@ const portfolioQA = [
         "प्रत्येक परियोजना ने अलग चुनौतियाँ पेश कीं — भारी ट्रैफ़िक में स्केलिंग से लेकर कमजोर कनेक्टिविटी वाले क्षेत्रों में ऐप पहुँचाने तक। मैं परीक्षण, पुनरावृत्ति और उत्पाद-प्रथम मानसिकता के साथ चुनौतियों का समाधान करता हूँ।"
       ]},
       { type: 'ul', items: [
-        "Low connectivity: solved with offline fallbacks in AgriBot so farmers could still use the chatbot without internet.",
-        "SEO competition: tackled with semantic HTML, JSON-LD, and server-side rendering for better indexing.",
-        "Performance bottlenecks: optimized with Brotli compression, CloudFront CDN, and pre-rendered routes."
+        { en: "Low connectivity: solved with offline fallbacks in AgriBot so farmers could still use the chatbot without internet.", hi: "कम कनेक्टिविटी: AgriBot में ऑफ़लाइन फॉलबैक के साथ हल किया गया ताकि किसान बिना इंटरनेट के भी चैटबॉट उपयोग कर सकें।" },
+        { en: "SEO competition: tackled with semantic HTML, JSON-LD, and server-side rendering for better indexing.", hi: "SEO प्रतियोगिता: बेहतर इंडेक्सिंग के लिए सेमांटिक HTML, JSON-LD और सर्वर-साइड रेंडरिंग के साथ हल किया गया।" },
+        { en: "Performance bottlenecks: optimized with Brotli compression, CloudFront CDN, and pre-rendered routes.", hi: "परफ़ॉर्मेंस बाधाएँ: Brotli संपीड़न, CloudFront CDN और प्री-रेंडर रूट्स के साथ अनुकूलित।" }
       ]}
     ]
   },
@@ -147,9 +165,9 @@ const portfolioQA = [
         "सर्वरलेस मुझे इंफ्रा प्रबंधन के बिना तेज़ी से काम करने देता है और लागत को वास्तविक ट्रैफ़िक के साथ संरेखित रखता है। यह उन परियोजनाओं के लिए उपयुक्त है जहाँ स्केलेबिलिटी और दक्षता मायने रखती हैं।"
       ]},
       { type: 'ul', items: [
-        "Zero maintenance overhead and instant scaling with AWS Lambda.",
-        "Cost-effective: only pay per request instead of idle servers.",
-        "Better security: secrets and orchestration handled server-side."
+        { en: "Zero maintenance overhead and instant scaling with AWS Lambda.", hi: "AWS Lambda के साथ शून्य मेंटेनेंस ओवरहेड और तुरंत स्केलिंग।" },
+        { en: "Cost-effective: only pay per request instead of idle servers.", hi: "लागत-कुशल: निष्क्रिय सर्वरों के बजाय केवल अनुरोध के अनुसार भुगतान।" },
+        { en: "Better security: secrets and orchestration handled server-side.", hi: "बेहतर सुरक्षा: सीक्रेट्स और ऑर्केस्ट्रेशन सर्वर-साइड पर हैं।" }
       ]}
     ]
   },
@@ -163,9 +181,9 @@ const portfolioQA = [
         "मैं उत्पादों को शुरुआत से ही SEO के साथ डिज़ाइन करता हूँ, न कि बाद में। इससे तेज़ इंडेक्सिंग और दीर्घकालिक दृश्यता सुनिश्चित होती है।"
       ]},
       { type: 'ul', items: [
-        "Server-side rendering and static pre-rendering for instant crawlability.",
-        "Structured JSON-LD, React Helmet, and Open Graph for rich snippets.",
-        "Optimized assets: Brotli compression, lazy loading, and critical CSS inlining."
+        { en: "Server-side rendering and static pre-rendering for instant crawlability.", hi: "त्वरित क्रॉलिंग के लिए सर्वर-साइड रेंडरिंग और स्टैटिक प्री-रेंडरिंग।" },
+        { en: "Structured JSON-LD, React Helmet, and Open Graph for rich snippets.", hi: "रिच स्निपेट के लिए संरचित JSON-LD, React Helmet और Open Graph।" },
+        { en: "Optimized assets: Brotli compression, lazy loading, and critical CSS inlining.", hi: "अनुकूलित एसेट: Brotli संपीड़न, लेज़ी-लोडिंग और क्रिटिकल CSS इनलाइन करना।" }
       ]}
     ]
   },
@@ -179,9 +197,9 @@ const portfolioQA = [
         "मेरे लिए सफलता केवल कोड लिखना नहीं है — यह देखना है कि उत्पाद व्यावसायिक लक्ष्यों को पूरा करता है और उपयोगकर्ता अनुभव में सुधार करता है।"
       ]},
       { type: 'ul', items: [
-        "Lead and conversion tracking (forms & analytics) for CRM projects.",
-        "Certificate issuance counts for learning platforms.",
-        "Organic impressions and Search Console metrics for content platforms."
+        { en: "Lead and conversion tracking (forms & analytics) for CRM projects.", hi: "CRM प्रोजेक्ट्स के लिए लीड और कन्वर्शन ट्रैकिंग (फॉर्म्स और एनालिटिक्स)।" },
+        { en: "Certificate issuance counts for learning platforms.", hi: "लर्निंग प्लेटफ़ॉर्म के लिए प्रमाणपत्र जारी करने की गिनती।" },
+        { en: "Organic impressions and Search Console metrics for content platforms.", hi: "कंटेंट प्लेटफ़ॉर्म के लिए ऑर्गेनिक इंप्रेशन्स और Search Console मैट्रिक्स।" }
       ]}
     ]
   },
