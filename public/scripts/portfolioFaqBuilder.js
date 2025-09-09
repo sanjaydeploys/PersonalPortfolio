@@ -103,22 +103,19 @@ const buildULDual = (items = []) => {
   return out;
 };
 
-/* ========== FAQ data (EN & HI) ==========
-   All list items now explicitly provide en/hi so both lang spans are present.
-*/
 const portfolioQA = [
   {
     q: { en: "Who is Sanjay Patidar?", hi: "संजय पाटीदार कौन हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "I'm Sanjay Patidar, a full-stack product engineer passionate about building digital platforms that combine engineering precision with business results. My journey has been focused on solving real-world problems with practical, measurable solutions."
+        "Sanjay Patidar is a Full-Stack Product Engineer who builds digital platforms that merge engineering precision with measurable business outcomes. His focus lies in solving real-world problems through scalable, serverless, and SEO-optimized solutions."
       ], parts_hi: [
-        "मैं संजय पाटीदार हूँ, एक फुल-स्टैक प्रोडक्ट इंजीनियर जो इंजीनियरिंग सटीकता को व्यावसायिक परिणामों के साथ जोड़ने वाले डिजिटल प्लेटफॉर्म बनाते हैं। मेरा फोकस व्यावहारिक और मापनीय समाधान बनाने पर रहा है।"
+        "संजय पाटीदार एक फुल-स्टैक प्रोडक्ट इंजीनियर हैं जो इंजीनियरिंग सटीकता को मापनीय व्यावसायिक परिणामों के साथ जोड़ने वाले डिजिटल प्लेटफ़ॉर्म बनाते हैं। उनका फोकस वास्तविक समस्याओं को स्केलेबल, सर्वरलेस और SEO-अनुकूल समाधानों से हल करने पर है।"
       ]},
       { type: 'ul', items: [
-        { en: "Delivered 12+ production-ready applications across insurance, education, events, and communication domains.", hi: "बीमा, शिक्षा, इवेंट और संचार जैसे क्षेत्रों में 12+ प्रोडक्शन-रेडी एप्लिकेशन डिलीवर किए।" },
-        { en: "Recognized by hiring managers at Amazon and Microsoft for shipping production-grade work.", hi: "उत्पादन-स्तर का काम देने के लिए Amazon और Microsoft के हायरिंग मैनेजर्स द्वारा मान्यता प्राप्त।" },
-        { en: "Focused on measurable outcomes: faster load times, improved SEO visibility, and scalable systems.", hi: "मापनीय परिणामों पर फोकस: तेज़ लोड समय, बेहतर SEO दृश्यता, और स्केलेबल सिस्टम।" }
+        { en: "Delivered 12+ production-ready applications across insurance, education, events, and communication.", hi: "बीमा, शिक्षा, इवेंट और संचार जैसे क्षेत्रों में 12+ प्रोडक्शन-रेडी एप्लिकेशन डिलीवर किए।" },
+        { en: "Recognized by hiring managers at Amazon and Microsoft for shipping production-grade platforms.", hi: "उत्पादन-स्तर के प्लेटफ़ॉर्म देने के लिए Amazon और Microsoft के हायरिंग मैनेजर्स द्वारा मान्यता प्राप्त।" },
+        { en: "Consistently focused on faster load times, stronger SEO visibility, and scalable system design.", hi: "तेज़ लोड समय, बेहतर SEO दृश्यता और स्केलेबल सिस्टम डिज़ाइन पर लगातार ध्यान केंद्रित।" }
       ]}
     ]
   },
@@ -127,15 +124,15 @@ const portfolioQA = [
     q: { en: "What kind of projects has Sanjay Patidar built?", hi: "संजय पाटीदार ने किस तरह की परियोजनाएँ बनाई हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "My projects are centered around solving inefficiencies and creating scalable, serverless products. Each one ties engineering choices directly to business outcomes."
+        "Sanjay has developed projects aimed at eliminating inefficiencies and creating scalable, serverless products. Each project ties engineering decisions directly to measurable business outcomes."
       ], parts_hi: [
-        "मेरी परियोजनाएँ अक्षमताओं को हल करने और स्केलेबल, सर्वरलेस उत्पाद बनाने के इर्द-गिर्द केंद्रित हैं। हर परियोजना में इंजीनियरिंग निर्णय सीधे व्यावसायिक परिणामों से जुड़े होते हैं।"
+        "संजय ने ऐसी परियोजनाएँ विकसित की हैं जिनका उद्देश्य अक्षमताओं को समाप्त करना और स्केलेबल, सर्वरलेस उत्पाद बनाना है। हर परियोजना में इंजीनियरिंग निर्णय सीधे मापनीय व्यावसायिक परिणामों से जुड़े होते हैं।"
       ]},
       { type: 'ul', items: [
-        { en: "Govt. Insurance CRM — a serverless lead-generation portal that achieved top Google rankings and inquiry growth.", hi: "Govt. Insurance CRM — एक सर्वरलेस लीड-जनरेशन पोर्टल जिसने Google रैंकिंग में शीर्ष स्थान और पूछताछों में वृद्धि हासिल की।" },
-        { en: "Zedemy — a serverless learning platform with UUID-backed certificate verification and automated workflows.", hi: "Zedemy — UUID-समर्थित प्रमाणपत्र सत्यापन और स्वचालित वर्कफ़्लो के साथ एक सर्वरलेस लर्निंग प्लेटफ़ॉर्म।" },
+        { en: "Govt. Insurance CRM — a serverless lead-generation portal achieving top Google rankings and 80% conversion growth.", hi: "Govt. Insurance CRM — एक सर्वरलेस लीड-जनरेशन पोर्टल जिसने Google रैंकिंग में शीर्ष स्थान और 80% कन्वर्शन वृद्धि हासिल की।" },
+        { en: "Zedemy — a serverless learning platform with certificate verification and automated workflows.", hi: "Zedemy — प्रमाणपत्र सत्यापन और स्वचालित वर्कफ़्लो के साथ एक सर्वरलेस लर्निंग प्लेटफ़ॉर्म।" },
         { en: "AgriBot — a bilingual Android chatbot for farmers with voice support, offline fallback, and LLM orchestration.", hi: "AgriBot — किसानों के लिए वॉयस सपोर्ट, ऑफ़लाइन फॉलबैक और LLM ऑर्केस्ट्रेशन के साथ द्विभाषी Android चैटबॉट।" },
-        { en: "EventEase — a MERN event dashboard with role-based authentication and calendar sync.", hi: "EventEase — रोल-आधारित प्रमाणीकरण और कैलेंडर सिंक के साथ MERN इवेंट डैशबोर्ड।" }
+        { en: "EventEase — a role-based event dashboard with Google Calendar sync.", hi: "EventEase — रोल-आधारित इवेंट डैशबोर्ड जिसमें Google Calendar सिंक है।" }
       ]}
     ]
   },
@@ -144,14 +141,14 @@ const portfolioQA = [
     q: { en: "What challenges has Sanjay faced and how were they solved?", hi: "संजय को किन चुनौतियों का सामना करना पड़ा और उन्हें कैसे हल किया गया?" },
     a: [
       { type: 'p', parts_en: [
-        "Every project brought unique obstacles — from scaling systems under heavy traffic to making apps accessible in poor connectivity zones. I approach challenges with experimentation, iteration, and a product-first mindset."
+        "Sanjay has encountered diverse challenges, from scaling systems under high traffic to ensuring usability in low-connectivity environments. His approach blends experimentation, iteration, and a product-first mindset."
       ], parts_hi: [
-        "प्रत्येक परियोजना ने अलग चुनौतियाँ पेश कीं — भारी ट्रैफ़िक में स्केलिंग से लेकर कमजोर कनेक्टिविटी वाले क्षेत्रों में ऐप पहुँचाने तक। मैं परीक्षण, पुनरावृत्ति और उत्पाद-प्रथम मानसिकता के साथ चुनौतियों का समाधान करता हूँ।"
+        "संजय ने कई तरह की चुनौतियों का सामना किया है — भारी ट्रैफ़िक में सिस्टम स्केलिंग से लेकर कमजोर कनेक्टिविटी वाले क्षेत्रों में उपयोगिता सुनिश्चित करने तक। उनका दृष्टिकोण परीक्षण, पुनरावृत्ति और उत्पाद-प्रथम मानसिकता पर आधारित है।"
       ]},
       { type: 'ul', items: [
-        { en: "Low connectivity: solved with offline fallbacks in AgriBot so farmers could still use the chatbot without internet.", hi: "कम कनेक्टिविटी: AgriBot में ऑफ़लाइन फॉलबैक के साथ हल किया गया ताकि किसान बिना इंटरनेट के भी चैटबॉट उपयोग कर सकें।" },
-        { en: "SEO competition: tackled with semantic HTML, JSON-LD, and server-side rendering for better indexing.", hi: "SEO प्रतियोगिता: बेहतर इंडेक्सिंग के लिए सेमांटिक HTML, JSON-LD और सर्वर-साइड रेंडरिंग के साथ हल किया गया।" },
-        { en: "Performance bottlenecks: optimized with Brotli compression, CloudFront CDN, and pre-rendered routes.", hi: "परफ़ॉर्मेंस बाधाएँ: Brotli संपीड़न, CloudFront CDN और प्री-रेंडर रूट्स के साथ अनुकूलित।" }
+        { en: "Low connectivity: solved with offline fallbacks in AgriBot, enabling farmers to use the chatbot without internet.", hi: "कम कनेक्टिविटी: AgriBot में ऑफ़लाइन फॉलबैक जोड़ा गया ताकि किसान बिना इंटरनेट के भी चैटबॉट का उपयोग कर सकें।" },
+        { en: "SEO competition: addressed with semantic HTML, JSON-LD, and server-side rendering for better indexing.", hi: "SEO प्रतियोगिता: बेहतर इंडेक्सिंग के लिए सेमांटिक HTML, JSON-LD और सर्वर-साइड रेंडरिंग का उपयोग किया।" },
+        { en: "Performance bottlenecks: optimized using Brotli compression, CloudFront CDN, and pre-rendered routes.", hi: "प्रदर्शन बाधाएँ: Brotli संपीड़न, CloudFront CDN और प्री-रेंडर रूट्स के साथ अनुकूलित।" }
       ]}
     ]
   },
@@ -160,14 +157,14 @@ const portfolioQA = [
     q: { en: "Why does Sanjay prefer serverless architecture?", hi: "संजय सर्वरलेस आर्किटेक्चर को क्यों पसंद करते हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Serverless lets me move fast without managing infrastructure while keeping costs aligned with actual traffic. It’s ideal for projects where scalability and efficiency matter."
+        "Sanjay prefers serverless architecture because it enables rapid development without infrastructure overhead while keeping costs aligned with real traffic. It is ideal for projects demanding scalability and efficiency."
       ], parts_hi: [
-        "सर्वरलेस मुझे इंफ्रा प्रबंधन के बिना तेज़ी से काम करने देता है और लागत को वास्तविक ट्रैफ़िक के साथ संरेखित रखता है। यह उन परियोजनाओं के लिए उपयुक्त है जहाँ स्केलेबिलिटी और दक्षता मायने रखती हैं।"
+        "संजय सर्वरलेस आर्किटेक्चर को पसंद करते हैं क्योंकि यह उन्हें इंफ्रा ओवरहेड के बिना तेज़ विकास करने देता है और लागत को वास्तविक ट्रैफ़िक के साथ संरेखित रखता है। यह स्केलेबिलिटी और दक्षता की आवश्यकता वाली परियोजनाओं के लिए उपयुक्त है।"
       ]},
       { type: 'ul', items: [
         { en: "Zero maintenance overhead and instant scaling with AWS Lambda.", hi: "AWS Lambda के साथ शून्य मेंटेनेंस ओवरहेड और तुरंत स्केलिंग।" },
-        { en: "Cost-effective: only pay per request instead of idle servers.", hi: "लागत-कुशल: निष्क्रिय सर्वरों के बजाय केवल अनुरोध के अनुसार भुगतान।" },
-        { en: "Better security: secrets and orchestration handled server-side.", hi: "बेहतर सुरक्षा: सीक्रेट्स और ऑर्केस्ट्रेशन सर्वर-साइड पर हैं।" }
+        { en: "Cost efficiency: pay per request instead of idle servers.", hi: "लागत-कुशल: निष्क्रिय सर्वरों के बजाय केवल अनुरोध के अनुसार भुगतान।" },
+        { en: "Improved security with server-side handling of secrets and orchestration.", hi: "बेहतर सुरक्षा: सीक्रेट्स और ऑर्केस्ट्रेशन का सर्वर-साइड प्रबंधन।" }
       ]}
     ]
   },
@@ -176,14 +173,14 @@ const portfolioQA = [
     q: { en: "How does Sanjay achieve high SEO visibility?", hi: "संजय उच्च SEO दृश्यता कैसे प्राप्त करते हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "I design products with SEO baked in from the start, not as an afterthought. This ensures fast indexing and long-term visibility."
+        "Sanjay integrates SEO from the beginning of product design, ensuring faster indexing and long-term discoverability."
       ], parts_hi: [
-        "मैं उत्पादों को शुरुआत से ही SEO के साथ डिज़ाइन करता हूँ, न कि बाद में। इससे तेज़ इंडेक्सिंग और दीर्घकालिक दृश्यता सुनिश्चित होती है।"
+        "संजय उत्पाद डिज़ाइन की शुरुआत से ही SEO को शामिल करते हैं, जिससे तेज़ इंडेक्सिंग और दीर्घकालिक दृश्यता सुनिश्चित होती है।"
       ]},
       { type: 'ul', items: [
         { en: "Server-side rendering and static pre-rendering for instant crawlability.", hi: "त्वरित क्रॉलिंग के लिए सर्वर-साइड रेंडरिंग और स्टैटिक प्री-रेंडरिंग।" },
-        { en: "Structured JSON-LD, React Helmet, and Open Graph for rich snippets.", hi: "रिच स्निपेट के लिए संरचित JSON-LD, React Helmet और Open Graph।" },
-        { en: "Optimized assets: Brotli compression, lazy loading, and critical CSS inlining.", hi: "अनुकूलित एसेट: Brotli संपीड़न, लेज़ी-लोडिंग और क्रिटिकल CSS इनलाइन करना।" }
+        { en: "Structured JSON-LD, React Helmet, and Open Graph integration.", hi: "संरचित JSON-LD, React Helmet और Open Graph एकीकरण।" },
+        { en: "Optimized assets: Brotli compression, lazy loading, and critical CSS inlining.", hi: "अनुकूलित एसेट्स: Brotli संपीड़न, लेज़ी लोडिंग और क्रिटिकल CSS इनलाइन।" }
       ]}
     ]
   },
@@ -192,14 +189,14 @@ const portfolioQA = [
     q: { en: "How does Sanjay measure product success?", hi: "संजय उत्पाद सफलता को कैसे मापते हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Success to me isn’t just about writing code — it’s about whether the product meets business goals and improves user experience."
+        "For Sanjay, product success goes beyond writing code — it is measured by achieving business goals and improving user experience."
       ], parts_hi: [
-        "मेरे लिए सफलता केवल कोड लिखना नहीं है — यह देखना है कि उत्पाद व्यावसायिक लक्ष्यों को पूरा करता है और उपयोगकर्ता अनुभव में सुधार करता है।"
+        "संजय के लिए, उत्पाद की सफलता केवल कोड लिखने से आगे है — इसे व्यावसायिक लक्ष्यों की प्राप्ति और उपयोगकर्ता अनुभव में सुधार से मापा जाता है।"
       ]},
       { type: 'ul', items: [
-        { en: "Lead and conversion tracking (forms & analytics) for CRM projects.", hi: "CRM प्रोजेक्ट्स के लिए लीड और कन्वर्शन ट्रैकिंग (फॉर्म्स और एनालिटिक्स)।" },
-        { en: "Certificate issuance counts for learning platforms.", hi: "लर्निंग प्लेटफ़ॉर्म के लिए प्रमाणपत्र जारी करने की गिनती।" },
-        { en: "Organic impressions and Search Console metrics for content platforms.", hi: "कंटेंट प्लेटफ़ॉर्म के लिए ऑर्गेनिक इंप्रेशन्स और Search Console मैट्रिक्स।" }
+        { en: "Lead and conversion tracking for CRM platforms.", hi: "CRM प्लेटफ़ॉर्म के लिए लीड और कन्वर्शन ट्रैकिंग।" },
+        { en: "Certificate issuance metrics for learning platforms.", hi: "लर्निंग प्लेटफ़ॉर्म के लिए प्रमाणपत्र जारी करने के आँकड़े।" },
+        { en: "Organic impressions and Search Console metrics for content platforms.", hi: "कंटेंट प्लेटफ़ॉर्म के लिए ऑर्गेनिक इंप्रेशन्स और सर्च कंसोल मैट्रिक्स।" }
       ]}
     ]
   },
@@ -208,9 +205,9 @@ const portfolioQA = [
     q: { en: "How to contact Sanjay Patidar?", hi: "संजय पाटीदार से संपर्क कैसे करें?" },
     a: [
       { type: 'p', parts_en: [
-        "I'm open to freelance work, product roles, and collaboration. Reach out through any channel below:"
+        "Sanjay is open to freelance work, product roles, and collaborations. He can be contacted through the following channels:"
       ], parts_hi: [
-        "मैं फ्रीलांस, प्रोडक्ट रोल और सहयोग के लिए उपलब्ध हूँ। नीचे दिए गए किसी भी माध्यम से संपर्क करें:"
+        "संजय फ्रीलांस कार्य, प्रोडक्ट रोल और सहयोग के लिए उपलब्ध हैं। उनसे नीचे दिए गए माध्यमों से संपर्क किया जा सकता है:"
       ]},
       { type: 'ul', items: [
         { type: 'link', en: 'Email: sanjay.deploys@gmail.com', hi: 'ईमेल: sanjay.deploys@gmail.com', href: 'mailto:sanjay.deploys@gmail.com' },
