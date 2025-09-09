@@ -13,29 +13,20 @@ document.addEventListener('DOMContentLoaded', function () {
     speechSynthesis.onvoiceschanged = loadVoices;
   }
 
-// helper to pick best available pleasant voice
-function pickVoice(langCode) {
-  if (!voices || !voices.length) return null;
+  // helper to pick a more pleasant voice
+  function pickVoice(langCode) {
+    if (!voices || !voices.length) return null;
 
-  if (langCode === 'en-IN') {
-    // Prefer UK English Female if available
-    const ukFemale = voices.find(v => v.name.includes('Google UK English Female'));
-    if (ukFemale) return ukFemale;
+    // Prefer Google or Microsoft natural female voices
+    const preferred = voices.find(v =>
+      v.lang.toLowerCase().startsWith(langCode.toLowerCase()) &&
+      /female|zira|google/i.test(v.name)
+    );
+    if (preferred) return preferred;
 
-    // Fallback to US English
-    const us = voices.find(v => v.name.includes('Google US English'));
-    if (us) return us;
+    // fallback: first matching voice for that language
+    return voices.find(v => v.lang.toLowerCase().startsWith(langCode.toLowerCase())) || null;
   }
-
-  if (langCode === 'hi-IN') {
-    const hiVoice = voices.find(v => v.name.includes('Google हिन्दी'));
-    if (hiVoice) return hiVoice;
-  }
-
-  // Last fallback: first matching lang
-  return voices.find(v => v.lang.toLowerCase().startsWith(langCode.toLowerCase())) || null;
-}
-
 
   speakButtons.forEach((button) => {
     button.addEventListener('click', () => {
