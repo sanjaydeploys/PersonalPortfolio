@@ -1,9 +1,5 @@
-/* portfolioFaqBuilder.js
-   Safe, enhanced FAQ builder for portfolio homepage.
-   Maintains classes/attributes used by interviewFaqToggle.js and interviewAudio.js.
-*/
 
-/* ========== helpers (same style as your interview code) ========== */
+
 const escapeHTML = (str) => {
   if (!str || typeof str !== 'string') return '';
   return str
@@ -48,163 +44,114 @@ const buildUL = (items = []) => {
   return out;
 };
 
-/* ========== FAQ data: mixed-format blocks (pulled & improved from your PDF) ========== */
-/* NOTE: Project label: "Govt. Insurance CRM" used where appropriate (per your request). */
 const portfolioQA = [
   {
-    q: "Tell me about yourself (short intro)",
+    q: "Who is Sanjay Patidar?",
     a: [
       { type: 'p', parts: [
-        "Hi — I'm Sanjay Patidar, a full-stack product engineer who builds SEO-first, serverless web platforms and mobile experiences that move metrics.",
-        " I focus on fast load-times, cost-efficient infra, and measurable outcomes."
+        "I'm Sanjay Patidar, a full-stack product engineer passionate about building digital platforms that combine engineering precision with business results. My journey is self-driven — I didn’t rely on bootcamps or big-name internships, instead I learned by solving real-world problems with real users."
       ]},
       { type: 'ul', items: [
-        "Govt. Insurance CRM — a serverless lead-gen system with strong SEO results.",
-        "Zedemy — serverless LMS with verifiable UUID certificates and notification flows.",
-        "AgriBot — bilingual, voice-first Android chatbot with offline fallback + LLM orchestration."
+        "Delivered 12+ production-ready applications across insurance, education, events, and communication domains.",
+        "Recognized by hiring managers at Amazon and Microsoft for shipping production-grade work.",
+        "Focused on measurable outcomes: faster load times, improved SEO visibility, and scalable systems."
       ]}
     ]
   },
 
   {
-    q: "Why should a team hire you?",
+    q: "What kind of projects has Sanjay Patidar built?",
     a: [
       { type: 'p', parts: [
-        "I deliver end-to-end product outcomes — not just code. I tie engineering choices to clear business metrics and shipping velocity."
+        "My projects are centered around solving inefficiencies and creating scalable, serverless products. Each one ties engineering choices directly to business outcomes."
       ]},
       { type: 'ul', items: [
-        "Proven KPIs: SEO-first projects with measured lead uplift and featured search results.",
-        "End-to-end ownership: frontend, backend, infra, CI/CD, and SEO monitoring.",
-        "Able to mentor and transfer knowledge: small-team leadership and code-review practices."
+        "Govt. Insurance CRM — a serverless lead-generation portal that achieved top Google rankings and 3× inquiry growth.",
+        "Zedemy — a serverless learning platform with UUID-backed certificate verification and automated workflows.",
+        "AgriBot — a bilingual Android chatbot for farmers with voice support, offline fallback, and LLM orchestration.",
+        "EventEase — a MERN event dashboard with role-based authentication and calendar sync."
       ]}
     ]
   },
 
   {
-    q: "Why serverless (AWS Lambda) across your projects?",
+    q: "What challenges has Sanjay faced and how were they solved?",
     a: [
       { type: 'p', parts: [
-        "Serverless reduces ops overhead and aligns cost with traffic while keeping secrets and orchestration secure."
+        "Every project brought unique obstacles — from scaling systems under heavy traffic to making apps accessible in poor connectivity zones. I approach challenges with experimentation, iteration, and a product-first mindset."
       ]},
       { type: 'ul', items: [
-        "Zero-maintenance infra for many public-facing endpoints.",
-        "Cost control: pay-per-invocation vs always-on servers.",
-        "Security: secrets in AWS Secrets Manager, keys never in clients.",
-        "Trade-offs: cold starts and vendor lock-in mitigated with provisioned concurrency and decoupled logic."
+        "Low connectivity: solved with offline fallbacks in AgriBot so farmers could still use the chatbot without internet.",
+        "SEO competition: tackled with semantic HTML, JSON-LD, and server-side rendering that led to top search rankings.",
+        "Performance bottlenecks: optimized with Brotli compression, CloudFront CDN, and pre-rendered routes to achieve 100/100 Lighthouse scores."
       ]}
     ]
   },
 
   {
-    q: "Explain the Govt. Insurance CRM (architecture summary)",
+    q: "Why does Sanjay prefer serverless architecture?",
     a: [
       { type: 'p', parts: [
-        "A concise, production-ready stack designed for speed, SEO, and secure lead capture."
+        "Serverless lets me move fast without managing infrastructure while keeping costs aligned with actual traffic. It’s ideal for projects where scalability and efficiency matter."
       ]},
       { type: 'ul', items: [
-        "Frontend: pre-rendered React pages + React Helmet for metadata (served via S3 or Vercel CDN).",
-        "CDN & Performance: CloudFront (Brotli), font preloads, inline critical CSS for LCP < 800ms.",
-        "Leads pipeline: API Gateway → Lambda validates & stores leads in MongoDB Atlas (indexed for queries).",
-        "Observability: CloudWatch logs, structured events, and simple incident/runbook for rollbacks.",
-        "Privacy: minimal PII storage, HTTPS (ACM), and documented data flow for compliance."
+        "Zero maintenance overhead and instant scaling with AWS Lambda.",
+        "Cost-effective: only pay per request instead of idle servers.",
+        "Better security: secrets and orchestration handled server-side.",
+        "Cold start trade-offs mitigated with provisioned concurrency."
       ]}
     ]
   },
 
   {
-    q: "How did you achieve 100/100 Lighthouse for key pages?",
+    q: "How does Sanjay achieve high SEO visibility?",
     a: [
       { type: 'p', parts: [
-        "A set of practical, repeatable steps produced consistent 100/100 Lighthouse scores."
+        "I design products with SEO baked in from the start, not as an afterthought. This ensures fast indexing and long-term visibility."
       ]},
       { type: 'ul', items: [
-        "Pre-render every route (SSR or static pre-rendering) so crawlers receive HTML instantly.",
-        "Inline critical CSS, lazy-load below-the-fold, and remove render-blocking scripts.",
-        "Optimize images (srcset), Brotli compression on CDN, and minimal third-party scripts.",
-        "Result: LCP < 800ms, improved search ranking and conversion uplift."
+        "Server-side rendering and static pre-rendering for instant crawlability.",
+        "Structured JSON-LD, React Helmet, and Open Graph for rich snippets.",
+        "Optimized assets: Brotli compression, lazy loading, and critical CSS inlining.",
+        "Multiple blogs and portals featured in Google AI Overview and ranking in top results."
       ]}
     ]
   },
 
   {
-    q: "How does Zedemy's certificate pipeline work (short)",
+    q: "How does Sanjay measure product success?",
     a: [
       { type: 'p', parts: [
-        "Certificates are issued only after backend verification — preventing client-side spoofing while allowing public verification."
+        "Success to me isn’t just about writing code — it’s about whether the product meets business goals and improves user experience."
       ]},
       { type: 'ul', items: [
-        "Client flags completion → request to a backend Lambda.",
-        "Lambda recomputes completion logs, writes a UUID-backed certificate to DynamoDB.",
-        "An email with the certificate link is sent; public GET /cert/{uuid} returns non-PII metadata for verification."
-      ]},
-      { type: 'note', note: "See the Zedemy case study for a live demo and verification workflow." }
-    ]
-  },
-
-  {
-    q: "AgriBot — offline fallback & LLM orchestration (how it actually works)",
-    a: [
-      { type: 'p', parts: [
-        "AgriBot balances on-device resilience with server-side LLM orchestration to work in low-connectivity environments."
-      ]},
-      { type: 'ul', items: [
-        "Client: Kotlin + SpeechRecognizer for STT, TTS for replies, SharedPreferences for local state.",
-        "Fallback: Chaquopy caches canned responses when Lambda is unreachable.",
-        "Server: client posts queries to API Gateway → Lambda reads secrets from Secrets Manager and orchestrates LLM (LangChain/Gemini).",
-        "Observability: logs for prompts, token usage metrics and prompt versioning so I can iterate safely."
+        "Govt. Insurance CRM: tracked 3× inquiry growth through SEO and form submissions.",
+        "Zedemy: measured certificate issuances as definitive learner outcomes.",
+        "Content platforms: monitored organic impressions via Google Search Console.",
+        "AgriBot: evaluated adoption in rural areas based on daily active users."
       ]}
     ]
   },
 
   {
-    q: "How do you protect LLM prompts & API keys?",
+    q: "What makes Sanjay Patidar’s career journey unique?",
     a: [
       { type: 'p', parts: [
-        "Keys never live in client apps; prompts and orchestration live server-side so iteration is fast without APK releases."
+        "Unlike a traditional path through internships or bootcamps, my career has been about building from the ground up. I worked directly with stakeholders, experimented fast, and iterated based on feedback."
       ]},
       { type: 'ul', items: [
-        "Store all keys in Secrets Manager (server-side only).",
-        "Android client calls API Gateway; no keys stored on device.",
-        "Prompt shaping and response rules live in Lambdas for quick iteration and safe logging."
+        "Self-taught engineer delivering production systems used by real users.",
+        "Bridged engineering with product strategy by focusing on measurable KPIs.",
+        "Earned recognition from industry professionals and global reach across 127 countries."
       ]}
     ]
   },
 
   {
-    q: "What accessibility (a11y) steps do you take?",
+    q: "How to contact Sanjay Patidar?",
     a: [
       { type: 'p', parts: [
-        "Accessibility is baked into every build — semantic HTML, keyboard nav, and screen-reader considerations."
-      ]},
-      { type: 'ul', items: [
-        "Proper heading hierarchy and ARIA labels on interactive controls.",
-        "Keyboard operability & large touch targets for mobile-first UX.",
-        "TTS support for AgriBot and FAQ schema so screen readers parse content well.",
-        "Lighthouse accessibility audits and prioritized fixes before launch."
-      ]}
-    ]
-  },
-
-  {
-    q: "How do you measure product success?",
-    a: [
-      { type: 'p', parts: [
-        "I focus on tangible KPIs tied to the product's business goals — not vanity metrics."
-      ]},
-      { type: 'ul', items: [
-        "Lead count / conversion (Govt. Insurance CRM): tracked via forms + Search Console signals.",
-        "Certificate issuances (Zedemy): definitive completion metric.",
-        "Organic impressions & ranking (blog platforms): Search Console + GSC reports.",
-        "Engagement (DAU/MAU, completion funnels, notification clicks)."
-      ]}
-    ]
-  },
-
-  {
-    q: "How can someone reach or collaborate with you?",
-    a: [
-      { type: 'p', parts: [
-        "Open to freelance engagements, product roles, and collaboration on serverless + SEO-first projects."
+        "I’m always open to collaboration, freelance work, or product-focused roles. Feel free to connect through the channels below:"
       ]},
       { type: 'ul', items: [
         { type: 'link', text: 'Email: sanjay.deploys@gmail.com', href: 'mailto:sanjay.deploys@gmail.com' },
