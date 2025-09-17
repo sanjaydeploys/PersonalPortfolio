@@ -3,11 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
   copyButtons.forEach(button => {
     button.addEventListener('click', () => {
       const snippetId = button.getAttribute('data-snippet-id');
-      const wrapper = document.getElementById(snippetId);
-      const code = wrapper ? wrapper.getAttribute('data-snippet') : '';
+      const rawPre = document.getElementById(snippetId + '-raw');
+      const code = rawPre ? rawPre.textContent.trim() : '';
       if (code) {
         navigator.clipboard.writeText(code).then(() => {
-          button.textContent = 'Copied';
+          button.textContent = 'Copied!';
           button.classList.add('copied');
           setTimeout(() => {
             button.textContent = 'Copy';
@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
             button.textContent = 'Copy';
           }, 2000);
         });
+      } else {
+        console.warn('No code found for snippet:', snippetId);
       }
     });
 
