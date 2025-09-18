@@ -12,15 +12,17 @@
 
     toggleBtn.addEventListener('click', () => {
       const isOpen = sidebarWrapper.classList.toggle('open');
+      toggleBtn.classList.toggle('active', isOpen);
       toggleBtn.setAttribute('aria-expanded', isOpen);
       console.log(`[sidebarToggle.js] Sidebar ${isOpen ? 'opened' : 'closed'}`);
     });
 
-    // Close sidebar on link click
+    // Auto close on link click
     sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', () => {
         if (sidebarWrapper.classList.contains('open')) {
           sidebarWrapper.classList.remove('open');
+          toggleBtn.classList.remove('active');
           toggleBtn.setAttribute('aria-expanded', false);
         }
       });
