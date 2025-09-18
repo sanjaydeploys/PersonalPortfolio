@@ -154,8 +154,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/interview-prep"
     },
      {
-      "source": "/dsa-prep",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep"
+      "source": "/dsa-prep-easy",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
     },
      {
       "source": "/dsa-prep-medium",
