@@ -16,7 +16,7 @@
       console.log(`[sidebarToggle.js] Sidebar ${isOpen ? 'opened' : 'closed'}`);
     });
 
-    // Close sidebar on link click (mobile only)
+    // Close sidebar on link click
     sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', () => {
         if (sidebarWrapper.classList.contains('open')) {
