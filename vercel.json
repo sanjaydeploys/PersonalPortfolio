@@ -162,8 +162,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-medium"
     },
         {
-      "source": "/dsa/minimum-window-substring",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa/minimum-window-substring"
+      "source": "/minimum-window-substring",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/minimum-window-substring"
     },
 
     
