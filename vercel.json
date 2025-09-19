@@ -161,6 +161,12 @@
       "source": "/dsa-prep-medium",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-medium"
     },
+        {
+      "source": "/dsa/minimum-window-substring",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa/minimum-window-substring"
+    },
+
+    
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
