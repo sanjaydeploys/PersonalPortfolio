@@ -90,7 +90,6 @@ label {
 .left-pane, .right-pane {
   flex: 0 1 auto; /* Allow JavaScript to control width via flex-basis */
   min-width: 200px; /* Prevent collapse */
-  height: 100%; /* Fill container height for scrolling */
   overflow-y: auto; /* Enable scrolling for overflowing content */
   padding: 1.5rem;
   background: var(--bg-dark);
@@ -124,6 +123,7 @@ label {
     display: none;
   }
 }
+
 .navbar {
     display: flex;
     position: sticky;
