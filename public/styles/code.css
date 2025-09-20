@@ -117,16 +117,20 @@ label {
     overflow-y: auto; /* Allow container scrolling if content overflows */
   }
   .left-pane, .right-pane {
-    flex: none;
+    flex: 1 1 auto; /* Ensure both panes share space and are visible */
     width: 100%;
-    min-width: 0; /* Allow full width on mobile */
+    min-width: 0; /* Prevent flexbox from enforcing minimum width */
     height: auto; /* Allow natural content height */
+    min-height: 0; /* Prevent flexbox from enforcing minimum height */
     overflow-y: auto; /* Enable scrolling within each pane */
   }
   .splitter {
     display: none;
   }
-}   .navbar {
+}
+
+
+.navbar {
     display: flex;
     position: sticky;
     top: 0;
