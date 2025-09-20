@@ -165,7 +165,10 @@
       "source": "/minimum-window-substring",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/minimum-window-substring"
     },
-
+ {
+      "source": "/find-all-anagrams",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/find-all-anagrams"
+    },
     
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
