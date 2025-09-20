@@ -90,7 +90,7 @@ label {
 .left-pane, .right-pane {
   flex: 0 1 auto; /* Allow JavaScript to control width via flex-basis */
   min-width: 200px; /* Prevent collapse */
-  height: 100%; /* Fill container height */
+  height: 100%; /* Fill container height for scrolling */
   overflow-y: auto; /* Enable scrolling for overflowing content */
   padding: 1.5rem;
   background: var(--bg-dark);
@@ -113,23 +113,17 @@ label {
 @media (max-width: 768px) {
   .splitter-container {
     flex-direction: column;
-    height: 600px; /* Maintain fixed height on mobile */
-    overflow-y: auto; /* Allow container scrolling if content overflows */
+    min-height: auto; /* Allow natural height */
   }
   .left-pane, .right-pane {
-    flex: 1 1 auto; /* Ensure both panes share space and are visible */
+    flex: none;
     width: 100%;
-    min-width: 0; /* Prevent flexbox from enforcing minimum width */
-    height: auto; /* Allow natural content height */
-    min-height: 0; /* Prevent flexbox from enforcing minimum height */
-    overflow-y: auto; /* Enable scrolling within each pane */
+    min-width: 0; /* Allow full width on mobile */
   }
   .splitter {
     display: none;
   }
 }
-
-
 .navbar {
     display: flex;
     position: sticky;
