@@ -75,6 +75,7 @@ label {
 .splitter-container {
   display: flex;
   width: 100%;
+  height: 600px; /* Fixed height like LeetCode editor */
   background: var(--bg-dark); /* Matches #0A0A0A */
   border-radius: var(--border-radius);
   overflow-y: auto; /* Allow container scrolling */
