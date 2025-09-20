@@ -71,6 +71,52 @@ label {
   color: var(--text-color);
   margin-right: 0.5rem;
 }
+
+
+.splitter-container {
+  display: flex;
+  width: 100%;
+  height: 600px; /* Adjust height as needed */
+  background: #1C0401; /* Dark black */
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+}
+
+.left-pane, .right-pane {
+  overflow-y: auto;
+  padding: 1rem;
+  background: #1C0401;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.splitter {
+  width: 5px;
+  background: var(--card-border);
+  cursor: col-resize;
+  transition: background 0.3s;
+}
+
+.splitter:hover {
+  background: var(--secondary-color);
+}
+
+@media (max-width: 768px) {
+  .splitter-container {
+    flex-direction: column;
+    height: auto;
+  }
+  .left-pane, .right-pane {
+    width: 100%;
+  }
+  .splitter {
+    display: none;
+  }
+}
+
+
    .navbar {
     display: flex;
     position: sticky;
