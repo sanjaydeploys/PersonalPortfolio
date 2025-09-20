@@ -12,74 +12,98 @@
     let startX, startLeftWidthPercent;
 
     // Initialize widths to 50% each
-    leftPane.style.width = '50%';
+    leftPane.style.flexBasis = '50%';
+    rightPane.style.flexBasis = '50%';
+    leftPane.style.width = '50%'; // Fallback for consistency
     rightPane.style.width = '50%';
 
-    // Add active class on drag for visual feedback
-    splitter.addEventListener('mousedown', (e) => {
+    // Prevent interference from other elements
+    const disablePointerEvents = () => {
+      document.querySelectorAll('.navbar, .social-sticky-container, .sidebar-toggle-btn, .section')
+        .forEach(el => el.style.pointerEvents = 'none');
+    };
+
+    const restorePointerEvents = () => {
+      document.querySelectorAll('.navbar, .social-sticky-container, .sidebar-toggle-btn, .section')
+        .forEach(el => el.style.pointerEvents = '');
+    };
+
+    // Start dragging
+    const startDragging = (e) => {
       if (window.innerWidth <= 768) return; // Disable dragging on mobile
+      e.stopPropagation(); // Prevent bubbling to other elements
       isDragging = true;
-      startX = e.clientX;
-      startLeftWidthPercent = parseFloat(leftPane.style.width) || 50;
+      startX = e.clientX || (e.touches && e.touches[0].clientX);
+      startLeftWidthPercent = parseFloat(leftPane.style.flexBasis) || 50;
       splitter.classList.add('active');
       document.body.style.userSelect = 'none';
       document.body.style.cursor = 'col-resize';
-    });
+      disablePointerEvents();
+    };
+
+    splitter.addEventListener('mousedown', startDragging);
+    splitter.addEventListener('touchstart', startDragging, { passive: false });
 
     // Handle drag movement
-    document.addEventListener('mousemove', (e) => {
+    const handleMove = (e) => {
       if (!isDragging) return;
+      e.stopPropagation();
 
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const containerWidth = container.getBoundingClientRect().width;
-      const minWidthPercent = (minWidthPx / containerWidth) * 100; // Convert minWidth to percentage
-      const deltaX = e.clientX - startX;
-      const deltaPercent = (deltaX / containerWidth) * 100; // Convert pixel movement to percentage
+      const minWidthPercent = (minWidthPx / containerWidth) * 100;
+      const deltaX = clientX - startX;
+      const deltaPercent = (deltaX / containerWidth) * 100;
       let newLeftWidthPercent = startLeftWidthPercent + deltaPercent;
 
       // Enforce minimum width constraints
-      if (newLeftWidthPercent < minWidthPercent) {
-        newLeftWidthPercent = minWidthPercent;
-      } else if (newLeftWidthPercent > 100 - minWidthPercent) {
-        newLeftWidthPercent = 100 - minWidthPercent;
-      }
+      newLeftWidthPercent = Math.max(minWidthPercent, Math.min(100 - minWidthPercent, newLeftWidthPercent));
 
       // Update widths
-      leftPane.style.width = `${newLeftWidthPercent}%`;
+      leftPane.style.flexBasis = `${newLeftWidthPercent}%`;
+      rightPane.style.flexBasis = `${100 - newLeftWidthPercent}%`;
+      leftPane.style.width = `${newLeftWidthPercent}%`; // Fallback
       rightPane.style.width = `${100 - newLeftWidthPercent}%`;
-    });
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove, { passive: false });
 
     // Stop dragging
-    const stopDragging = () => {
+    const stopDragging = (e) => {
       if (isDragging) {
+        e.stopPropagation();
         isDragging = false;
         splitter.classList.remove('active');
         document.body.style.userSelect = '';
         document.body.style.cursor = '';
+        restorePointerEvents();
       }
     };
 
     document.addEventListener('mouseup', stopDragging);
+    document.addEventListener('touchend', stopDragging);
     document.addEventListener('mouseleave', stopDragging);
+    document.addEventListener('touchcancel', stopDragging);
 
-    // Handle window resize for responsiveness
+    // Handle window resize
     const handleResize = () => {
       if (window.innerWidth <= 768) {
-        // On mobile, rely on CSS to stack panes (flex-direction: column, width: 100%)
+        // Rely on CSS for mobile stacking
+        leftPane.style.flexBasis = '100%';
+        rightPane.style.flexBasis = '100%';
         leftPane.style.width = '100%';
         rightPane.style.width = '100%';
         splitter.style.display = 'none';
       } else {
-        // On desktop, restore proportional widths if they were altered
+        // Restore proportional widths
         if (!isDragging) {
-          const currentLeftWidth = parseFloat(leftPane.style.width) || 50;
+          const currentLeftWidth = parseFloat(leftPane.style.flexBasis) || 50;
           const containerWidth = container.getBoundingClientRect().width;
           const minWidthPercent = (minWidthPx / containerWidth) * 100;
-          let adjustedLeftWidth = currentLeftWidth;
-          if (currentLeftWidth < minWidthPercent) {
-            adjustedLeftWidth = minWidthPercent;
-          } else if (currentLeftWidth > 100 - minWidthPercent) {
-            adjustedLeftWidth = 100 - minWidthPercent;
-          }
+          let adjustedLeftWidth = Math.max(minWidthPercent, Math.min(100 - minWidthPercent, currentLeftWidth));
+          leftPane.style.flexBasis = `${adjustedLeftWidth}%`;
+          rightPane.style.flexBasis = `${100 - adjustedLeftWidth}%`;
           leftPane.style.width = `${adjustedLeftWidth}%`;
           rightPane.style.width = `${100 - adjustedLeftWidth}%`;
           splitter.style.display = 'block';
@@ -91,11 +115,14 @@
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // Cleanup event listeners on page unload
+    // Cleanup event listeners
     window.addEventListener('unload', () => {
-      document.removeEventListener('mousemove', stopDragging);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('mouseup', stopDragging);
+      document.removeEventListener('touchend', stopDragging);
       document.removeEventListener('mouseleave', stopDragging);
+      document.removeEventListener('touchcancel', stopDragging);
       window.removeEventListener('resize', handleResize);
     });
   });
