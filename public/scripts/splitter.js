@@ -89,14 +89,18 @@
     // Handle window resize
     const handleResize = () => {
       if (window.innerWidth <= 768) {
-        // Rely on CSS for mobile stacking
+        // Mobile: Rely on CSS for stacking, ensure visibility
         leftPane.style.flexBasis = '100%';
         rightPane.style.flexBasis = '100%';
         leftPane.style.width = '100%';
         rightPane.style.width = '100%';
+        leftPane.style.height = 'auto'; // Ensure natural height
+        rightPane.style.height = 'auto';
+        container.style.height = 'auto'; // Allow container to expand
         splitter.style.display = 'none';
       } else {
-        // Restore proportional widths
+        // Desktop: Fixed height and proportional widths
+        container.style.height = '600px'; // Fixed height like LeetCode editor
         if (!isDragging) {
           const currentLeftWidth = parseFloat(leftPane.style.flexBasis) || 50;
           const containerWidth = container.getBoundingClientRect().width;
@@ -106,6 +110,8 @@
           rightPane.style.flexBasis = `${100 - adjustedLeftWidth}%`;
           leftPane.style.width = `${adjustedLeftWidth}%`;
           rightPane.style.width = `${100 - adjustedLeftWidth}%`;
+          leftPane.style.height = ''; // Clear height for desktop
+          rightPane.style.height = '';
           splitter.style.display = 'block';
         }
       }
