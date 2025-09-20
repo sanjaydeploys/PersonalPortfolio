@@ -76,47 +76,51 @@ label {
 .splitter-container {
   display: flex;
   width: 100%;
-  height: 600px; /* Adjust height as needed */
-  background: #1C0401; /* Dark black */
+  background: var(--bg-dark); /* Matches #0A0A0A */
   border-radius: var(--border-radius);
   overflow: hidden;
-  margin: 1rem 0;
+  margin: 1.5rem 0;
   box-shadow: var(--shadow);
+  position: relative; /* Ensure splitter is positioned relative to container */
+  z-index: 1200; /* Above navbar (1000) and sidebar-toggle-btn (1100) */
 }
 
 .left-pane, .right-pane {
+  flex: 0 1 auto; /* Allow JavaScript to control width via flex-basis */
+  min-width: 200px; /* Prevent collapse */
   overflow-y: auto;
-  padding: 1rem;
-  background: #1C0401;
+  padding: 1.5rem;
+  background: var(--bg-dark);
   color: var(--text-color);
-  flex: 1;
+  box-sizing: border-box;
 }
 
 .splitter {
-  width: 5px;
-  background: var(--card-border);
+  width: 6px;
+  background: var(--card-border); /* rgba(211, 47, 47, 0.5) */
   cursor: col-resize;
-  transition: background 0.3s;
+  transition: background 0.2s ease;
+  z-index: 1250; /* Ensure splitter is clickable above panes */
 }
 
-.splitter:hover {
-  background: var(--secondary-color);
+.splitter:hover, .splitter.active {
+  background: var(--secondary-color); /* #FFD54F for highlight */
 }
 
 @media (max-width: 768px) {
   .splitter-container {
     flex-direction: column;
-    height: auto;
+    min-height: auto; /* Allow natural height */
   }
   .left-pane, .right-pane {
+    flex: none;
     width: 100%;
+    min-width: 0; /* Allow full width on mobile */
   }
   .splitter {
     display: none;
   }
 }
-
-
    .navbar {
     display: flex;
     position: sticky;
