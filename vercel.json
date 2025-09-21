@@ -162,8 +162,8 @@
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-medium"
     },
         {
-      "source": "/minimum-window-substring",
-      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/minimum-window-substring"
+      "source": "/minimum-variable-window-substring",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/minimum-variable-window-substring"
     },
  {
       "source": "/find-all-anagrams",
@@ -172,6 +172,18 @@
      {
       "source": "/two-sum-pattern",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/two-sum-pattern"
+    },
+      {
+      "source": "/three-sum",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/three-sum"
+    },
+       {
+      "source": "/three-sum-closest",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/three-sum-closest"
+    },
+         {
+      "source": "/two-sum-ii-sorted",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/two-sum-ii-sorted"
     },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
