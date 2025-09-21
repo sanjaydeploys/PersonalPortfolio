@@ -169,7 +169,10 @@
       "source": "/find-all-anagrams",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/find-all-anagrams"
     },
-    
+     {
+      "source": "/two-sum-pattern",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/two-sum-pattern"
+    },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
