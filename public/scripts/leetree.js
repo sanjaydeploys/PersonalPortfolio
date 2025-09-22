@@ -1,205 +1,220 @@
-/* leetree.js — Improved auto-layout, dynamic sizing, arrows, pan/zoom, hover highlight
-   Drop into your SSR page just like before:
-   <script src="/scripts/leetree.js"></script>
+/* leetree-advanced.js
+   - Auto-populates map with clusters & problems
+   - Auto-layout (root -> clusters -> problems)
+   - SVG curved arrows with animated stroke
+   - Cluster color-coding + legend + filter highlight
+   - Search & center + zoom
+   - Drag-to-pan + wheel scroll mapping
+   - Hover tooltips & highlight of edges
+   - API: Leetree.addNode / addEdge / fit
+   Comments are inline to guide future edits.
 */
 
 (function () {
-  // ---------- CONFIG ----------
-  // simple node list (id must be unique). If you want me to bulk add every problem I can.
-  const nodes = [
-    { id: 'root', title: 'DSA / Patterns', subtitle: 'Start here', url: '#', type: 'root' },
-
-    // branches (will be auto-positioned)
-    { id: 'sum', title: 'SUM & PAIR', subtitle: 'Two-sum family', url: '#', type: 'intermediate' },
-    { id: 'two1', title: 'Two Sum (LC1)', subtitle: 'Hash map / indices', url: 'https://sanjay-patidar.vercel.app/two-sum-pattern', type: 'leaf' },
-    { id: 'two2', title: 'Two Sum II (LC167)', subtitle: 'Two-pointers (sorted)', url: 'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', type: 'leaf' },
-    { id: '3sum', title: '3Sum (LC15)', subtitle: 'k-sum family', url: 'https://sanjay-patidar.vercel.app/three-sum', type: 'leaf' },
-    { id: '3closest', title: '3Sum Closest (LC16)', subtitle: 'closest target', url: 'https://sanjay-patidar.vercel.app/three-sum-closest', type: 'leaf' },
-
-    { id: 'window', title: 'SLIDING WINDOW', subtitle: 'Fixed & variable', url: '#', type: 'intermediate' },
-    { id: 'anagram', title: 'Anagrams (LC438)', subtitle: 'Fixed window', url: 'https://sanjay-patidar.vercel.app/find-all-anagrams', type: 'leaf' },
-    { id: 'minwindow', title: 'Min Window (LC76)', subtitle: 'Variable window', url: 'https://sanjay-patidar.vercel.app/minimum-variable-window-substring', type: 'leaf' },
-
-    { id: 'prefix', title: 'PREFIX SUM', subtitle: 'Prefix & subarray', url: '#', type: 'intermediate' },
-    { id: 'pref1', title: 'Prefix Sum (LC560)', subtitle: 'Cum sum maps', url: '#', type: 'leaf' },
-
-    { id: 'back', title: 'BACKTRACKING', subtitle: 'Permutations/combos', url: '#', type: 'intermediate' },
-    { id: 'perm', title: 'Permutations (LC46)', subtitle: 'Recursive tree', url: '#', type: 'leaf' },
-    { id: 'subs', title: 'Subsets (LC78)', subtitle: 'Decision tree', url: '#', type: 'leaf' },
-
-    { id: 'dp', title: 'DYNAMIC PROGRAMMING', subtitle:'1D/2D patterns', url: '#', type:'intermediate' },
-    { id: 'dp1', title: 'Climbing (LC70)', subtitle:'1D DP', url:'#', type:'leaf' },
-    { id: 'dp2', title: 'House Robber (LC198)', subtitle:'1D DP', url:'#', type:'leaf' },
-
-    { id: 'graph', title: 'GRAPH', subtitle:'BFS/DFS basics', url:'#', type:'intermediate' },
-    { id: 'islands', title: 'Islands (LC200)', subtitle:'Grid BFS', url:'#', type:'leaf' },
-    { id: 'ladder', title: 'Word Ladder (LC127)', subtitle:'BFS levels', url:'#', type:'leaf' },
+  /* -----------------------------
+     CONFIG: clusters & problems
+     Each cluster has id, label, color.
+     Each problem node has id, label, subtitle, url, cluster.
+  -------------------------------*/
+  const clusters = [
+    { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
+    { id: 'window', label: 'Sliding Window', color: '#7bd1ff' },
+    { id: 'prefix', label: 'Prefix / Subarray', color: '#ffd47b' },
+    { id: 'twoPointers', label: 'Two Pointers / k-sum', color: '#b6ff7b' },
+    { id: 'backtracking', label: 'Backtracking', color: '#cba6ff' },
+    { id: 'binary', label: 'Binary Search', color: '#7bffd9' },
+    { id: 'dp', label: 'Dynamic Programming', color: '#ffb6e0' },
+    { id: 'graph', label: 'Graph', color: '#8fd6ff' }
   ];
 
-  // edges define flow direction [fromId, toId]
-  const edges = [
-    ['root','sum'], ['root','window'], ['root','prefix'], ['root','back'], ['root','dp'], ['root','graph'],
-    ['sum','two1'], ['sum','two2'], ['sum','3sum'],
-    ['3sum','3closest'],
-    ['window','anagram'], ['window','minwindow'],
-    ['prefix','pref1'],
-    ['back','perm'], ['back','subs'],
-    ['dp','dp1'], ['dp','dp2'],
-    ['graph','islands'], ['graph','ladder']
+  // Problems (representative set) — add more as you want.
+  const problems = [
+    // SUM & PAIR
+    { id:'two-sum', title:'Two Sum', sub:'LC1 — Hash map', url:'https://sanjay-patidar.vercel.app/two-sum-pattern', cluster:'sum' },
+    { id:'two-sum-ii', title:'Two Sum II', sub:'LC167 — Sorted two-pointer', url:'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', cluster:'sum' },
+    { id:'3sum', title:'3Sum', sub:'LC15 — k-sum family', url:'https://sanjay-patidar.vercel.app/three-sum', cluster:'twoPointers' },
+    { id:'3closest', title:'3Sum Closest', sub:'LC16 — closest target', url:'https://sanjay-patidar.vercel.app/three-sum-closest', cluster:'twoPointers' },
+
+    // SLIDING WINDOW
+    { id:'anagram', title:'Find All Anagrams', sub:'LC438 — Fixed window', url:'https://sanjay-patidar.vercel.app/find-all-anagrams', cluster:'window' },
+    { id:'min-window', title:'Minimum Window', sub:'LC76 — Variable window', url:'https://sanjay-patidar.vercel.app/minimum-variable-window-substring', cluster:'window' },
+
+    // PREFIX / SUBARRAY
+    { id:'prefix-sum', title:'Prefix Sum', sub:'LC560 variants', url:'#', cluster:'prefix' },
+    { id:'subarray-sum', title:'Subarray Sum K', sub:'LC560 / LC525', url:'#', cluster:'prefix' },
+
+    // BACKTRACKING
+    { id:'perm', title:'Permutations', sub:'LC46', url:'#', cluster:'backtracking' },
+    { id:'comb-phone', title:'Letter Combinations', sub:'LC17', url:'#', cluster:'backtracking' },
+    { id:'subsets', title:'Subsets', sub:'LC78', url:'#', cluster:'backtracking' },
+
+    // BINARY SEARCH
+    { id:'search-rotated', title:'Search in Rotated', sub:'LC33', url:'#', cluster:'binary' },
+    { id:'koko', title:'Search-on-Answer', sub:'LC875', url:'#', cluster:'binary' },
+
+    // DP
+    { id:'climb', title:'Climbing Stairs', sub:'LC70 — 1D DP', url:'#', cluster:'dp' },
+    { id:'house-robber', title:'House Robber', sub:'LC198', url:'#', cluster:'dp' },
+    { id:'lis', title:'LIS', sub:'LC300', url:'#', cluster:'dp' },
+
+    // GRAPH
+    { id:'islands', title:'Number of Islands', sub:'LC200', url:'#', cluster:'graph' },
+    { id:'wordladder', title:'Word Ladder', sub:'LC127', url:'#', cluster:'graph' },
+    { id:'clone-graph', title:'Clone Graph', sub:'LC133', url:'#', cluster:'graph' }
   ];
 
-  // layout params: tweak to pack tighter or looser
-  const H_GAP = 260;   // horizontal gap between sibling nodes
-  const V_GAP = 150;   // vertical gap between levels
-  const NODE_W = 220;  // approximate node width used for layout calculation
-  const NODE_H = 72;   // approximate node height
+  /* -----------------------------
+     Derived node list and edge set:
+     root -> cluster hubs -> problem nodes
+  -------------------------------*/
+  const nodes = []; // will contain {id, title, subtitle, url, type, cluster}
+  const edges = []; // [fromId, toId]
 
-  // DOM refs
-  const svg = document.getElementById('tree-svg');
-  const container = document.getElementById('tree-nodes');
-  const stage = document.getElementById('tree-stage');
+  // root
+  nodes.push({ id:'root', title:'DSA / Patterns', sub:'Start here', url:'#', type:'root', cluster:null });
 
-  // maps
-  const nodeById = {};
-  const childrenMap = {};
-
-  // build children map and nodeById
-  nodes.forEach(n => { nodeById[n.id] = Object.assign({}, n); childrenMap[n.id] = []; });
-  edges.forEach(([p,c]) => { if(childrenMap[p]) childrenMap[p].push(c); });
-
-  // ====== Simple hierarchical layout (root-based BFS) ======
-  function computeLevels(rootId = 'root') {
-    // BFS to compute depth (level) for each node; if unconnected nodes remain, give them levels after BFS
-    const levels = {};
-    const q = [rootId];
-    levels[rootId] = 0;
-    const visited = new Set([rootId]);
-    while(q.length) {
-      const id = q.shift();
-      const lvl = levels[id];
-      const kids = childrenMap[id] || [];
-      kids.forEach(childId => {
-        if(!visited.has(childId)) {
-          visited.add(childId);
-          levels[childId] = lvl + 1;
-          q.push(childId);
-        }
-      });
-    }
-    // any nodes not visited: put them at next levels to the right
-    let maxLevel = Math.max(...Object.values(levels));
-    nodes.forEach(n => { if(!(n.id in levels)) { maxLevel++; levels[n.id] = maxLevel; } });
-    return levels;
-  }
-
-  function layoutNodes() {
-    const levels = computeLevels('root');
-    // group nodes by level
-    const byLevel = {};
-    for(const id in levels) {
-      const lvl = levels[id];
-      if(!byLevel[lvl]) byLevel[lvl] = [];
-      byLevel[lvl].push(nodeById[id]);
-    }
-    // sort levels by level index
-    const levelKeys = Object.keys(byLevel).map(k => parseInt(k)).sort((a,b)=>a-b);
-
-    // compute width needed per level, place nodes horizontally spaced
-    const placements = {}; // { id: {x,y} }
-    levelKeys.forEach((lvl) => {
-      const group = byLevel[lvl];
-      // horizontal span for this level
-      const totalWidth = (group.length - 1) * H_GAP;
-      // center at xStart; we will compute full tree width then offset later
-      const xStart = lvl * 0; // temporary, we will offset later
-      group.forEach((node, i) => {
-        const x = i * H_GAP; // spacing siblings across horizontally
-        const y = lvl * V_GAP;
-        placements[node.id] = { x, y };
-      });
-    });
-
-    // Now we want to arrange levels left-to-right with some spacing to avoid overlaps.
-    // We'll compute offsets per level so that each level starts after previous level's max X + margin.
-    const levelOffsets = {};
-    let currentX = 0;
-    levelKeys.forEach(lvl => {
-      levelOffsets[lvl] = currentX;
-      // compute max X used at this level
-      const group = byLevel[lvl];
-      const maxX = ((group.length - 1) * H_GAP);
-      // allow some overlap reduction: move next level a bit to the right
-      currentX += Math.max(maxX + 220, 420); // ensure minimum width per level
-    });
-
-    // assign final positions with offsets
-    for(const id in placements) {
-      const base = placements[id];
-      const lvl = computeLevels()['' + levels[id]]; // not ideal; instead use levels map
-    }
-    // simpler: place by level and index
-    const finalPositions = {};
-    levelKeys.forEach((lvl) => {
-      const group = byLevel[lvl];
-      const offsetX = levelOffsets[lvl];
-      // center the group horizontally within its allotted width block
-      const blockWidth = Math.max( (group.length - 1) * H_GAP, 320 );
-      const cx = offsetX + blockWidth/2;
-      group.forEach((node, i) => {
-        // place siblings around center
-        const x = offsetX + (i - (group.length-1)/2) * H_GAP;
-        const y = 80 + lvl * V_GAP;
-        finalPositions[node.id] = { x, y };
-      });
-    });
-
-    // store positions back into nodeById
-    for(const id in finalPositions) {
-      nodeById[id].x = Math.round(finalPositions[id].x);
-      nodeById[id].y = Math.round(finalPositions[id].y);
-    }
-  }
-
-  // fallback: if root missing or layout failed, keep manual positions (none set => layoutNodes will set)
-  layoutNodes();
-
-  // ====== Render nodes into DOM (absolute positioned) ======
-  const created = {};
-  nodes.forEach(n => {
-    const el = document.createElement('a');
-    el.className = n.type === 'root' ? 'root-node' : (n.type === 'intermediate' ? 'intermediate-node' : 'leaf-node');
-    el.href = n.url || '#';
-    el.target = (n.url && n.url.startsWith('http')) ? '_blank' : '_self';
-
-    // Use computed layout positions (nodeById entries)
-    const pos = nodeById[n.id];
-    const x = (typeof pos.x === 'number') ? pos.x : (n.x || 600);
-    const y = (typeof pos.y === 'number') ? pos.y : (n.y || 200);
-
-    el.style.left = (x) + 'px';
-    el.style.top = (y) + 'px';
-
-    el.dataset.id = n.id;
-    el.innerHTML = `<span class="node-title">${n.title}</span><span class="node-sub">${n.subtitle||''}</span>`;
-
-    // hover highlight
-    el.addEventListener('mouseenter', () => highlightNodeEdges(n.id, true));
-    el.addEventListener('mouseleave', () => highlightNodeEdges(n.id, false));
-
-    // tooltip
-    el.addEventListener('mouseenter', (e) => showTooltip(e, n));
-    el.addEventListener('mouseleave', hideTooltip);
-
-    container.appendChild(el);
-    nodeById[n.id].el = el;
-    created[n.id] = el;
+  // cluster hubs as intermediate nodes
+  clusters.forEach(c => {
+    nodes.push({ id: 'hub-'+c.id, title: c.label, sub:'pattern hub', url:'#', type:'hub', cluster:c.id });
+    edges.push(['root', 'hub-'+c.id]);
   });
 
-  // ------- SVG helpers: marker for arrowheads -------
-  function createSvgDefs() {
+  // problem nodes attached to cluster hubs
+  problems.forEach(p => {
+    nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url, type:'leaf', cluster: p.cluster });
+    // find hub node id
+    edges.push(['hub-'+p.cluster, p.id]);
+  });
+
+  /* -----------------------------
+     Elements and state
+  -------------------------------*/
+  const svg = document.getElementById('map-svg');
+  const container = document.getElementById('map-nodes');
+  const stage = document.getElementById('map-stage');
+  const legendEl = document.getElementById('map-legend');
+  const searchInput = document.getElementById('node-search');
+
+  // Map id -> object
+  const nodeMap = {};
+  nodes.forEach(n => nodeMap[n.id] = Object.assign({}, n));
+
+  /* -----------------------------
+     Layout algorithm:
+     - level 0: root at left-center (x0,y0)
+     - level 1: cluster hubs arranged radially/fan to the right of root
+     - level 2: problem nodes fan out below each hub
+     We'll compute approximate positions and then compact.
+  -------------------------------*/
+  function layoutCompute() {
+    // base positions
+    const x0 = 60;
+    const y0 = 120;
+    nodeMap['root'].x = x0;
+    nodeMap['root'].y = y0;
+
+    // level 1: hubs — arrange in two rows to the right (to make tree compact)
+    const hubs = clusters.map(c => 'hub-'+c.id);
+    const hubCount = hubs.length;
+    const colX = x0 + 320; // hubs start to the right of root
+    const hubSpacingY = 110;
+    const hubStartY = y0 - ((hubCount-1)/2)*hubSpacingY;
+    hubs.forEach((hid, idx) => {
+      const hy = hubStartY + idx*hubSpacingY;
+      nodeMap[hid].x = colX;
+      nodeMap[hid].y = hy;
+    });
+
+    // level 2: problems per cluster — fan out horizontally around hub
+    const clusterGroups = {};
+    nodes.forEach(n => {
+      if(n.type === 'leaf') {
+        clusterGroups[n.cluster] = clusterGroups[n.cluster] || [];
+        clusterGroups[n.cluster].push(n);
+      }
+    });
+
+    // placement: for each cluster, place nodes in a semi-circle/fan to the right and slightly below hub
+    Object.keys(clusterGroups).forEach(clusterId => {
+      const hubId = 'hub-'+clusterId;
+      const hub = nodeMap[hubId];
+      const problemsArr = clusterGroups[clusterId];
+      const count = problemsArr.length;
+      const startX = hub.x + 220;
+      const startY = hub.y - Math.floor(count/2)*90;
+      problemsArr.forEach((p, i) => {
+        nodeMap[p.id].x = startX + (i % 6) * 190;
+        nodeMap[p.id].y = startY + Math.floor(i/6)*110;
+      });
+    });
+  }
+
+  /* -----------------------------
+     Render nodes into DOM (absolute positioned anchors)
+  -------------------------------*/
+  function renderNodes() {
+    container.innerHTML = '';
+    // create node elements
+    nodes.forEach(n => {
+      const el = document.createElement('a');
+      el.href = n.url || '#';
+      el.target = (n.url && n.url.startsWith('http')) ? '_blank' : '_self';
+      el.className = 'node-box ' + (n.type === 'root' ? 'root-node' : (n.type === 'hub' ? 'intermediate-node' : 'leaf-node'));
+      el.dataset.id = n.id;
+      el.setAttribute('role','link');
+      el.setAttribute('aria-label', n.title + ' — ' + (n.sub||''));
+      // cluster accent
+      const accent = document.createElement('span');
+      accent.className = 'cluster-accent';
+      const clusterColor = n.cluster ? (clusters.find(c=>c.id===n.cluster).color) : '#ffffff';
+      accent.style.background = clusterColor;
+      accent.style.boxShadow = `0 6px 18px ${hexToRgba(clusterColor, 0.12)}`;
+      // content
+      const t = document.createElement('span');
+      t.className = 'node-title';
+      t.textContent = n.title;
+      const s = document.createElement('span');
+      s.className = 'node-sub';
+      s.textContent = n.sub || '';
+      el.appendChild(accent);
+      el.appendChild(t);
+      el.appendChild(s);
+
+      // position based on layout
+      const pos = nodeMap[n.id];
+      const left = (typeof pos.x === 'number') ? pos.x : 200;
+      const top = (typeof pos.y === 'number') ? pos.y : 120;
+      el.style.left = left + 'px';
+      el.style.top = top + 'px';
+
+      // floating animation for hubs & leaf nodes
+      el.classList.add('node-float');
+
+      // hover interactions
+      el.addEventListener('mouseenter', (e)=> {
+        highlightConnections(n.id, true);
+        showTooltip(e, n);
+      });
+      el.addEventListener('mouseleave', ()=> {
+        highlightConnections(n.id, false);
+        hideTooltip();
+      });
+
+      container.appendChild(el);
+      nodeMap[n.id].el = el;
+    });
+  }
+
+  /* -----------------------------
+     Draw curved edges as SVG paths + arrowheads
+  -------------------------------*/
+  function setupSvgDefs() {
+    // clear
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
     const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    // arrow marker
     const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
-    marker.setAttribute('id','arrowhead');
+    marker.setAttribute('id','arrowhead-ll');
     marker.setAttribute('viewBox','0 0 10 10');
     marker.setAttribute('refX','10');
     marker.setAttribute('refY','5');
@@ -214,124 +229,151 @@
     defs.appendChild(marker);
     svg.appendChild(defs);
   }
-  createSvgDefs();
 
-  // draw edges using nodeById positions (fast)
   function drawEdges() {
-    // clear old edges
-    while(svg.firstChild) svg.removeChild(svg.firstChild);
-    createSvgDefs(); // recreate defs (marker)
-    // for each edge, draw smooth cubic bezier
+    // remove old edges
+    // remove everything except defs
+    const defs = svg.querySelector('defs');
+    svg.innerHTML = '';
+    if(defs) svg.appendChild(defs);
+
     edges.forEach(([fromId,toId]) => {
-      const f = nodeById[fromId];
-      const t = nodeById[toId];
-      if(!f || !t || !f.x || !t.x) return;
-
-      const x1 = f.x + NODE_W/2;
-      const y1 = f.y + NODE_H/2;
-      const x2 = t.x + NODE_W/2;
-      const y2 = t.y + NODE_H/2;
-
+      const f = nodeMap[fromId];
+      const t = nodeMap[toId];
+      if(!f || !t || !f.el || !t.el) return;
+      // compute positions using element bounding boxes
+      const a = f.el.getBoundingClientRect();
+      const b = t.el.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      const x1 = a.left - parentRect.left + (a.width/2);
+      const y1 = a.top - parentRect.top + (a.height/2);
+      const x2 = b.left - parentRect.left + (b.width/2);
+      const y2 = b.top - parentRect.top + (b.height/2);
       const dx = x2 - x1;
-      // control points: push curve upward for aesthetic diagonal
-      const curveLift = Math.max(80, Math.abs(dx) * 0.18);
-      const cx1 = x1 + dx*0.25;
-      const cx2 = x1 + dx*0.75;
-      const cy1 = y1 - curveLift;
-      const cy2 = y2 - curveLift*0.6;
+      // controls
+      const lift = Math.max(60, Math.abs(dx)*0.16);
+      const cx1 = x1 + dx*0.28;
+      const cy1 = y1 - lift;
+      const cx2 = x1 + dx*0.72;
+      const cy2 = y2 - lift*0.6;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
       path.setAttribute('d', `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
       path.setAttribute('class','flow-line flow-anim');
-      path.setAttribute('marker-end','url(#arrowhead)');
-      // stitch dataset for highlight toggling
+      path.setAttribute('marker-end','url(#arrowhead-ll)');
       path.dataset.from = fromId;
       path.dataset.to = toId;
       svg.appendChild(path);
     });
   }
 
-  // highlight edges related to node id
-  function highlightNodeEdges(nodeId, on) {
+  /* -----------------------------
+     Highlight edges connected to a node
+  -------------------------------*/
+  function highlightConnections(nodeId, on) {
     const paths = svg.querySelectorAll('path.flow-line');
     paths.forEach(p => {
       if(p.dataset.from === nodeId || p.dataset.to === nodeId) {
-        if(on) p.style.stroke = 'rgba(255,255,255,0.9)';
-        else p.style.stroke = '';
+        p.classList.toggle('flow-highlight', on);
+        p.style.opacity = on ? '1' : '';
       } else {
-        if(on) p.style.opacity = '0.18';
+        if(on) p.style.opacity = '0.12';
         else p.style.opacity = '';
       }
     });
+    // fade other nodes slightly on hover
+    Object.values(nodeMap).forEach(n => {
+      if(!n.el) return;
+      if(on && n.id !== nodeId) n.el.style.opacity = '0.6';
+      else n.el.style.opacity = '';
+    });
   }
 
-  // tooltip element
+  /* -----------------------------
+     Tooltip helpers
+  -------------------------------*/
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
-  tooltip.style.display='none';
   document.body.appendChild(tooltip);
-  function showTooltip(e,n) {
-    tooltip.style.display='block';
-    tooltip.innerHTML = `<strong>${n.title}</strong><div style="font-size:12px;opacity:0.9;margin-top:6px;">${n.subtitle||''}</div>
-      <div style="margin-top:6px;font-size:11px;opacity:0.8;">${n.url && n.url!=='#' ? n.url : 'demo / placeholder'}</div>`;
+  function showTooltip(e, n) {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<strong>${escapeHtml(n.title)}</strong>
+      <div style="font-size:12px;opacity:0.9;margin-top:6px;">${escapeHtml(n.sub || '')}</div>
+      <div style="font-size:11px;opacity:0.8;margin-top:6px;">${n.url && n.url!=='#' ? 'Open link' : 'Placeholder'}</div>`;
     const rect = e.target.getBoundingClientRect();
-    tooltip.style.left = (rect.left + window.scrollX + 12) + 'px';
-    tooltip.style.top = (rect.top + window.scrollY - 8) + 'px';
+    // position intelligently (avoid going offscreen)
+    const left = Math.max(12, rect.left + window.scrollX + 12);
+    const top = Math.max(12, rect.top + window.scrollY - 8);
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
   }
-  function hideTooltip() { tooltip.style.display='none'; }
+  function hideTooltip() { tooltip.style.display = 'none'; }
 
-  // compute bounding box and set container/svg sizes and optionally fit to viewport
-  function fitCanvas(padding = 120) {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    nodes.forEach(n => {
-      const pos = nodeById[n.id];
-      if(typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
-      minX = Math.min(minX, pos.x);
-      minY = Math.min(minY, pos.y);
-      maxX = Math.max(maxX, pos.x + NODE_W);
-      maxY = Math.max(maxY, pos.y + NODE_H);
+  /* -----------------------------
+     Utility: hex to rgba
+  -------------------------------*/
+  function hexToRgba(hex, alpha=1) {
+    const h = hex.replace('#','');
+    const bigint = parseInt(h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  /* -----------------------------
+     Canvas fit: compute bounding box of all nodes and size svg/container, center into stage
+  -------------------------------*/
+  function fitCanvas(padding=80) {
+    // compute bounding box using element positions
+    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+    Object.values(nodeMap).forEach(n => {
+      if(!n.el) return; // skip unrendered
+      const r = n.el.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      const left = r.left - parentRect.left;
+      const top = r.top - parentRect.top;
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, left + r.width);
+      maxY = Math.max(maxY, top + r.height);
     });
-    if(minX === Infinity) { // nothing to set
+    if(minX === Infinity) { // fallback
       minX = 0; minY = 0; maxX = 1200; maxY = 800;
     }
-    const width = Math.ceil(maxX - minX + padding*2);
-    const height = Math.ceil(maxY - minY + padding*2);
-
-    // set container & svg dims via style (absolute)
+    const width = Math.ceil((maxX - minX) + padding*2);
+    const height = Math.ceil((maxY - minY) + padding*2);
     container.style.width = width + 'px';
     container.style.height = height + 'px';
     svg.setAttribute('width', width);
     svg.setAttribute('height', height);
 
-    // offset all nodes to account for minX/minY + padding
-    const offsetX = -minX + padding;
-    const offsetY = -minY + padding;
-    nodes.forEach(n => {
-      const pos = nodeById[n.id];
-      if(typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
-      pos.screenX = pos.x + offsetX;
-      pos.screenY = pos.y + offsetY;
-      const el = nodeById[n.id].el;
-      el.style.left = (pos.screenX) + 'px';
-      el.style.top = (pos.screenY) + 'px';
+    // apply offset so nodes are padded in canvas
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
+    Object.values(nodeMap).forEach(n => {
+      if(!n.el) return;
+      const left = parseFloat(n.el.style.left || 0);
+      const top = parseFloat(n.el.style.top || 0);
+      n.el.style.left = (left + offsetX) + 'px';
+      n.el.style.top = (top + offsetY) + 'px';
     });
 
-    // redraw edges using screenX/screenY
+    // redraw edges
     drawEdges();
 
-    // try to fit to viewport: if canvas width larger than stage, set scale so it fits horizontally
+    // fit to stage: scale down if too large
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
-    const fitScale = Math.min(1, (stageW - 40) / width, (stageH - 40) / height);
+    const fitScale = Math.min(1, (stageW - 60) / width, (stageH - 60) / height);
     setScale(fitScale);
-    // center horizontally (scroll)
-    const centerX = (width*fitScale - stageW)/2;
-    const centerY = (height*fitScale - stageH)/2;
-    stage.scrollLeft = Math.max(0, centerX);
-    stage.scrollTop = Math.max(0, centerY);
+    // center
+    stage.scrollLeft = (width*fitScale - stageW)/2;
+    stage.scrollTop = (height*fitScale - stageH)/2;
   }
 
-  // simple scale/zoom apply to both container and svg
+  // scale transform
   let scale = 1;
   function setScale(s) {
     scale = s;
@@ -339,28 +381,22 @@
     svg.style.transform = `scale(${scale})`;
   }
 
-  // zoom handlers wired to buttons (if present)
-  const zi = document.getElementById('zoom-in');
-  const zo = document.getElementById('zoom-out');
-  const rz = document.getElementById('reset-view');
-  if(zi) zi.addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
-  if(zo) zo.addEventListener('click', ()=> setScale(Math.max(0.6, scale - 0.12)));
-  if(rz) rz.addEventListener('click', ()=> { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; });
-
-  // pan: click+drag on stage to pan
+  /* -----------------------------
+     Drag to pan / wheel to horizontal scroll
+  -------------------------------*/
   (function enableDragPan() {
     let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
     stage.addEventListener('mousedown', (e) => {
-      if(e.target.closest('.node')) return; // allow node click without panning
-      isDown=true;
+      // if clicked over a node link, don't start panning to allow clicks
+      if(e.target.closest('.node-box')) return;
+      isDown = true;
+      stage.classList.add('dragging');
       startX = e.pageX - stage.offsetLeft;
       startY = e.pageY - stage.offsetTop;
       scrollLeft = stage.scrollLeft;
       scrollTop = stage.scrollTop;
-      stage.classList.add('dragging');
-      e.preventDefault();
     });
-    window.addEventListener('mouseup', ()=>{ isDown=false; stage.classList.remove('dragging'); });
+    window.addEventListener('mouseup', ()=> { isDown=false; stage.classList.remove('dragging'); });
     window.addEventListener('mousemove', (e)=> {
       if(!isDown) return;
       const x = e.pageX - stage.offsetLeft;
@@ -370,27 +406,180 @@
       stage.scrollLeft = scrollLeft + walkX;
       stage.scrollTop = scrollTop + walkY;
     });
-    // smooth horizontal wheel: shift+wheel free; normal wheel scrolls vertically; we swap vertical wheel into horizontal scroll
+    // wheel → horizontal pan
     stage.addEventListener('wheel', (e)=> {
-      if (e.deltaY === 0) return;
-      // if ctrl or meta pressed, allow browser zoom
       if(e.ctrlKey || e.metaKey) return;
       stage.scrollLeft += e.deltaY;
       e.preventDefault();
     }, { passive:false });
   })();
 
-  // initial fit + render
-  fitCanvas(120);
+  /* -----------------------------
+     Search control: simple autocomplete + center on select
+  -------------------------------*/
+  function initSearch() {
+    const flat = nodes.map(n => ({ id: n.id, title: n.title, sub: n.sub }));
+    let currentFocus = -1;
+    searchInput.addEventListener('input', function () {
+      const val = this.value.trim().toLowerCase();
+      closeAllLists();
+      if(!val) return;
+      const list = document.createElement('div');
+      list.setAttribute('id','autocomplete-list');
+      list.setAttribute('class','autocomplete-items');
+      this.parentNode.appendChild(list);
+      const matches = flat.filter(item => item.title.toLowerCase().includes(val) || (item.sub||'').toLowerCase().includes(val));
+      matches.slice(0,8).forEach(m => {
+        const itemEl = document.createElement('div');
+        itemEl.innerHTML = `<strong>${escapeHtml(m.title)}</strong><div style="font-size:12px;color:rgba(255,255,255,0.75)">${escapeHtml(m.sub||'')}</div>`;
+        itemEl.addEventListener('click', ()=> {
+          searchInput.value = m.title;
+          closeAllLists();
+          focusNode(m.id);
+        });
+        list.appendChild(itemEl);
+      });
+    });
 
-  // redraw on resize to refit if stage changed
-  window.addEventListener('resize', ()=> { fitCanvas(120); });
+    searchInput.addEventListener('keydown', function (e) {
+      const list = document.getElementById('autocomplete-list');
+      if(!list) return;
+      const items = list.getElementsByTagName('div');
+      if(e.key === 'ArrowDown') { currentFocus++; addActive(items); e.preventDefault(); }
+      else if(e.key === 'ArrowUp') { currentFocus--; addActive(items); e.preventDefault(); }
+      else if(e.key === 'Enter') { e.preventDefault(); if(currentFocus > -1 && items[currentFocus]) items[currentFocus].click(); }
+    });
 
-  // expose API for adding nodes / edges dynamically
+    function addActive(items) {
+      if(!items) return;
+      removeActive(items);
+      if(currentFocus >= items.length) currentFocus = 0;
+      if(currentFocus < 0) currentFocus = items.length - 1;
+      items[currentFocus].classList.add('autocomplete-active');
+    }
+    function removeActive(items) { for(let it of items) it.classList.remove('autocomplete-active'); }
+
+    function closeAllLists(elmnt) {
+      const items = document.getElementsByClassName('autocomplete-items');
+      for(let i=0;i<items.length;i++) if (elmnt != items[i] && elmnt != searchInput) items[i].parentNode.removeChild(items[i]);
+      currentFocus = -1;
+    }
+    document.addEventListener('click', (e)=> closeAllLists(e.target));
+  }
+
+  // center & zoom to node
+  function focusNode(nodeId) {
+    const n = nodeMap[nodeId];
+    if(!n || !n.el) return;
+    // compute bounding box & center
+    const rect = n.el.getBoundingClientRect();
+    const parentRect = container.getBoundingClientRect();
+    // center coordinates in container space
+    const cx = (rect.left - parentRect.left) + rect.width/2;
+    const cy = (rect.top - parentRect.top) + rect.height/2;
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    // compute position after scaling
+    const targetScale = Math.min(1.05, Math.max(0.7, 1.0));
+    setScale(targetScale);
+    // scroll so that target is centered
+    const scrollLeft = Math.max(0, cx*targetScale - stageW/2);
+    const scrollTop = Math.max(0, cy*targetScale - stageH/2);
+    stage.scrollTo({ left: scrollLeft, top: scrollTop, behavior: 'smooth' });
+    // highlight path briefly
+    highlightConnections(nodeId, true);
+    setTimeout(()=> highlightConnections(nodeId, false), 1800);
+  }
+
+  /* -----------------------------
+     Legend: render cluster swatches + click to highlight cluster
+  -------------------------------*/
+  function renderLegend() {
+    legendEl.innerHTML = '';
+    clusters.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      const sw = document.createElement('div');
+      sw.className = 'legend-swatch';
+      sw.style.background = c.color;
+      const label = document.createElement('div');
+      label.textContent = c.label;
+      item.appendChild(sw);
+      item.appendChild(label);
+      item.addEventListener('click', ()=> toggleClusterHighlight(c.id));
+      legendEl.appendChild(item);
+    });
+  }
+  let activeCluster = null;
+  function toggleClusterHighlight(clusterId) {
+    activeCluster = activeCluster === clusterId ? null : clusterId;
+    // fade nodes not in cluster
+    Object.values(nodeMap).forEach(n => {
+      if(!n.el) return;
+      if(!n.cluster && n.type !== 'root') n.el.style.opacity = activeCluster ? '0.24' : '';
+      else if(activeCluster && n.cluster !== clusterId && n.type !== 'root') n.el.style.opacity = '0.24';
+      else n.el.style.opacity = '';
+    });
+    // fade edges
+    const paths = svg.querySelectorAll('path.flow-line');
+    paths.forEach(p => {
+      if(!activeCluster) { p.style.opacity = ''; return; }
+      const from = p.dataset.from, to = p.dataset.to;
+      const f = nodeMap[from], t = nodeMap[to];
+      // if either end belongs to cluster, highlight; else fade
+      if((f && f.cluster === clusterId) || (t && t.cluster === clusterId)) {
+        p.style.opacity = '1';
+        p.style.stroke = '';
+      } else {
+        p.style.opacity = '0.08';
+      }
+    });
+  }
+
+  /* -----------------------------
+     Wire UI controls (zoom, reset)
+  -------------------------------*/
+  function wireControls() {
+    document.getElementById('zoom-in').addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
+    document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
+    document.getElementById('reset-view').addEventListener('click', ()=> {
+      setScale(1);
+      stage.scrollLeft = 0; stage.scrollTop = 0;
+      // un-fade nodes
+      Object.values(nodeMap).forEach(n=> { if(n.el) n.el.style.opacity = ''; });
+      const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p=> p.style.opacity='');
+      activeCluster = null;
+    });
+  }
+
+  /* -----------------------------
+     Boot: compute layout, render, fit and wire events
+  -------------------------------*/
+  function boot() {
+    layoutCompute();
+    renderNodes();
+    setupSvgDefs();
+    drawEdges();
+    renderLegend();
+    initSearch();
+    wireControls();
+    fitCanvas(90);
+
+    // animate edges by toggling class (already set by CSS .flow-anim)
+    // highlight when hovering over any node (handled per node)
+    // redrawing edges on window resize
+    window.addEventListener('resize', ()=> { drawEdges(); fitCanvas(90); });
+  }
+
+  // expose programmatic API
   window.Leetree = {
-    addNode: function(n) { nodes.push(n); nodeById[n.id] = n; childrenMap[n.id] = []; /* very minimal; re-render full? */ },
-    addEdge: function(e) { edges.push(e); if(!childrenMap[e[0]]) childrenMap[e[0]]=[]; childrenMap[e[0]].push(e[1]); fitCanvas(120); },
-    fit: function(padding=120) { fitCanvas(padding); }
+    nodes, edges,
+    addProblem: function (problem) { problems.push(problem); nodes.push({ id:problem.id, title:problem.title, sub:problem.sub, url:problem.url, type:'leaf', cluster:problem.cluster }); edges.push(['hub-'+problem.cluster, problem.id]); nodeMap[problem.id] = { id:problem.id, title:problem.title, sub:problem.sub, url:problem.url, type:'leaf', cluster:problem.cluster }; layoutCompute(); renderNodes(); drawEdges(); fitCanvas(90); },
+    focusNode: focusNode,
+    fit: ()=> fitCanvas(90)
   };
+
+  // kick off
+  boot();
 
 })();
