@@ -1,6 +1,6 @@
 (function () {
   window.Leetree = window.Leetree || {};
-  window.Leetree.initialized = false; // Flag to signal buildGraph completion
+  window.Leetree.initialized = false;
 
   const isMobile = window.innerWidth < 768;
 
@@ -105,7 +105,6 @@
       edges.push([target, p.id]);
     });
 
-    // Cross-connections for advanced web structure
     edges.push(['sliding-max', 'prefix-sum']);
     edges.push(['trapping-rain', 'sliding-max']);
     edges.push(['word-search', 'graph-dfs']);
@@ -118,7 +117,6 @@
       nodeMap[n.id] = n;
     });
 
-    // Signal that graph is built
     window.Leetree.initialized = true;
   }
 
@@ -142,6 +140,17 @@
     window.LeetreeRender.renderLegend();
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
+
+    // Setup animation toggle button
+    let animationButton = document.getElementById('use-animations');
+    if (!animationButton) {
+      animationButton = document.createElement('button');
+      animationButton.id = 'use-animations';
+      animationButton.textContent = 'Toggle Animations: ON';
+      document.body.appendChild(animationButton);
+    }
+    animationButton.onclick = () => window.Leetree.toggleAnimations();
+
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
@@ -160,9 +169,7 @@
   }
 
   function start() {
-    // Build graph first to ensure nodes, nodeMap, and clusters are ready
     buildGraph();
-    // Store globals for access in other modules
     window.Leetree.nodes = nodes;
     window.Leetree.edges = edges;
     window.Leetree.nodeMap = nodeMap;
@@ -180,7 +187,7 @@
     if (checkDependencies()) {
       boot();
     } else {
-      setTimeout(start, 50); // Retry every 50ms until dependencies are loaded
+      setTimeout(start, 50);
     }
   }
 
@@ -204,6 +211,15 @@
     document.getElementById('use-worker').click();
   };
 
-  // Start the app with dependency check
+  window.Leetree.toggleAnimations = function() {
+    animationsEnabled = !animationsEnabled;
+    window.Leetree.animationsEnabled = animationsEnabled;
+    const button = document.getElementById('use-animations');
+    if (button) {
+      button.textContent = `Toggle Animations: ${animationsEnabled ? 'ON' : 'OFF'}`;
+    }
+    window.dispatchEvent(new CustomEvent('leetree:animationsToggled', { detail: { animationsEnabled } }));
+  };
+
   start();
 })();
