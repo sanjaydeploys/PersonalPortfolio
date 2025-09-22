@@ -1,4 +1,4 @@
-/* leetree-worker.js remains the same */
+/* leetree-worker.js unchanged */
 
 self.addEventListener('message', (ev) => {
   const data = ev.data;
