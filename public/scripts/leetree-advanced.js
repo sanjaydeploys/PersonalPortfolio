@@ -1,14 +1,4 @@
-/* leetree-advanced.js - Robust updates:
-   - Mobile: Single vertical column for hubs and leaves for tree structure. Increased row spacing, reduced widths.
-   - Arrows: Enhanced Bezier with perpendicular lift for smoother curves. Precise start/end points (right of from, left of to for horizontal; adjust for vertical).
-   - Tooltip: Fixed with e.currentTarget, preventDefault on touchstart to avoid unwanted focus.
-   - Structured display: Root left, hubs in vertical succession right of root, leaves in vertical list right of hub for better organization.
-   - Highlight on hover: Highlight full path from root to node using cluster color for stroke.
-   - Robust arrows: drawEdges called on resize, drag end, and interval (every 500ms) if positions change.
-   - Removed force layout and export to focus on robustness.
-   - Added node drag redraw and fit.
-   - Maintained all core functionalities intact.
-*/
+
 
 (function () {
   const isMobile = window.innerWidth < 768;
@@ -45,7 +35,6 @@
     { id:'wordladder', title:'Word Ladder', sub:'LC127', url:'#', cluster:'graph' }
   ];
 
-  // Sort problems for organization
   problems.sort((a, b) => a.title.localeCompare(b.title));
 
   const svg = document.getElementById('map-svg');
@@ -63,9 +52,9 @@
   let worker = null;
   let workerEnabled = false;
 
-  const NODE_W = isMobile ? 120 : 200;
-  const NODE_H = isMobile ? 48 : 72;
-  const PADDING = isMobile ? 24 : 96;
+  const NODE_W = isMobile ? 110 : 200;
+  const NODE_H = isMobile ? 44 : 72;
+  const PADDING = isMobile ? 20 : 96;
 
   function buildGraph() {
     nodes.length = 0; edges.length = 0;
@@ -82,27 +71,34 @@
   }
 
   function computeGuidedPositions() {
-    const rootX = PADDING, rootY = PADDING + 100;
+    const rootX = PADDING, rootY = PADDING + 40;
     nodeMap['root'].x = rootX; nodeMap['root'].y = rootY;
 
-    // Hubs in vertical succession right of root
+    // Hubs successive vertically
     const hubIds = clusters.map(c => 'hub-'+c.id);
     const hubSpacing = isMobile ? 80 : 120;
-    hubIds.forEach((hid, i) => {
-      nodeMap[hid].x = rootX + (isMobile ? 240 : 320);
-      nodeMap[hid].y = rootY + i * hubSpacing;
+    let currentY = rootY + hubSpacing;
+    hubIds.forEach(hid => {
+      nodeMap[hid].x = rootX + (isMobile ? 200 : 320);
+      nodeMap[hid].y = currentY;
+      currentY += hubSpacing;
     });
 
-    // Leaves in vertical list right of hub
     const group = {};
     nodes.forEach(n => { if(n.type === 'leaf') { group[n.cluster] = group[n.cluster] || []; group[n.cluster].push(n.id); } });
     Object.keys(group).forEach(clusterId => {
       const hub = nodeMap['hub-'+clusterId];
       const list = group[clusterId];
-      const leafSpacing = isMobile ? 80 : 120;
+      const cols = isMobile ? 1 : 2; // Less cols on mobile for vertical spread
+      const rows = Math.ceil(list.length / cols);
+      const leafSpacingX = isMobile ? 180 : 240;
+      const leafSpacingY = isMobile ? 60 : 100;
+      let startY = hub.y - (rows - 1) * leafSpacingY / 2;
       list.forEach((id, idx) => {
-        nodeMap[id].x = hub.x + (isMobile ? 240 : 320);
-        nodeMap[id].y = hub.y + idx * leafSpacing;
+        const c = Math.floor(idx / rows);
+        const r = idx % rows;
+        nodeMap[id].x = hub.x + 160 + c * leafSpacingX;
+        nodeMap[id].y = startY + r * leafSpacingY;
       });
     });
   }
@@ -127,8 +123,8 @@
   }
 
   function deterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W + 12, NODE_H_LOCAL = NODE_H + 12;
-    const iters = 180;
+    const NODE_W_LOCAL = NODE_W + 10, NODE_H_LOCAL = NODE_H + 10;
+    const iters = 200;
     for(let it=0; it<iters; it++) {
       let moved = false;
       for(let i=0;i<arr.length;i++){
@@ -139,7 +135,7 @@
           const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
           if(overlapX <=0 || overlapY <= 0) continue;
-          const push = Math.min(overlapX, overlapY) / 2 + 6;
+          const push = Math.min(overlapX, overlapY) / 2 + 5;
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx*dx + dy*dy) || 1;
@@ -175,10 +171,10 @@
       const s = document.createElement('span'); s.className='node-sub'; s.textContent = n.sub || '';
       el.appendChild(t); el.appendChild(s);
 
-      el.addEventListener('mouseenter', (e)=> { highlightPathConnections(n.id, true); showTooltip(e, n); });
-      el.addEventListener('mouseleave', ()=> { highlightPathConnections(n.id, false); hideTooltip(); });
-      el.addEventListener('touchstart', (e)=> { e.preventDefault(); highlightPathConnections(n.id, true); showTooltip(e, n); });
-      el.addEventListener('touchend', (e)=> { highlightPathConnections(n.id, false); hideTooltip(); });
+      el.addEventListener('mouseenter', (e)=> { highlightPath(findPathTo(n.id), 0, true); showTooltip(e, n); });
+      el.addEventListener('mouseleave', ()=> { highlightPath(findPathTo(n.id), 0, false); hideTooltip(); });
+      el.addEventListener('touchstart', (e)=> { e.preventDefault(); highlightPath(findPathTo(n.id), 0, true); showTooltip(e, n); });
+      el.addEventListener('touchend', ()=> { highlightPath(findPathTo(n.id), 0, false); hideTooltip(); });
       el.addEventListener('click', (ev)=> {
         if(!n.url || n.url === '#') { ev.preventDefault(); focusNode(n.id); }
       });
@@ -218,23 +214,29 @@
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
-      let x1 = aRect.right - parentRect.left - 10; // Right of from
+      let x1 = aRect.left - parentRect.left + aRect.width / 2;
       let y1 = aRect.top - parentRect.top + aRect.height / 2;
-      let x2 = bRect.left - parentRect.left + 10; // Left of to
+      let x2 = bRect.left - parentRect.left + bRect.width / 2;
       let y2 = bRect.top - parentRect.top + bRect.height / 2;
 
       const dx = x2 - x1;
       const dy = y2 - y1;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        x1 = dx > 0 ? aRect.right - parentRect.left : aRect.left - parentRect.left;
+        x2 = dx > 0 ? bRect.left - parentRect.left : bRect.right - parentRect.left;
+      } else {
+        y1 = dy > 0 ? aRect.bottom - parentRect.top : aRect.top - parentRect.top;
+        y2 = dy > 0 ? bRect.top - parentRect.top : bRect.bottom - parentRect.top;
+      }
+
       const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      const normX = dx / dist;
-      const normY = dy / dist;
-      const perpX = -normY;
-      const perpY = normX;
       const lift = Math.max(20, dist * 0.2);
-      const cx1 = x1 + dx * 0.3 + perpX * lift * 0.6;
-      const cy1 = y1 + dy * 0.3 + perpY * lift * 0.6;
-      const cx2 = x1 + dx * 0.7 + perpX * lift * 0.4;
-      const cy2 = y1 + dy * 0.7 + perpY * lift * 0.4;
+      const perpX = -dy / dist * lift;
+      const perpY = dx / dist * lift;
+      const cx1 = x1 + dx * 0.3 + perpX * 0.6;
+      const cy1 = y1 + dy * 0.3 + perpY * 0.6;
+      const cx2 = x1 + dx * 0.7 + perpX * 0.4;
+      const cy2 = y1 + dy * 0.7 + perpY * 0.4;
       const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -243,6 +245,7 @@
       if(f.type === 'hub' || t.type === 'hub') path.classList.add('flow-glow');
       path.setAttribute('marker-end', 'url(#map-arrow)');
       path.dataset.from = from; path.dataset.to = to;
+      path.dataset.cluster = f.cluster || t.cluster;
       svg.appendChild(path);
 
       if(initial) {
@@ -260,27 +263,30 @@
     });
   }
 
-  function highlightPathConnections(nodeId, on) {
-    const path = findPathTo(nodeId);
+  function highlightPath(path, duration = 0, on = true) {
+    if (path.length < 2) return;
+    const clusterColor = nodeMap[path[path.length - 1]].cluster ? clusters.find(c => c.id === nodeMap[path[path.length - 1]].cluster).color : '#fff';
     const pairs = [];
-    for(let i=0; i<path.length-1; i++) pairs.push([path[i], path[i+1]]);
+    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i+1]]);
     const svgpaths = svg.querySelectorAll('path.flow-line');
     svgpaths.forEach(p => {
       const from = p.dataset.from, to = p.dataset.to;
       const match = pairs.some(pair => pair[0] === from && pair[1] === to);
-      if(match && on) {
-        p.classList.add('flow-highlight');
-        p.style.stroke = nodeMap[nodeId].cluster ? clusters.find(c => c.id === nodeMap[nodeId].cluster).color : '#fff';
-        p.style.opacity = '1';
-      } else if (match && !on) {
-        p.classList.remove('flow-highlight');
-        p.style.stroke = '';
-        p.style.opacity = '';
+      if (match) {
+        p.classList.toggle('flow-highlight', on);
+        p.style.stroke = on ? clusterColor : '';
+        p.style.opacity = on ? '1' : '';
+        if (on) p.classList.add('path-pulse');
+        else p.classList.remove('path-pulse');
       } else {
-        p.style.opacity = on ? '0.12' : '';
+        p.style.opacity = on ? '0.1' : '';
       }
     });
-    nodes.forEach(n => { if(n.el) n.el.style.opacity = (on && n.id !== nodeId) ? '0.6' : ''; });
+    if (duration > 0) {
+      setTimeout(() => {
+        svgpaths.forEach(p => { p.classList.remove('flow-highlight'); p.style.stroke = ''; p.style.opacity = ''; p.classList.remove('path-pulse'); });
+      }, duration);
+    }
   }
 
   const tooltip = document.createElement('div');
@@ -290,39 +296,56 @@
     tooltip.innerHTML = `<strong>${escapeHtml(n.title)}</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">${escapeHtml(n.sub||'')}</div>`;
     tooltip.style.display = 'block';
     const rect = e.currentTarget.getBoundingClientRect();
-    requestAnimationFrame(() => {
-      tooltip.style.left = `${rect.left + window.pageXOffset + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-      tooltip.style.top = `${rect.bottom + window.pageYOffset + 8}px`;
-    });
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let left = rect.left + window.pageXOffset + rect.width / 2 - tooltipRect.width / 2;
+    let top = rect.bottom + window.pageYOffset + 8;
+    if (left < 0) left = 0;
+    if (left + tooltipRect.width > window.innerWidth) left = window.innerWidth - tooltipRect.width;
+    if (top + tooltipRect.height > window.innerHeight + window.pageYOffset) top = rect.top + window.pageYOffset - tooltipRect.height - 8;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
   }
-  function hideTooltip(){ tooltip.style.display = 'none'; }
+  function hideTooltip() { tooltip.style.display = 'none'; }
 
   function fitCanvas(padding = PADDING) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(n => {
       if(!n.el) return;
-      minX = Math.min(minX, n.x);
-      minY = Math.min(minY, n.y);
-      maxX = Math.max(maxX, n.x + NODE_W);
-      maxY = Math.max(maxY, n.y + NODE_H);
+      const left = n.x || parseFloat(n.el.style.left || 0);
+      const top = n.y || parseFloat(n.el.style.top || 0);
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, left + (n.el.offsetWidth || NODE_W));
+      maxY = Math.max(maxY, top + (n.el.offsetHeight || NODE_H));
     });
-    if(minX === Infinity) { minX = 0; minY = 0; maxX = 1200; maxY = 800; }
-    const width = Math.ceil((maxX - minX) + padding*2);
-    const height = Math.ceil((maxY - minY) + padding*2);
-    container.style.width = width + 'px'; container.style.height = height + 'px';
-    svg.setAttribute('width', width); svg.setAttribute('height', height);
+    if(minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
+    const width = Math.ceil(maxX - minX + padding * 2);
+    const height = Math.ceil(maxY - minY + padding * 2);
+    container.style.width = width + 'px';
+    container.style.height = height + 'px';
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
 
-    const offsetX = padding - minX; const offsetY = padding - minY;
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
     nodes.forEach(n => {
-      n.x += offsetX;
-      n.y += offsetY;
+      if(!n.el) return;
+      n.x = (n.x || parseFloat(n.el.style.left || 0)) + offsetX;
+      n.y = (n.y || parseFloat(n.el.style.top || 0)) + offsetY;
       n.el.style.left = n.x + 'px';
       n.el.style.top = n.y + 'px';
     });
 
     drawEdges(false);
-    const stageW = stage.clientWidth, stageH = stage.clientHeight;
-    const fitScale = Math.min(1, (stageW - 40) / width, (stageH - 40) / height);
+
+    const headerHeight = document.querySelector('.map-header')?.offsetHeight || 60;
+    stage.style.height = (window.innerHeight - headerHeight - 80) + 'px';
+
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    const fitScaleW = (stageW - 10) / width;
+    const fitScaleH = (stageH - 10) / height;
+    const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
     stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
     stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
@@ -330,38 +353,18 @@
 
   function focusNode(nodeId) {
     const n = nodeMap[nodeId]; if(!n || !n.el) return;
-    const cx = n.x + NODE_W / 2;
-    const cy = n.y + NODE_H / 2;
+    const cx = n.x + (n.el.offsetWidth || NODE_W) / 2;
+    const cy = n.y + (n.el.offsetHeight || NODE_H) / 2;
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
-    stage.scrollTo({ left: Math.max(0, cx*scale - stage.clientWidth / 2), top: Math.max(0, cy*scale - stage.clientHeight / 2), behavior:'smooth' });
-    const path = findPathTo(nodeId);
-    highlightPath(path, 1400);
+    stage.scrollTo({ left: Math.max(0, cx * scale - stage.clientWidth / 2), top: Math.max(0, cy * scale - stage.clientHeight / 2), behavior:'smooth' });
+    highlightPath(findPathTo(nodeId), 1400);
   }
 
   function findPathTo(nodeId) {
-    const path = [];
-    let current = nodeId;
-    while (current) {
-      path.unshift(current);
-      const edge = edges.find(e => e[1] === current);
-      current = edge ? edge[0] : null;
-    }
-    return path;
-  }
-
-  function highlightPath(path, duration=1200) {
-    const pairs = [];
-    for(let i=0;i<path.length-1;i++) pairs.push([path[i], path[i+1]]);
-    const svgpaths = svg.querySelectorAll('path.flow-line');
-    svgpaths.forEach(p => {
-      const from = p.dataset.from, to = p.dataset.to;
-      const match = pairs.some(pair => pair[0] === from && pair[1] === to);
-      if(match) { p.classList.add('flow-highlight'); p.style.opacity = '1'; }
-      else p.style.opacity = '0.12';
-    });
-    setTimeout(()=> {
-      svgpaths.forEach(p => { p.classList.remove('flow-highlight'); p.style.opacity = ''; });
-    }, duration);
+    const n = nodeMap[nodeId]; if(!n) return [];
+    if(n.type === 'hub') return ['root', nodeId];
+    if(n.type === 'leaf') return ['root', 'hub-'+n.cluster, nodeId];
+    return ['root'];
   }
 
   let activeCluster = null;
@@ -468,50 +471,74 @@
       document.removeEventListener('touchmove', drag);
       document.removeEventListener('mouseup', endDrag);
       document.removeEventListener('touchend', endDrag);
-      fitCanvas(PADDING);
+      fitCanvas(PADDING); // Refit after drag
     }
   }
 
+  if (isMobile) {
+    let initialDistance = 0;
+    let initialScale = 1;
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialScale = scale;
+      }
+    }, { passive: false });
+    stage.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const distance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance)));
+      }
+    }, { passive: false });
+  }
+
   (function enablePan() {
-    let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
-    stage.addEventListener('mousedown', (e)=> { if(e.target.closest('.node-box')) return; isDown=true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
-    window.addEventListener('mouseup', ()=> { isDown=false; stage.classList.remove('dragging'); });
-    window.addEventListener('mousemove', (e)=> { if(!isDown) return; const x = e.pageX - stage.offsetLeft; const y = e.pageY - stage.offsetTop; stage.scrollLeft = scrollLeft + (startX - x); stage.scrollTop = scrollTop + (startY - y); });
-    stage.addEventListener('wheel', (e)=> { if(e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive:false });
+    let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+    stage.addEventListener('mousedown', (e) => { if (e.target.closest('.node-box')) return; isDown = true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
+    window.addEventListener('mouseup', () => { isDown = false; stage.classList.remove('dragging'); });
+    window.addEventListener('mousemove', (e) => { if (!isDown) return; const x = e.pageX - stage.offsetLeft; const y = e.pageY - stage.offsetTop; stage.scrollLeft = scrollLeft + (startX - x); stage.scrollTop = scrollTop + (startY - y); });
+    stage.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive: false });
   })();
 
   function setScale(s) { scale = s; container.style.transform = `scale(${scale})`; svg.style.transform = `scale(${scale})`; drawEdges(false); }
 
-  document.getElementById('zoom-in').addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
-  document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
-  document.getElementById('reset-view').addEventListener('click', ()=> { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if(n.el) n.el.style.opacity=''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity=''); activeCluster = null; });
+  document.getElementById('zoom-in').addEventListener('click', () => setScale(Math.min(1.6, scale + 0.12)));
+  document.getElementById('zoom-out').addEventListener('click', () => setScale(Math.max(0.5, scale - 0.12)));
+  document.getElementById('reset-view').addEventListener('click', () => { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if (n.el) n.el.style.opacity = ''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity = ''); activeCluster = null; });
 
   useWorkerBtn.addEventListener('click', () => {
-    if(!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
-    if(workerEnabled) {
+    if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
+    if (workerEnabled) {
       workerEnabled = false;
       useWorkerBtn.textContent = 'Use Worker';
-      if(worker) { worker.terminate(); worker = null; }
+      if (worker) { worker.terminate(); worker = null; }
     } else {
       try {
         worker = new Worker('/scripts/leetree-worker.js');
         workerEnabled = true; useWorkerBtn.textContent = 'Worker ON';
-        worker.postMessage({ type:'init' });
-      } catch(err) { console.error('Worker spawn failed', err); alert('Failed to start worker'); workerEnabled = false; useWorkerBtn.textContent = 'Use Worker'; }
+        worker.postMessage({ type: 'init' });
+      } catch (err) { console.error('Worker spawn failed', err); alert('Failed to start worker'); workerEnabled = false; useWorkerBtn.textContent = 'Use Worker'; }
     }
   });
 
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-  function hexToRgba(hex, a=1) { const h=hex.replace('#',''); const bi=parseInt(h,16); return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`; }
+  function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function hexToRgba(hex, a = 1) { const h = hex.replace('#', ''); const bi = parseInt(h, 16); return `rgba(${(bi >> 16) & 255},${(bi >> 8) & 255},${bi & 255},${a})`; }
 
   function boot() {
     buildGraph();
     computeGuidedPositions();
     renderNodes();
     setupSvgDefs();
-    resolveCollisionsAndLayout(()=> {
+    resolveCollisionsAndLayout(() => {
       nodes.forEach(n => {
-        if(!n.el) return;
+        if (!n.el) return;
         n.el.style.left = (n.x || 0) + 'px';
         n.el.style.top = (n.y || 0) + 'px';
       });
@@ -522,25 +549,23 @@
     initSearch();
     renderProblemButtons();
     let resizeTimer;
-    window.addEventListener('resize', ()=> {
+    window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(()=> { computeGuidedPositions(); fitCanvas(PADDING); drawEdges(false); }, 200);
+      resizeTimer = setTimeout(() => { computeGuidedPositions(); resolveCollisionsAndLayout(() => { fitCanvas(PADDING); drawEdges(false); }); }, 200);
     });
-    // Interval for robust redraw
-    setInterval(()=> { drawEdges(false); }, 500);
   }
 
   boot();
 
   window.Leetree = {
     focusNode: focusNode,
-    addProblem: function(p) {
-      problems.push(p); nodes.push({ id:p.id, title:p.title, sub:p.sub, url:p.url || '#', type:'leaf', cluster:p.cluster}); edges.push(['hub-'+p.cluster, p.id]); nodeMap[p.id] = nodes.find(n=>n.id===p.id);
+    addProblem: function (p) {
+      problems.push(p); nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster }); edges.push(['hub-' + p.cluster, p.id]); nodeMap[p.id] = nodes.find(n => n.id === p.id);
       computeGuidedPositions();
-      resolveCollisionsAndLayout(()=> {
+      resolveCollisionsAndLayout(() => {
         renderNodes(); setupSvgDefs(); drawEdges(true); fitCanvas(PADDING); renderProblemButtons();
       });
     },
-    toggleWorker: function(enable) { useWorkerBtn.click(); }
+    toggleWorker: function (enable) { useWorkerBtn.click(); }
   };
 })();
