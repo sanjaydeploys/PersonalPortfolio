@@ -1,5 +1,3 @@
-// leetree-core.js - Core graph building, data, and main boot logic
-
 (function () {
   window.Leetree = window.Leetree || {};
 
@@ -122,35 +120,59 @@
 
   function boot() {
     buildGraph();
-    LeetreeLayout.computeGuidedPositions();
-    LeetreeRender.renderNodes();
-    LeetreeRender.setupSvgDefs();
-    LeetreeLayout.resolveCollisionsAndLayout(() => {
+    window.LeetreeLayout.computeGuidedPositions();
+    window.LeetreeRender.renderNodes();
+    window.LeetreeRender.setupSvgDefs();
+    window.LeetreeLayout.resolveCollisionsAndLayout(() => {
       nodes.forEach((n) => {
         if (!n.el) return;
         n.el.style.left = (n.x || 0) + 'px';
         n.el.style.top = (n.y || 0) + 'px';
       });
-      LeetreeRender.drawEdges(true);
-      LeetreeUtils.fitCanvas(PADDING);
+      window.LeetreeRender.drawEdges(true);
+      window.LeetreeUtils.fitCanvas(PADDING);
     });
-    LeetreeRender.renderLegend();
-    LeetreeUtils.initSearch();
-    LeetreeRender.renderProblemButtons();
+    window.LeetreeRender.renderLegend();
+    window.LeetreeUtils.initSearch();
+    window.LeetreeRender.renderProblemButtons();
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        LeetreeLayout.computeGuidedPositions();
-        LeetreeLayout.resolveCollisionsAndLayout(() => {
-          LeetreeUtils.fitCanvas(PADDING);
-          LeetreeRender.drawEdges(false);
+        window.LeetreeLayout.computeGuidedPositions();
+        window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+          window.LeetreeUtils.fitCanvas(PADDING);
+          window.LeetreeRender.drawEdges(false);
         });
       }, 200);
     });
   }
 
-  boot();
+  function checkDependencies() {
+    return window.LeetreeLayout && window.LeetreeRender && window.LeetreeUtils;
+  }
+
+  function start() {
+    if (checkDependencies()) {
+      // Store globals for access in other modules
+      window.Leetree.nodes = nodes;
+      window.Leetree.edges = edges;
+      window.Leetree.nodeMap = nodeMap;
+      window.Leetree.clusters = clusters;
+      window.Leetree.problems = problems;
+      window.Leetree.scale = scale;
+      window.Leetree.worker = worker;
+      window.Leetree.workerEnabled = workerEnabled;
+      window.Leetree.animationsEnabled = animationsEnabled;
+      window.Leetree.NODE_W = NODE_W;
+      window.Leetree.NODE_H = NODE_H;
+      window.Leetree.PADDING = PADDING;
+      window.Leetree.isMobile = isMobile;
+      boot();
+    } else {
+      setTimeout(start, 50); // Retry every 50ms until dependencies are loaded
+    }
+  }
 
   window.Leetree.addProblem = function(p) {
     problems.push(p);
@@ -158,17 +180,20 @@
     const target = p.subcluster ? p.subcluster : 'hub-' + p.cluster;
     edges.push([target, p.id]);
     nodeMap[p.id] = nodes.find((n) => n.id === p.id);
-    LeetreeLayout.computeGuidedPositions();
-    LeetreeLayout.resolveCollisionsAndLayout(() => {
-      LeetreeRender.renderNodes();
-      LeetreeRender.setupSvgDefs();
-      LeetreeRender.drawEdges(true);
-      LeetreeUtils.fitCanvas(PADDING);
-      LeetreeRender.renderProblemButtons();
+    window.LeetreeLayout.computeGuidedPositions();
+    window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+      window.LeetreeRender.renderNodes();
+      window.LeetreeRender.setupSvgDefs();
+      window.LeetreeRender.drawEdges(true);
+      window.LeetreeUtils.fitCanvas(PADDING);
+      window.LeetreeRender.renderProblemButtons();
     });
   };
 
   window.Leetree.toggleWorker = function(enable) {
     document.getElementById('use-worker').click();
   };
+
+  // Start the app with dependency check
+  start();
 })();
