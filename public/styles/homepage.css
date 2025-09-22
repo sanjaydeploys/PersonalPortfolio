@@ -134,71 +134,56 @@
 
 
 
-.leetcode-3d-tree {
-  color: white;
-  font-family: monospace;
-  padding: 1rem;
-  perspective: 1000px; /* 3D perspective */
+#leetcode-3d-flow { color: #fff; font-family: Inter, system-ui, monospace; padding: 20px; }
+#leetcode-3d-flow .tree-title { font-size: 22px; margin-bottom: 10px; color: #fff; }
+#tree-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; }
+#tree-toolbar .hint { font-size:12px; opacity:0.85; }
+#tree-toolbar .controls button { background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:6px; cursor:pointer; }
+#tree-stage { position:relative; width:100%; height:520px; overflow:auto; border-radius:8px; outline: none; }
+.tree-svg { position:absolute; left:0; top:0; width:4000px; height:1600px; pointer-events:none; } /* big canvas for arrows */
+.tree-nodes { position:absolute; left:0; top:0; width:4000px; height:1600px; } /* overlay container */
+
+.leaf-node, .intermediate-node, .root-node {
+  position:absolute;
+  min-width:180px;
+  max-width:220px;
+  padding:10px 12px;
+  border-radius:10px;
+  text-decoration:none;
+  color:#fff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  cursor:pointer;
+  font-weight:600;
 }
 
-.tree-root {
-  display: flex;
-  justify-content: flex-start;
-  position: relative;
-  transform-style: preserve-3d;
+/* visual depth: root bigger and centered */
+.root-node { min-width:220px; font-size:16px; left:1000px; top:40px; padding:14px 16px; transform: translateZ(40px); }
+
+/* intermediate / leaf nodes styling */
+.intermediate-node:hover, .leaf-node:hover { transform: translateY(-6px) translateZ(30px) scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.7); }
+.node-title { display:block; font-size:13px; color:#fff; }
+.node-sub { display:block; font-size:12px; opacity:0.8; margin-top:6px; font-weight:400; }
+
+/* arrows animation (stroke-dashoffset) */
+.flow-line { stroke: rgba(255,255,255,0.16); stroke-width:2.2; fill:none; stroke-linecap:round; }
+.flow-arrow { stroke: rgba(255,255,255,0.32); stroke-width:2.2; fill:none; stroke-linecap:round; }
+.flow-anim { stroke-dasharray: 240; stroke-dashoffset: 240; animation: dash 2.4s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: 0; } }
+
+/* tooltip */
+.node-tooltip {
+  position:absolute; min-width:220px; padding:8px 10px; border-radius:8px; background: rgba(0,0,0,0.75); color:#fff; font-size:12px; z-index:40; pointer-events:none; display:none;
+  border:1px solid rgba(255,255,255,0.06);
 }
 
-.node {
-  margin: 2rem;
-  position: relative;
-  display: inline-block;
-  transform-style: preserve-3d;
-}
+/* ascii guidance */
+.ascii-guidance { margin-top:18px; background:transparent; border-left:3px solid rgba(255,255,255,0.06); padding:12px; white-space:pre; font-family:monospace; color:#fff; font-size:12px; }
 
-.node-link {
-  padding: 4px 8px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 5px;
-  text-decoration: none;
-  color: white;
-  display: inline-block;
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-
-.node-link:hover {
-  background: rgba(255,255,255,0.3);
-  transform: translateZ(20px) scale(1.1);
-}
-
-/* Branches (diagonal lines) */
-.branch {
-  position: relative;
-  margin-left: 2rem;
-  margin-top: 1rem;
-}
-
-.branch::before {
-  content: "";
-  position: absolute;
-  top: -1rem;
-  left: -2rem;
-  width: 2rem;
-  height: 2rem;
-  border-left: 1px solid rgba(255,255,255,0.3);
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  transform: rotate(-45deg);
-}
-
-.level-2 .branch::before { transform: rotate(-35deg); }
-.level-3 .branch::before { transform: rotate(-25deg); }
-.level-4 .branch::before { transform: rotate(-15deg); }
-
-.ascii-guidance {
-  margin-top: 2rem;
-  white-space: pre;
-  font-size: 0.85rem;
-}
-
+/* responsive */
+@media (max-width:900px) { #tree-stage { height:420px; } .root-node { left:520px; } .leaf-node { min-width:150px; } }
 
 
 .social-sticky-container {
