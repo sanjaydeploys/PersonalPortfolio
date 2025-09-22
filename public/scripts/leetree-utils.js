@@ -295,7 +295,7 @@ window.LeetreeUtils = (function () {
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
-        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance)));
+        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
       }
     }, { passive: false });
   }
