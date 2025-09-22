@@ -132,104 +132,76 @@
     z-index: 1001;
   }
 
-/* leetree-advanced.css - Updated with mobile optimizations:
-   - Reduced sizes further for mobile.
-   - Adjusted paddings/margins to minimize white space.
-   - Tooltip visibility and smaller size on mobile.
-   - Added styles for new buttons.
-   - Autocomplete overlay refined.
+/* leetree-advanced.css - Updated for robustness:
+   - Mobile: Smaller sizes, vertical alignment.
+   - Highlight: Added stroke transition.
+   - No changes to remove, maintained.
 */
 
-.leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:12px 6px; margin:0; }
-.map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
-.map-title { font-size:18px; margin:0; font-weight:700; color:#fff; }
-.map-controls { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
-.map-search, .map-search:focus { min-width:220px; padding:5px 7px; border-radius:5px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
-.control-buttons { display:flex; gap:3px; flex-wrap:wrap; }
-.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:3px 6px; border-radius:5px; cursor:pointer; font-size:11px; }
+.leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px; }
+.map-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.map-title { font-size:20px; margin:0; font-weight:700; color:#fff; }
+.map-controls { display:flex; gap:10px; align-items:center; }
+.map-search, .map-search:focus { min-width:300px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
+.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
 
 /* Stage */
-.map-stage { position:relative; height:520px; border-radius:8px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y pinch-zoom; }
+.map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
 .map-svg { position:absolute; left:0; top:0; pointer-events:none; transition: transform 180ms ease; }
 .map-nodes { position:absolute; left:0; top:0; transition: transform 180ms ease; }
 
 /* Node */
-.node-box { position:absolute; display:block; min-width:150px; padding:8px 10px 8px 22px; border-radius:8px; color:#fff; text-decoration:none; box-shadow:0 6px 20px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); font-weight:700; cursor:grab; transition: transform 160ms ease, box-shadow 160ms ease; user-select:none; }
-.node-title { display:block; font-size:12px; }
-.node-sub { display:block; font-size:10px; opacity:0.88; margin-top:4px; font-weight:600; color:rgba(255,255,255,0.9); }
+.node-box { position:absolute; display:block; min-width:160px; padding:10px 12px; border-radius:10px; color:#fff; text-decoration:none; box-shadow:0 8px 26px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); font-weight:700; cursor:pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
+.node-title { display:block; font-size:13px; }
+.node-sub { display:block; font-size:11px; opacity:0.88; margin-top:6px; font-weight:600; color:rgba(255,255,255,0.9); }
 
 /* sizes */
-.root-node { min-width:200px; padding:12px 14px 12px 26px; font-size:14px; }
-.intermediate-node { min-width:160px; padding:10px 12px 10px 24px; }
-.leaf-node { min-width:140px; padding:8px 10px 8px 22px; }
+.root-node { min-width:220px; padding:14px; font-size:15px; }
+.intermediate-node { min-width:180px; padding:12px; }
+.leaf-node { min-width:150px; padding:10px; }
 
 /* hover lift */
-.node-box:hover { transform: translateY(-6px) scale(1.02); box-shadow:0 14px 40px rgba(0,0,0,0.75); }
+.node-box:hover { transform: translateY(-8px) scale(1.03); box-shadow:0 18px 50px rgba(0,0,0,0.75); }
 
 /* accent */
-.cluster-accent { position:absolute; left:6px; top:6px; width:5px; height:calc(100% - 12px); border-radius:3px; }
+.cluster-accent { position:absolute; left:8px; top:8px; width:8px; height:36px; border-radius:4px; }
 
 /* edges */
-.flow-line { stroke: rgba(255,255,255,0.14); stroke-width:2.2; fill:none; stroke-linecap:round; transition: stroke 160ms, opacity 160ms; }
-.flow-glow { filter: url(#map-glow); stroke: rgba(255,255,255,0.22); stroke-width:2.8; }
+.flow-line { stroke: rgba(255,255,255,0.14); stroke-width:2.6; fill:none; stroke-linecap:round; transition: stroke 160ms, opacity 160ms; }
+.flow-glow { filter: url(#map-glow); stroke: rgba(255,255,255,0.22); stroke-width:3.2; }
 
 /* initial draw and continuous motion */
 .path-draw { transition: stroke-dashoffset 900ms cubic-bezier(.2,.9,.2,1); }
-.flow-anim { stroke-dasharray: 180; animation: map-dash 2.4s linear infinite; }
-@keyframes map-dash { to { stroke-dashoffset: -180; } }
+.flow-anim { stroke-dasharray: 200; animation: map-dash 2.6s linear infinite; }
+@keyframes map-dash { to { stroke-dashoffset: -200; } }
 
 /* highlight */
-.flow-highlight { stroke: rgba(255,255,255,0.96) !important; stroke-width:2.8 !important; opacity:1 !important; }
+.flow-highlight { stroke-width:3.2 !important; opacity:1 !important; transition: stroke 200ms ease; }
 
 /* tooltip */
-.node-tooltip { position:fixed; z-index:9999; padding:5px 7px; border-radius:5px; background:rgba(0,0,0,0.82); color:#fff; font-size:10px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 5px 20px rgba(0,0,0,0.6); max-width:180px; }
+.node-tooltip { position:fixed; z-index:9999; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.82); color:#fff; font-size:12px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
 
 /* legend & actions */
-.map-legend { margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; align-items:center; color:#fff; }
-.legend-item { display:flex; align-items:center; gap:5px; padding:3px 5px; border-radius:5px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; font-size:11px; }
-.legend-swatch { width:11px; height:11px; border-radius:3px; }
+.map-legend { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:#fff; }
+.legend-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; }
+.legend-swatch { width:14px; height:14px; border-radius:4px; }
 
 /* action buttons list */
-.map-actions { margin-top:8px; }
-.actions-header { margin-bottom:5px; font-size:11px; }
-.problem-buttons { display:flex; gap:5px; flex-wrap:wrap; }
-.problem-buttons button { padding:3px 5px; border-radius:5px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; font-size:10px; }
+.map-actions { margin-top:12px; }
+.actions-header { margin-bottom:8px; font-size:13px; }
+.problem-buttons { display:flex; gap:8px; flex-wrap:wrap; }
+.problem-buttons button { padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; }
 
 /* ASCII guide */
-.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:10px; margin-top:8px; }
-
-/* autocomplete overlay */
-.autocomplete-items { background:rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:5px; max-height:220px; overflow-y:auto; z-index:1000; }
-.autocomplete-items div { padding:6px 8px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.06); font-size:11px; }
-.autocomplete-items div:hover, .autocomplete-active { background:rgba(255,255,255,0.08); }
+.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:12px; margin-top:12px; }
 
 /* responsive */
-@media (max-width: 768px) {
-  .leetcode-3d-map { padding:6px; }
-  .map-header { flex-direction:column; align-items:flex-start; gap:4px; }
-  .map-title { font-size:16px; }
-  .map-search { min-width:100%; margin-bottom:6px; padding:4px 6px; font-size:12px; }
-  .control-buttons { justify-content:center; width:100%; gap:2px; }
-  .control-buttons button { padding:2px 4px; font-size:10px; }
-  .map-stage { height:340px; }
-  .node-box { min-width:100px; padding:4px 6px 4px 16px; }
-  .root-node { min-width:140px; padding:6px 8px 6px 20px; font-size:13px; }
-  .intermediate-node { min-width:120px; padding:5px 7px 5px 18px; }
-  .leaf-node { min-width:90px; padding:4px 6px 4px 16px; }
-  .node-title { font-size:10px; }
-  .node-sub { font-size:8px; margin-top:2px; }
-  .cluster-accent { left:4px; top:4px; width:3px; height:calc(100% - 8px); }
-  .map-legend { gap:3px; }
-  .legend-item { padding:2px 4px; font-size:10px; }
-  .legend-swatch { width:9px; height:9px; }
-  .map-actions { margin-top:6px; }
-  .actions-header { font-size:10px; }
-  .problem-buttons button { padding:2px 4px; font-size:9px; }
-  .map-ascii { font-size:9px; }
-  .autocomplete-items { max-height:180px; }
-  .autocomplete-items div { padding:4px 6px; font-size:10px; }
-  .node-tooltip { padding:3px 5px; font-size:9px; max-width:140px; }
+@media (max-width: 980px) {
+  .map-search { min-width:140px; }
+  .map-stage { height:420px; }
+  .node-box { min-width:130px; }
 }
+
 .social-sticky-container {
   position: fixed;
   bottom: 1.5rem;
