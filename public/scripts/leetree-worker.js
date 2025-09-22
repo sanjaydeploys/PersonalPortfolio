@@ -1,4 +1,4 @@
-/* leetree-worker.js - Updated to enhanced deterministic resolve, no full force for organization */
+/* leetree-worker.js unchanged, but added more iterations for better resolution */
 
 self.addEventListener('message', (ev) => {
   const data = ev.data;
@@ -9,34 +9,37 @@ self.addEventListener('message', (ev) => {
   }
   if(data.type === 'layout') {
     const arr = data.nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
-    const NODE_W_LOCAL = 200 + 20;
-    const NODE_H_LOCAL = 72 + 20;
-    const iters = 500;
-    const directions = [[1,0], [0,1], [-1,0], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]];
-    for (let it = 0; it < iters; it++) {
+    const NODE_W = 200, NODE_H = 72;
+    const ITER = 300; // Further increased for more nodes
+    for(let iter=0; iter<ITER; iter++) {
       let moved = false;
-      for (let i = 0; i < arr.length; i++) {
+      for(let i=0;i<arr.length;i++) {
         const a = arr[i];
-        for (let j = i + 1; j < arr.length; j++) {
+        for(let j=i+1;j<arr.length;j++) {
           const b = arr[j];
-          if (a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
-          const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
-          const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
-          if (overlapX <= 0 || overlapY <= 0) continue;
-          const push = Math.min(overlapX, overlapY) / 2 + 8;
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const dirIdx = Math.floor(Math.random() * directions.length);
-          const [dirX, dirY] = directions[dirIdx];
-          a.x += (dx / dist + dirX * 0.2) * push;
-          a.y += (dy / dist + dirY * 0.2) * push;
-          b.x -= (dx / dist + dirX * 0.2) * push;
-          b.y -= (dy / dist + dirY * 0.2) * push;
+          if(a.x + NODE_W <= b.x || b.x + NODE_W <= a.x || a.y + NODE_H <= b.y || b.y + NODE_H <= a.y) continue;
+          const overlapX = Math.min(a.x + NODE_W, b.x + NODE_W) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + NODE_H, b.y + NODE_H) - Math.max(a.y, b.y);
+          if(overlapX <= 0 || overlapY <= 0) continue;
+          if(overlapX < overlapY) {
+            const push = overlapX/2 + 6;
+            if(a.x < b.x) { a.x -= push; b.x += push; } else { a.x += push; b.x -= push; }
+          } else {
+            const push = overlapY/2 + 6;
+            if(a.y < b.y) { a.y -= push; b.y += push; } else { a.y += push; b.y -= push; }
+          }
           moved = true;
         }
       }
-      if (!moved) break;
+      if(!moved) break;
+    }
+    for(let i=0;i<arr.length;i++){
+      for(let j=i+1;j<arr.length;j++){
+        const a=arr[i], b=arr[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const dist2 = dx*dx+dy*dy;
+        if(dist2<100){ a.x += (Math.random()-0.5)*8; a.y += (Math.random()-0.5)*8; }
+      }
     }
     self.postMessage({ type:'layout', nodes: arr });
   }
