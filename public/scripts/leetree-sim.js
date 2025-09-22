@@ -10,15 +10,20 @@
     function init() {
       canvas = document.createElement('canvas');
       canvas.id = 'leetree-sim-canvas';
-      canvas.style.position = 'absolute';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
+      canvas.style.position = 'fixed';
+      canvas.style.top = '50px';
+      canvas.style.left = '50%';
+      canvas.style.transform = 'translateX(-50%)';
       canvas.style.zIndex = '1000';
+      canvas.style.border = '1px solid #000';
+      canvas.style.background = '#fff';
       canvas.style.display = 'none';
       document.body.appendChild(canvas);
       ctx = canvas.getContext('2d');
-      setupNodeClickHandlers();
+
       setupControls();
+      setupNodeClickHandlers();
+
       window.addEventListener('leetree:animationsToggled', (e) => {
         if (currentSim && !e.detail.animationsEnabled) {
           pauseSimulation();
@@ -27,17 +32,34 @@
     }
 
     function setupNodeClickHandlers() {
-      window.Leetree.nodes.forEach((node) => {
-        if (node.type !== 'leaf' || !simulations[node.id]) return;
-        const el = node.el;
-        if (el) {
-          el.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'A') {
-              startSimulation(node.id);
-            }
-          });
+      let attempts = 0;
+      const maxAttempts = 20;
+      function trySetup() {
+        let ready = true;
+        window.Leetree.nodes.forEach((node) => {
+          if (node.type !== 'leaf' || !simulations[node.id]) return;
+          if (!node.el) {
+            ready = false;
+            return;
+          }
+          const el = node.el;
+          if (!el.dataset.clickHandlerSet) {
+            el.addEventListener('click', (e) => {
+              if (e.target.tagName !== 'A') {
+                console.log(`Starting simulation for ${node.id}`);
+                startSimulation(node.id);
+              }
+            });
+            el.dataset.clickHandlerSet = 'true';
+          }
+        });
+        if (!ready && attempts < maxAttempts) {
+          attempts++;
+          console.log(`Retrying node click handlers, attempt ${attempts}`);
+          setTimeout(trySetup, 100);
         }
-      });
+      }
+      trySetup();
     }
 
     function setupControls() {
@@ -47,7 +69,11 @@
       controls.style.bottom = '20px';
       controls.style.left = '50%';
       controls.style.transform = 'translateX(-50%)';
+      controls.style.zIndex = '1000';
       controls.style.display = 'none';
+      controls.style.background = '#f0f0f0';
+      controls.style.padding = '10px';
+      controls.style.borderRadius = '5px';
       controls.innerHTML = `
         <button id="sim-play-pause">Play</button>
         <button id="sim-step-forward">Step Forward</button>
@@ -63,13 +89,17 @@
     }
 
     function startSimulation(problemId) {
-      if (!simulations[problemId]) return;
+      if (!simulations[problemId]) {
+        console.warn(`No simulation defined for ${problemId}`);
+        return;
+      }
       currentSim = { id: problemId, state: simulations[problemId].init() };
-      canvas.width = isMobile ? window.innerWidth - 20 : 800;
+      canvas.width = isMobile ? window.innerWidth - 40 : 800;
       canvas.height = isMobile ? 200 : 300;
       canvas.style.display = 'block';
       document.getElementById('leetree-sim-controls').style.display = 'block';
       simulations[problemId].render(currentSim.state);
+      console.log(`Simulation started for ${problemId}`);
     }
 
     function pauseSimulation() {
@@ -84,14 +114,12 @@
       if (!currentSim) return;
       if (currentSim.state.interval) {
         pauseSimulation();
-      } else {
-        if (animationsEnabled()) {
-          currentSim.state.interval = setInterval(() => {
-            simulations[currentSim.id].step(currentSim.state);
-            simulations[currentSim.id].render(currentSim.state);
-          }, 1000);
-          document.getElementById('sim-play-pause').textContent = 'Pause';
-        }
+      } else if (animationsEnabled()) {
+        currentSim.state.interval = setInterval(() => {
+          simulations[currentSim.id].step(currentSim.state);
+          simulations[currentSim.id].render(currentSim.state);
+        }, 1000);
+        document.getElementById('sim-play-pause').textContent = 'Pause';
       }
     }
 
@@ -122,7 +150,7 @@
     // Simulation for Container With Most Water (LC11)
     simulations['container-water'] = {
       init: () => ({
-        heights: [1, 8, 6, 2, 5, 4, 8, 3, 7], // Example input
+        heights: [1, 8, 6, 2, 5, 4, 8, 3, 7],
         left: 0,
         right: 8,
         maxArea: 0,
@@ -152,14 +180,14 @@
           state.left = lastStep.left;
           state.right = lastStep.right;
           state.currentArea = lastStep.currentArea;
-          state.maxArea = Math.max(...state.stepHistory.map(s => s.currentArea), state.currentArea);
+          state.maxArea = Math.max(...state.stepHistory.map(s => s.currentArea).concat(state.currentArea));
         }
       },
       render: (state) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const barWidth = canvas.width / state.heights.length;
         const maxHeight = Math.max(...state.heights);
-        const scaleY = canvas.height / maxHeight;
+        const scaleY = (canvas.height - 20) / maxHeight;
 
         // Draw bars
         state.heights.forEach((h, i) => {
