@@ -1,20 +1,14 @@
-/* leetree-worker.js
-   Off-main-thread layout/collision resolver.
-   Receives message: { type:'layout', nodes: [{id,x,y}, ...] }
-   Replies: { type:'layout', nodes: [{id,x,y}, ...] }
-*/
+/* leetree-worker.js remains the same */
 
 self.addEventListener('message', (ev) => {
   const data = ev.data;
   if(!data) return;
   if(data.type === 'init') {
-    // no-op init acknowledgment
     self.postMessage({ type:'inited' });
     return;
   }
   if(data.type === 'layout') {
     const arr = data.nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
-    // constants
     const NODE_W = 200, NODE_H = 72;
     const ITER = 180;
     for(let iter=0; iter<ITER; iter++) {
@@ -39,7 +33,6 @@ self.addEventListener('message', (ev) => {
       }
       if(!moved) break;
     }
-    // small relaxation: nudge apart slightly if still close
     for(let i=0;i<arr.length;i++){
       for(let j=i+1;j<arr.length;j++){
         const a=arr[i], b=arr[j];
@@ -48,7 +41,6 @@ self.addEventListener('message', (ev) => {
         if(dist2===0){ a.x += (Math.random()-0.5)*4; a.y += (Math.random()-0.5)*4; }
       }
     }
-    // send back
     self.postMessage({ type:'layout', nodes: arr });
   }
 });
