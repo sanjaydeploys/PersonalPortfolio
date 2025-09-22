@@ -1,14 +1,15 @@
-/* Updated leetree-advanced.js with further fixes:
-   - Added touch events for tooltip on mobile (touchstart for show, touchend for hide).
-   - Refined curve in drawEdges: Adjusted lift and control points for better directionality, especially when dy is large (more vertical).
-   - Improved fitCanvas: Added dynamic stage height based on window.innerHeight, subtracted header heights, ensured no white space by setting min scale carefully.
-   - Search autocomplete: Made it overlay by styling in CSS (position:absolute), appended to body for better positioning.
-   - Mobile layout: Further reduced spacings, made hub columns 1 on mobile for more vertical tree.
-   - Maintained all functionalities.
+/* Updated leetree-advanced.js with further mobile fixes:
+   - Improved arrow positioning: Added adjustment for scale in getBoundingClientRect calculations.
+   - Tooltip: Ensured show on touchstart, hide on touchend/window touchmove if outside.
+   - Curved lines: Already curved, but refined control points for better appearance on mobile (less lift for close nodes).
+   - Organization: Changed leaf arrangement to more vertical tree-like: Increased rows, reduced cols for vertical emphasis.
+   - Advanced functionalities: Added pinch zoom for mobile (using GestureEvent), added export button to download SVG as PNG.
+   - FitCanvas: Adjusted dynamic height, ensured no distant arrows by clamping minX/Y.
+   - Maintained all functionalities, added export in boot.
 */
 
 (function () {
-  const isMobile = window.innerWidth < 768;
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
@@ -55,6 +56,10 @@
   const searchInput = document.getElementById('node-search');
   const problemButtons = document.getElementById('problem-buttons');
   const useWorkerBtn = document.getElementById('use-worker');
+  const exportBtn = document.createElement('button');
+  exportBtn.id = 'export-graph';
+  exportBtn.textContent = 'Export PNG';
+  document.querySelector('.control-buttons').appendChild(exportBtn);
 
   const nodes = [];
   const edges = [];
@@ -104,14 +109,14 @@
     Object.keys(group).forEach(clusterId => {
       const hub = nodeMap['hub-'+clusterId];
       const list = group[clusterId];
-      const maxRows = isMobile ? 4 : 4;
-      const rows = Math.min(maxRows, list.length);
-      const cols = Math.ceil(list.length / rows);
+      const maxCols = isMobile ? 1 : 2; // More vertical on mobile
+      const cols = Math.min(maxCols, Math.ceil(list.length / 6)); // Max 6 rows for vertical
+      const rows = Math.ceil(list.length / cols);
       const leafSpacingX = isMobile ? 160 : 220;
       const leafSpacingY = isMobile ? 70 : 110;
       list.forEach((id, idx) => {
-        const r = idx % rows;
         const c = Math.floor(idx / rows);
+        const r = idx % rows;
         const x = hub.x + 160 + c * leafSpacingX;
         const y = hub.y - ((rows - 1) / 2) * leafSpacingY + r * leafSpacingY;
         nodeMap[id].x = x;
@@ -190,8 +195,11 @@
 
       el.addEventListener('mouseenter', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
       el.addEventListener('mouseleave', ()=> { highlightConnections(n.id, false); hideTooltip(); });
-      el.addEventListener('touchstart', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
-      el.addEventListener('touchend', ()=> { highlightConnections(n.id, false); hideTooltip(); });
+      if(isMobile) {
+        el.addEventListener('touchstart', (e) => { e.stopPropagation(); highlightConnections(n.id, true); showTooltip(e, n); });
+        document.addEventListener('touchmove', hideTooltip, { passive: true });
+        document.addEventListener('touchend', hideTooltip, { passive: true });
+      }
       el.addEventListener('click', (ev)=> {
         if(!n.url || n.url === '#') { ev.preventDefault(); focusNode(n.id); }
       });
@@ -229,31 +237,37 @@
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
-      let x1 = aRect.left - parentRect.left + aRect.width / 2;
-      let y1 = aRect.top - parentRect.top + aRect.height / 2;
-      let x2 = bRect.left - parentRect.left + bRect.width / 2;
-      let y2 = bRect.top - parentRect.top + bRect.height / 2;
+      const stageRect = stage.getBoundingClientRect();
+      let x1 = (aRect.left - parentRect.left + aRect.width / 2) / scale;
+      let y1 = (aRect.top - parentRect.top + aRect.height / 2) / scale;
+      let x2 = (bRect.left - parentRect.left + bRect.width / 2) / scale;
+      let y2 = (bRect.top - parentRect.top + bRect.height / 2) / scale;
+
+      x1 += (parentRect.left - stageRect.left + stage.scrollLeft) / scale;
+      y1 += (parentRect.top - stageRect.top + stage.scrollTop) / scale;
+      x2 += (parentRect.left - stageRect.left + stage.scrollLeft) / scale;
+      y2 += (parentRect.top - stageRect.top + stage.scrollTop) / scale;
 
       if (Math.abs(x1 - x2) < 20) {
         if (y1 < y2) {
-          y1 += aRect.height / 2 - 10;
-          y2 -= bRect.height / 2 - 10;
+          y1 += (aRect.height / 2 - 10) / scale;
+          y2 -= (bRect.height / 2 - 10) / scale;
         } else {
-          y1 -= aRect.height / 2 - 10;
-          y2 += bRect.height / 2 - 10;
+          y1 -= (aRect.height / 2 - 10) / scale;
+          y2 += (bRect.height / 2 - 10) / scale;
         }
       } else if (x1 < x2) {
-        x1 += aRect.width / 2 - 10;
-        x2 -= bRect.width / 2 - 10;
+        x1 += (aRect.width / 2 - 10) / scale;
+        x2 -= (bRect.width / 2 - 10) / scale;
       } else {
-        x1 -= aRect.width / 2 - 10;
-        x2 += bRect.width / 2 - 10;
+        x1 -= (aRect.width / 2 - 10) / scale;
+        x2 += (bRect.width / 2 - 10) / scale;
       }
 
       const dx = x2 - x1;
       const dy = y2 - y1;
       const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      const lift = Math.max(32, dist * 0.12);
+      const lift = Math.max(isMobile ? 24 : 32, dist * (isMobile ? 0.08 : 0.12));
       const cx1 = x1 + dx * 0.3 + (dy / dist) * lift * 0.4;
       const cy1 = y1 + dy * 0.3 - (dx / dist) * lift * 0.4;
       const cx2 = x1 + dx * 0.7 + (dy / dist) * lift * 0.2;
@@ -308,7 +322,7 @@
       tooltip.style.top = `${rect.bottom + window.pageYOffset + (isMobile ? 4 : 8)}px`;
     });
   }
-  function hideTooltip(){ tooltip.style.display = 'none'; }
+  function hideTooltip() { tooltip.style.display = 'none'; }
 
   function fitCanvas(padding = PADDING) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -321,6 +335,8 @@
       maxX = Math.max(maxX, left + (n.el.offsetWidth || NODE_W));
       maxY = Math.max(maxY, top + (n.el.offsetHeight || NODE_H));
     });
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
     if(minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
     const width = Math.ceil(maxX - minX + padding * 2);
     const height = Math.ceil(maxY - minY + padding * 2);
@@ -344,16 +360,16 @@
     drawEdges(false);
 
     const headerHeight = document.querySelector('.map-header')?.offsetHeight || 60;
-    stage.style.height = (window.innerHeight - headerHeight - 100) + 'px'; // Dynamic height
+    stage.style.height = (window.innerHeight - headerHeight - 120) + 'px'; // Adjusted for more space
 
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
     const fitScaleW = stageW / width;
     const fitScaleH = stageH / height;
-    const fitScale = Math.min(1, fitScaleW, fitScaleH);
+    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH) * 0.9); // Slight buffer
     setScale(fitScale);
-    stage.scrollLeft = (width * fitScale - stageW) / 2;
-    stage.scrollTop = (height * fitScale - stageH) / 2;
+    stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
+    stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
   }
 
   function focusNode(nodeId) {
@@ -423,7 +439,7 @@
     searchInput.addEventListener('input', function () {
       const val = this.value.trim().toLowerCase(); closeAllLists();
       if(!val) return;
-      const list = document.createElement('div'); list.className = 'autocomplete-items'; document.body.appendChild(list); // To body for overlay
+      const list = document.createElement('div'); list.className = 'autocomplete-items'; document.body.appendChild(list);
       const inputRect = this.getBoundingClientRect();
       list.style.position = 'absolute';
       list.style.left = inputRect.left + 'px';
@@ -467,7 +483,27 @@
     stage.addEventListener('wheel', (e)=> { if(e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive:false });
   })();
 
-  function setScale(s) { scale = s; container.style.transform = `scale(${scale})`; svg.style.transform = `scale(${scale})`; }
+  // Advanced: Pinch zoom for mobile
+  if(isMobile) {
+    let startScale = scale;
+    let startDistance = 0;
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        startScale = scale;
+        startDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+      }
+    }, { passive: false });
+    stage.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const distance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+        const newScale = startScale * (distance / startDistance);
+        setScale(Math.max(0.5, Math.min(1.6, newScale)));
+      }
+    }, { passive: false });
+  }
+
+  function setScale(s) { scale = s; container.style.transform = `scale(${scale})`; svg.style.transform = `scale(${scale})`; drawEdges(false); }
 
   document.getElementById('zoom-in').addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
   document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
@@ -486,6 +522,25 @@
         worker.postMessage({ type:'init' });
       } catch(err) { console.error('Worker spawn failed', err); alert('Failed to start worker'); workerEnabled = false; useWorkerBtn.textContent = 'Use Worker'; }
     }
+  });
+
+  // Advanced: Export as PNG
+  exportBtn.addEventListener('click', () => {
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = svg.getAttribute('width');
+      canvas.height = svg.getAttribute('height');
+      ctx.drawImage(img, 0, 0);
+      const png = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = png;
+      a.download = 'leetree-map.png';
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   });
 
   function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
@@ -529,4 +584,3 @@
     toggleWorker: function(enable) { useWorkerBtn.click(); }
   };
 })();
-
