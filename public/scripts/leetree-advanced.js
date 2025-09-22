@@ -9,28 +9,54 @@
     { id: 'backtracking', label: 'Backtracking', color: '#cba6ff' },
     { id: 'binary', label: 'Binary Search', color: '#7bffd9' },
     { id: 'dp', label: 'Dynamic Programming', color: '#ffb6e0' },
-    { id: 'graph', label: 'Graph', color: '#8fd6ff' }
+    { id: 'graph', label: 'Graph', color: '#8fd6ff' },
+    { id: 'greedy', label: 'Greedy', color: '#ffab7b' },
+    { id: 'heap', label: 'Heap / PQ', color: '#7bffab' },
+    { id: 'trie', label: 'Trie', color: '#ab7bff' },
+    { id: 'unionfind', label: 'Union-Find', color: '#ff7bd9' }
   ];
 
   const problems = [
     { id: 'two-sum', title: 'Two Sum', sub: 'LC1 — Hash map', url: 'https://sanjay-patidar.vercel.app/two-sum-pattern', cluster: 'sum' },
     { id: 'two-sum-ii', title: 'Two Sum II', sub: 'LC167 — Sorted two-pointer', url: 'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', cluster: 'sum' },
+    { id: '4sum-ii', title: '4Sum II', sub: 'LC454 — Hash map extension', url: '#', cluster: 'sum' },
     { id: '3sum', title: '3Sum', sub: 'LC15 — k-sum', url: 'https://sanjay-patidar.vercel.app/three-sum', cluster: 'twoPointers' },
     { id: '3closest', title: '3Sum Closest', sub: 'LC16 — closest target', url: 'https://sanjay-patidar.vercel.app/three-sum-closest', cluster: 'twoPointers' },
     { id: '4sum', title: '4Sum', sub: 'LC18 — k-sum extension', url: '#', cluster: 'twoPointers' },
+    { id: 'container-water', title: 'Container With Most Water', sub: 'LC11 — Two pointers', url: '#', cluster: 'twoPointers' },
+    { id: 'trapping-rain', title: 'Trapping Rain Water', sub: 'LC42 — Monotonic stack / two pointers', url: '#', cluster: 'twoPointers' },
     { id: 'anagram', title: 'Find All Anagrams', sub: 'LC438 — Fixed window', url: 'https://sanjay-patidar.vercel.app/find-all-anagrams', cluster: 'window' },
     { id: 'min-window', title: 'Minimum Window', sub: 'LC76 — Variable window', url: 'https://sanjay-patidar.vercel.app/minimum-variable-window-substring', cluster: 'window' },
     { id: 'sliding-max', title: 'Sliding Window Max', sub: 'LC239 — Monotonic', url: '#', cluster: 'window' },
+    { id: 'longest-no-repeat', title: 'Longest Substring Without Repeating', sub: 'LC3 — Variable window', url: '#', cluster: 'window' },
+    { id: 'max-consecutive', title: 'Max Consecutive Ones', sub: 'LC1004 — Sliding window', url: '#', cluster: 'window' },
     { id: 'subarray-sum-k', title: 'Subarray Sum K', sub: 'LC560', url: '#', cluster: 'prefix' },
     { id: 'prefix-sum', title: 'Prefix Sum Techniques', sub: 'prefix-sum', url: '#', cluster: 'prefix' },
+    { id: 'continuous-subarray', title: 'Continuous Subarray Sum', sub: 'LC523 — Prefix mod', url: '#', cluster: 'prefix' },
+    { id: 'product-except-self', title: 'Product of Array Except Self', sub: 'LC238 — Prefix product', url: '#', cluster: 'prefix' },
     { id: 'perm', title: 'Permutations', sub: 'LC46', url: '#', cluster: 'backtracking' },
     { id: 'comb-phone', title: 'Letter Combinations', sub: 'LC17', url: '#', cluster: 'backtracking' },
+    { id: 'subsets', title: 'Subsets', sub: 'LC78 — Backtracking', url: '#', cluster: 'backtracking' },
+    { id: 'word-search', title: 'Word Search', sub: 'LC79 — Backtracking DFS', url: '#', cluster: 'backtracking' },
     { id: 'binary-search', title: 'Binary Search', sub: 'LC33', url: '#', cluster: 'binary' },
     { id: 'search-answer', title: 'Search on Answer', sub: 'LC875', url: '#', cluster: 'binary' },
-    { id: 'climb', title: 'Climbing Stairs', sub: 'LC70', url: '#', cluster: 'dp' },
-    { id: 'house-robber', title: 'House Robber', sub: 'LC198', url: '#', cluster: 'dp' },
+    { id: 'min-rotated', title: 'Find Minimum in Rotated Sorted Array', sub: 'LC153 — Binary search', url: '#', cluster: 'binary' },
+    { id: 'climb', title: 'Climbing Stairs', sub: 'LC70', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
+    { id: 'house-robber', title: 'House Robber', sub: 'LC198', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
+    { id: 'lis', title: 'Longest Increasing Subsequence', sub: 'LC300 — DP', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
+    { id: 'coin-change', title: 'Coin Change', sub: 'LC322 — Unbounded knapsack', url: '#', cluster: 'dp', subcluster: 'dp-2d' },
     { id: 'islands', title: 'Number of Islands', sub: 'LC200', url: '#', cluster: 'graph' },
-    { id: 'wordladder', title: 'Word Ladder', sub: 'LC127', url: '#', cluster: 'graph' }
+    { id: 'wordladder', title: 'Word Ladder', sub: 'LC127', url: '#', cluster: 'graph' },
+    { id: 'course-schedule', title: 'Course Schedule', sub: 'LC207 — Topo sort', url: '#', cluster: 'graph' },
+    { id: 'rotten-oranges', title: 'Rotten Oranges', sub: 'LC994 — BFS', url: '#', cluster: 'graph' },
+    { id: 'jump-game', title: 'Jump Game', sub: 'LC55 — Greedy', url: '#', cluster: 'greedy' },
+    { id: 'gas-station', title: 'Gas Station', sub: 'LC134 — Greedy', url: '#', cluster: 'greedy' },
+    { id: 'kth-largest', title: 'Kth Largest Element', sub: 'LC215 — Heap', url: '#', cluster: 'heap' },
+    { id: 'merge-k-lists', title: 'Merge K Sorted Lists', sub: 'LC23 — Priority queue', url: '#', cluster: 'heap' },
+    { id: 'word-dictionary', title: 'Implement Trie', sub: 'LC208 — Trie', url: '#', cluster: 'trie' },
+    { id: 'longest-word', title: 'Longest Word in Dictionary', sub: 'LC720 — Trie', url: '#', cluster: 'trie' },
+    { id: 'provinces', title: 'Number of Provinces', sub: 'LC547 — Union-Find', url: '#', cluster: 'unionfind' },
+    { id: 'redundant-connection', title: 'Redundant Connection', sub: 'LC684 — Union-Find cycle', url: '#', cluster: 'unionfind' }
   ];
 
   problems.sort(function(a, b) {
@@ -44,6 +70,8 @@
   const searchInput = document.getElementById('node-search');
   const problemButtons = document.getElementById('problem-buttons');
   const useWorkerBtn = document.getElementById('use-worker');
+  const autoLayoutBtn = document.getElementById('auto-layout');
+  const toggleAnimBtn = document.getElementById('toggle-animations');
 
   const nodes = [];
   const edges = [];
@@ -51,6 +79,7 @@
   let scale = 1;
   let worker = null;
   let workerEnabled = false;
+  let animationsEnabled = true;
 
   const NODE_W = isMobile ? 100 : 180;
   const NODE_H = isMobile ? 40 : 68;
@@ -60,14 +89,41 @@
     nodes.length = 0;
     edges.length = 0;
     nodes.push({ id: 'root', title: 'DSA / Patterns', sub: 'Start here', url: '#', type: 'root', cluster: null });
+
     clusters.forEach(function(c) {
       nodes.push({ id: 'hub-' + c.id, title: c.label, sub: 'pattern hub', url: '#', type: 'hub', cluster: c.id });
       edges.push(['root', 'hub-' + c.id]);
     });
-    problems.forEach(function(p) {
-      nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster });
-      edges.push(['hub-' + p.cluster, p.id]);
+
+    // Add sub-hubs for deeper layers (example for dp, graph, backtracking)
+    const subhubs = [
+      { id: 'dp-1d', title: '1D DP', sub: 'Linear sequences', url: '#', type: 'subhub', cluster: 'dp' },
+      { id: 'dp-2d', title: '2D DP', sub: 'Matrices / Multi-var', url: '#', type: 'subhub', cluster: 'dp' },
+      { id: 'graph-bfs', title: 'BFS Patterns', sub: 'Level order', url: '#', type: 'subhub', cluster: 'graph' },
+      { id: 'graph-dfs', title: 'DFS Patterns', sub: 'Recursion', url: '#', type: 'subhub', cluster: 'graph' },
+      { id: 'backtrack-comb', title: 'Combinations', sub: 'Choices', url: '#', type: 'subhub', cluster: 'backtracking' },
+      { id: 'backtrack-perm', title: 'Permutations', sub: 'Swaps', url: '#', type: 'subhub', cluster: 'backtracking' }
+    ];
+    subhubs.forEach(function(sh) {
+      nodes.push(sh);
+      edges.push(['hub-' + sh.cluster, sh.id]);
     });
+
+    problems.forEach(function(p) {
+      nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster, subcluster: p.subcluster });
+      const target = p.subcluster ? p.subcluster : 'hub-' + p.cluster;
+      edges.push([target, p.id]);
+    });
+
+    // Add cross-connections for web-like structure (related problems across clusters)
+    edges.push(['sliding-max', 'prefix-sum']); // Monotonic queue relation
+    edges.push(['trapping-rain', 'sliding-max']); // Stack/monotonic
+    edges.push(['word-search', 'graph-dfs']); // Backtracking as DFS
+    edges.push(['wordladder', 'graph-bfs']); // Word ladder BFS
+    edges.push(['merge-k-lists', 'kth-largest']); // Heap relations
+    edges.push(['3sum', 'two-sum']); // Sum family
+    edges.push(['coin-change', 'climb']); // DP progression
+
     nodes.forEach(function(n) {
       nodeMap[n.id] = n;
     });
@@ -87,34 +143,55 @@
       currentY += hubSpacing;
     });
 
+    // Position sub-hubs
+    const subhubGroups = {};
+    nodes.forEach(function(n) {
+      if (n.type === 'subhub') {
+        if (!subhubGroups[n.cluster]) subhubGroups[n.cluster] = [];
+        subhubGroups[n.cluster].push(n.id);
+      }
+    });
+    Object.keys(subhubGroups).forEach(function(clusterId) {
+      const hub = nodeMap['hub-' + clusterId];
+      const list = subhubGroups[clusterId];
+      const spacingY = isMobile ? 60 : 80;
+      let startY = hub.y - (list.length - 1) * spacingY / 2;
+      list.forEach(function(id, idx) {
+        nodeMap[id].x = hub.x + (isMobile ? 120 : 200);
+        nodeMap[id].y = startY + idx * spacingY;
+      });
+    });
+
     const group = {};
     nodes.forEach(function(n) {
       if (n.type === 'leaf') {
-        if (!group[n.cluster]) group[n.cluster] = [];
-        group[n.cluster].push(n.id);
+        const key = n.subcluster || n.cluster;
+        if (!group[key]) group[key] = [];
+        group[key].push(n.id);
       }
     });
-    Object.keys(group).forEach(function(clusterId) {
-      const hub = nodeMap['hub-' + clusterId];
-      const list = group[clusterId];
+    Object.keys(group).forEach(function(key) {
+      const parent = nodeMap[key.startsWith('hub-') ? key : key] || nodeMap['hub-' + key];
+      const list = group[key];
       const cols = isMobile ? 1 : 2;
       const rows = Math.ceil(list.length / cols);
       const leafSpacingX = isMobile ? 160 : 220;
       const leafSpacingY = isMobile ? 50 : 90;
-      let startY = hub.y - (rows - 1) * leafSpacingY / 2;
+      let startY = parent.y - (rows - 1) * leafSpacingY / 2;
       list.forEach(function(id, idx) {
         const c = Math.floor(idx / rows);
         const r = idx % rows;
-        nodeMap[id].x = hub.x + 140 + c * leafSpacingX;
+        nodeMap[id].x = parent.x + 140 + c * leafSpacingX;
         nodeMap[id].y = startY + r * leafSpacingY;
       });
     });
   }
 
   function resolveCollisionsAndLayout(doneCb) {
-    const payload = nodes.map(function(n) { return { id: n.id, x: n.x, y: n.y }; });
+    const payloadNodes = nodes.map(function(n) { return { id: n.id, x: n.x, y: n.y }; });
+    const payloadEdges = edges.map(function(e) { return { source: e[0], target: e[1] }; });
     if (workerEnabled && worker) {
-      worker.postMessage({ type: 'layout', nodes: payload });
+      worker.postMessage({ type: 'layout', nodes: payloadNodes, edges: payloadEdges });
       const onmsg = function(ev) {
         if (ev.data && ev.data.type === 'layout') {
           ev.data.nodes.forEach(function(p) {
@@ -129,8 +206,8 @@
       };
       worker.addEventListener('message', onmsg);
     } else {
-      deterministicResolve(payload);
-      payload.forEach(function(p) {
+      forceDirectedLayout(payloadNodes, payloadEdges);
+      payloadNodes.forEach(function(p) {
         if (nodeMap[p.id]) {
           nodeMap[p.id].x = p.x;
           nodeMap[p.id].y = p.y;
@@ -140,39 +217,64 @@
     }
   }
 
-  function deterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W + 8, NODE_H_LOCAL = NODE_H + 8;
-    const iters = 250;
-    for (let it = 0; it < iters; it++) {
-      let moved = false;
+  function forceDirectedLayout(arr, edgs) {
+    const REPULSION_STRENGTH = 12000;
+    const ATTRACTION_STRENGTH = 0.04;
+    const IDEAL_EDGE_LENGTH = 140;
+    const DAMPING = 0.85;
+    const ITER = 350; // Increased for better convergence
+    const velocities = arr.map(() => ({ vx: 0, vy: 0 }));
+
+    for (let iter = 0; iter < ITER; iter++) {
+      // Repulsion
       for (let i = 0; i < arr.length; i++) {
-        const a = arr[i];
         for (let j = i + 1; j < arr.length; j++) {
-          const b = arr[j];
-          if (a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
-          const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
-          const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
-          if (overlapX <= 0 || overlapY <= 0) continue;
-          const push = Math.min(overlapX, overlapY) / 2 + 4;
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          a.x += (dx / dist) * push;
-          a.y += (dy / dist) * push;
-          b.x -= (dx / dist) * push;
-          b.y -= (dy / dist) * push;
-          moved = true;
+          const a = arr[i], b = arr[j];
+          let dx = a.x - b.x;
+          let dy = a.y - b.y;
+          let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          let force = REPULSION_STRENGTH / (dist * dist);
+          let fx = (dx / dist) * force;
+          let fy = (dy / dist) * force;
+          velocities[i].vx += fx;
+          velocities[i].vy += fy;
+          velocities[j].vx -= fx;
+          velocities[j].vy -= fy;
         }
       }
-      if (!moved) break;
+
+      // Attraction
+      edgs.forEach((e) => {
+        const a = arr.find((n) => n.id === e.source);
+        const b = arr.find((n) => n.id === e.target);
+        if (!a || !b) return;
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        let force = (dist - IDEAL_EDGE_LENGTH) * ATTRACTION_STRENGTH;
+        let fx = (dx / dist) * force;
+        let fy = (dy / dist) * force;
+        velocities[arr.indexOf(a)].vx -= fx;
+        velocities[arr.indexOf(a)].vy -= fy;
+        velocities[arr.indexOf(b)].vx += fx;
+        velocities[arr.indexOf(b)].vy += fy;
+      });
+
+      // Update positions with damping
+      arr.forEach((n, i) => {
+        n.x += velocities[i].vx * DAMPING;
+        n.y += velocities[i].vy * DAMPING;
+        velocities[i].vx *= DAMPING;
+        velocities[i].vy *= DAMPING;
+      });
     }
   }
 
   function renderNodes() {
     container.innerHTML = '';
-    nodes.forEach(function(n) {
+    nodes.forEach(function(n, idx) {
       const el = document.createElement('a');
-      el.className = 'node-box ' + (n.type === 'root' ? 'root-node' : (n.type === 'hub' ? 'intermediate-node' : 'leaf-node'));
+      el.className = 'node-box ' + (n.type === 'root' ? 'root-node' : (n.type === 'hub' || n.type === 'subhub' ? 'intermediate-node' : 'leaf-node'));
       el.href = n.url || '#';
       el.target = (n.url && n.url.startsWith('http')) ? '_blank' : '_self';
       el.dataset.id = n.id;
@@ -209,6 +311,17 @@
 
       container.appendChild(el);
       n.el = el;
+
+      // Advanced entry animation
+      if (animationsEnabled) {
+        el.style.opacity = 0;
+        el.style.transform = 'scale(0.8) translateY(20px)';
+        setTimeout(() => {
+          el.classList.add('node-enter');
+          el.style.opacity = 1;
+          el.style.transform = 'scale(1) translateY(0)';
+        }, idx * 20);
+      }
     });
   }
 
@@ -256,12 +369,12 @@
   }
 
   function drawEdges(initial) {
-    initial = initial || true;
+    initial = initial || false; // Changed to false by default for updates
     const defs = svg.querySelector('defs');
     svg.innerHTML = '';
     if (defs) svg.appendChild(defs);
 
-    edges.forEach(function([from, to]) {
+    edges.forEach(function([from, to], idx) {
       const f = nodeMap[from], t = nodeMap[to];
       if (!f || !t || !f.el || !t.el) return;
       const aRect = f.el.getBoundingClientRect();
@@ -295,22 +408,26 @@
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
       path.setAttribute('class', 'flow-line');
-      if (f.type === 'hub' || t.type === 'hub') path.classList.add('flow-glow');
+      if (f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub') path.classList.add('flow-glow');
       path.setAttribute('marker-end', 'url(#map-arrow)');
       path.dataset.from = from;
       path.dataset.to = to;
       path.dataset.cluster = f.cluster || t.cluster;
       svg.appendChild(path);
 
-      if (initial) {
-        const len = path.getTotalLength();
-        path.style.strokeDasharray = len;
-        path.style.strokeDashoffset = len;
-        requestAnimationFrame(function() {
-          path.classList.add('path-draw');
-          path.style.strokeDashoffset = '0';
-          setTimeout(function() { path.classList.remove('path-draw'); path.classList.add('flow-anim'); }, 920);
-        });
+      if (animationsEnabled) {
+        if (initial) {
+          const len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+          requestAnimationFrame(function() {
+            path.classList.add('path-draw-advanced');
+            path.style.strokeDashoffset = '0';
+            setTimeout(function() { path.classList.remove('path-draw-advanced'); path.classList.add('flow-anim-advanced'); }, 1200);
+          });
+        } else {
+          path.classList.add('flow-anim-advanced');
+        }
       } else {
         path.classList.add('flow-anim');
       }
@@ -329,19 +446,19 @@
       const from = p.dataset.from, to = p.dataset.to;
       const match = pairs.some(function(pair) { return pair[0] === from && pair[1] === to; });
       if (match) {
-        if (on) p.classList.add('flow-highlight');
-        else p.classList.remove('flow-highlight');
+        if (on) p.classList.add('flow-highlight-advanced');
+        else p.classList.remove('flow-highlight-advanced');
         p.style.stroke = on ? clusterColor : '';
         p.style.opacity = on ? '1' : '';
-        if (on) p.classList.add('path-pulse');
-        else p.classList.remove('path-pulse');
+        if (on && animationsEnabled) p.classList.add('path-pulse-advanced');
+        else p.classList.remove('path-pulse-advanced');
       } else {
         p.style.opacity = on ? '0.1' : '';
       }
     });
     if (duration > 0) {
       setTimeout(function() {
-        svgpaths.forEach(function(p) { p.classList.remove('flow-highlight'); p.style.stroke = ''; p.style.opacity = ''; p.classList.remove('path-pulse'); });
+        svgpaths.forEach(function(p) { p.classList.remove('flow-highlight-advanced'); p.style.stroke = ''; p.style.opacity = ''; p.classList.remove('path-pulse-advanced'); });
       }, duration);
     }
   }
@@ -350,7 +467,10 @@
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
   function showTooltip(e, n) {
-    tooltip.innerHTML = '<strong>' + escapeHtml(n.title) + '</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">' + escapeHtml(n.sub || '') + '</div>';
+    // Enhanced tooltip with short description
+    let desc = n.sub || 'No description';
+    if (n.type === 'leaf') desc += '<br>Click to view solution';
+    tooltip.innerHTML = '<strong>' + escapeHtml(n.title) + '</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">' + escapeHtml(desc) + '</div>';
     tooltip.style.display = 'block';
     const rect = e.currentTarget.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
@@ -361,8 +481,12 @@
     if (top + tooltipRect.height > window.innerHeight + window.pageYOffset) top = rect.top + window.pageYOffset - tooltipRect.height - 8;
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
+    if (animationsEnabled) tooltip.classList.add('tooltip-fade-in');
   }
-  function hideTooltip() { tooltip.style.display = 'none'; }
+  function hideTooltip() { 
+    tooltip.style.display = 'none'; 
+    tooltip.classList.remove('tooltip-fade-in');
+  }
 
   function fitCanvas(padding) {
     padding = padding || PADDING;
@@ -417,14 +541,25 @@
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
     stage.scrollTo({ left: Math.max(0, cx * scale - stage.clientWidth / 2), top: Math.max(0, cy * scale - stage.clientHeight / 2), behavior: 'smooth' });
     highlightPath(findPathTo(nodeId), 1400);
+    if (animationsEnabled) n.el.classList.add('node-focus-pulse');
+    setTimeout(() => n.el.classList.remove('node-focus-pulse'), 1400);
   }
 
   function findPathTo(nodeId) {
-    const n = nodeMap[nodeId];
-    if (!n) return [];
-    if (n.type === 'hub') return ['root', nodeId];
-    if (n.type === 'leaf') return ['root', 'hub-' + n.cluster, nodeId];
-    return ['root'];
+    // Enhanced to find multiple paths in web, but for simplicity, find one path (BFS)
+    const visited = new Set();
+    const queue = [{ id: 'root', path: ['root'] }];
+    while (queue.length) {
+      const { id, path } = queue.shift();
+      if (id === nodeId) return path;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      edges.forEach(([from, to]) => {
+        if (from === id) queue.push({ id: to, path: [...path, to] });
+        if (to === id) queue.push({ id: from, path: [...path, from] }); // Bidirectional for paths
+      });
+    }
+    return [];
   }
 
   let activeCluster = null;
@@ -657,6 +792,26 @@
     }
   });
 
+  autoLayoutBtn.addEventListener('click', function() {
+    computeGuidedPositions();
+    resolveCollisionsAndLayout(function() {
+      nodes.forEach(function(n) {
+        if (!n.el) return;
+        n.el.style.left = (n.x || 0) + 'px';
+        n.el.style.top = (n.y || 0) + 'px';
+      });
+      drawEdges(false);
+      fitCanvas(PADDING);
+    });
+  });
+
+  toggleAnimBtn.addEventListener('click', function() {
+    animationsEnabled = !animationsEnabled;
+    toggleAnimBtn.textContent = animationsEnabled ? 'Animations ON' : 'Animations OFF';
+    // Re-draw edges to apply/remove advanced classes
+    drawEdges(false);
+  });
+
   function escapeHtml(s) {
     if (!s) return '';
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -704,8 +859,9 @@
     focusNode: focusNode,
     addProblem: function(p) {
       problems.push(p);
-      nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster });
-      edges.push(['hub-' + p.cluster, p.id]);
+      nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster, subcluster: p.subcluster });
+      const target = p.subcluster ? p.subcluster : 'hub-' + p.cluster;
+      edges.push([target, p.id]);
       nodeMap[p.id] = nodes.find(function(n) { return n.id === p.id; });
       computeGuidedPositions();
       resolveCollisionsAndLayout(function() {
