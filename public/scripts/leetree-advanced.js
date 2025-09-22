@@ -130,24 +130,20 @@
   }
 
   function computeGuidedPositions() {
-    // Improved for organization: arrange in grid for scalability
-    const gridCols = Math.ceil(Math.sqrt(clusters.length));
-    const gridSpacingX = isMobile ? 300 : 500;
-    const gridSpacingY = isMobile ? 200 : 300;
-    const rootX = PADDING + (gridCols * gridSpacingX) / 2;
-    const rootY = PADDING;
+    const rootX = PADDING, rootY = PADDING + 30;
     nodeMap['root'].x = rootX;
     nodeMap['root'].y = rootY;
 
     const hubIds = clusters.map(function(c) { return 'hub-' + c.id; });
-    hubIds.forEach(function(hid, idx) {
-      const col = idx % gridCols;
-      const row = Math.floor(idx / gridCols);
-      nodeMap[hid].x = PADDING + col * gridSpacingX + (isMobile ? 100 : 200);
-      nodeMap[hid].y = rootY + gridSpacingY + row * gridSpacingY;
+    const hubSpacing = isMobile ? 80 : 120; // Increased spacing for better organization
+    let currentY = rootY + hubSpacing;
+    hubIds.forEach(function(hid) {
+      nodeMap[hid].x = rootX + (isMobile ? 200 : 350); // Wider horizontal spacing
+      nodeMap[hid].y = currentY;
+      currentY += hubSpacing;
     });
 
-    // Position sub-hubs in a mini-grid around hub
+    // Position sub-hubs
     const subhubGroups = {};
     nodes.forEach(function(n) {
       if (n.type === 'subhub') {
@@ -158,20 +154,19 @@
     Object.keys(subhubGroups).forEach(function(clusterId) {
       const hub = nodeMap['hub-' + clusterId];
       const list = subhubGroups[clusterId];
-      const subCols = Math.ceil(Math.sqrt(list.length));
-      const subSpacingX = isMobile ? 150 : 250;
-      const subSpacingY = isMobile ? 100 : 150;
-      const startX = hub.x + 100;
-      const startY = hub.y + 50;
+      const cols = Math.max(1, Math.ceil(Math.sqrt(list.length))); // Square-like for scalability
+      const rows = Math.ceil(list.length / cols);
+      const spacingX = isMobile ? 140 : 220;
+      const spacingY = isMobile ? 60 : 90;
+      let startY = hub.y - (rows - 1) * spacingY / 2;
       list.forEach(function(id, idx) {
-        const col = idx % subCols;
-        const row = Math.floor(idx / subCols);
-        nodeMap[id].x = startX + col * subSpacingX;
-        nodeMap[id].y = startY + row * subSpacingY;
+        const c = idx % cols;
+        const r = Math.floor(idx / cols);
+        nodeMap[id].x = hub.x + 140 + c * spacingX;
+        nodeMap[id].y = startY + r * spacingY;
       });
     });
 
-    // Position leaves in dynamic grid based on count for scalability
     const group = {};
     nodes.forEach(function(n) {
       if (n.type === 'leaf') {
@@ -183,19 +178,16 @@
     Object.keys(group).forEach(function(key) {
       const parent = nodeMap[key];
       const list = group[key];
-      const leafCount = list.length;
-      const cols = Math.max(1, Math.ceil(Math.sqrt(leafCount)));
-      const rows = Math.ceil(leafCount / cols);
-      const leafSpacingX = isMobile ? 160 : Math.max(220, 220 + (leafCount > 10 ? (leafCount / 10) * 20 : 0)); // Dynamic spacing
-      const leafSpacingY = isMobile ? 50 : Math.max(90, 90 + (leafCount > 10 ? (leafCount / 10) * 10 : 0));
-      const totalWidth = (cols - 1) * leafSpacingX;
-      let startX = parent.x + 100 - totalWidth / 2;
-      let startY = parent.y + (parent.type === 'hub' ? gridSpacingY / 2 : subSpacingY) - (rows * leafSpacingY) / 2;
+      const cols = Math.max(1, Math.ceil(Math.sqrt(list.length))); // Square-like arrangement for large groups
+      const rows = Math.ceil(list.length / cols);
+      const leafSpacingX = isMobile ? 160 : 240; // Increased for better spread
+      const leafSpacingY = isMobile ? 50 : 80;
+      let startY = parent.y - (rows - 1) * leafSpacingY / 2;
       list.forEach(function(id, idx) {
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-        nodeMap[id].x = startX + col * leafSpacingX;
-        nodeMap[id].y = startY + row * leafSpacingY;
+        const c = idx % cols;
+        const r = Math.floor(idx / cols);
+        nodeMap[id].x = parent.x + 160 + c * leafSpacingX; // Adjusted offset
+        nodeMap[id].y = startY + r * leafSpacingY;
       });
     });
   }
@@ -218,7 +210,7 @@
       };
       worker.addEventListener('message', onmsg);
     } else {
-      enhancedDeterministicResolve(payload);
+      deterministicResolve(payload);
       payload.forEach(function(p) {
         if (nodeMap[p.id]) {
           nodeMap[p.id].x = p.x;
@@ -229,13 +221,14 @@
     }
   }
 
-  function enhancedDeterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W + 20; // Increased buffer
+  function deterministicResolve(arr) {
+    const NODE_W_LOCAL = NODE_W + 20; // Increased margin for better spacing
     const NODE_H_LOCAL = NODE_H + 20;
-    const iters = 500; // More iterations for better resolution
-    const directions = [[1,0], [0,1], [-1,0], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]]; // Multi-directional push
+    const iters = 400; // Increased iterations for better resolution without randomness
     for (let it = 0; it < iters; it++) {
       let moved = false;
+      // Sort by x then y to process in order, reducing chaos
+      arr.sort((a, b) => a.x - b.x || a.y - b.y);
       for (let i = 0; i < arr.length; i++) {
         const a = arr[i];
         for (let j = i + 1; j < arr.length; j++) {
@@ -244,21 +237,23 @@
           const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
           if (overlapX <= 0 || overlapY <= 0) continue;
-          const push = Math.min(overlapX, overlapY) / 2 + 8;
+          const push = Math.min(overlapX, overlapY) / 2 + 8; // Increased push for clearer separation
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const dirIdx = Math.floor(Math.random() * directions.length); // Slight randomness in direction to avoid stuck
-          const [dirX, dirY] = directions[dirIdx];
-          a.x += (dx / dist + dirX * 0.2) * push;
-          a.y += (dy / dist + dirY * 0.2) * push;
-          b.x -= (dx / dist + dirX * 0.2) * push;
-          b.y -= (dy / dist + dirY * 0.2) * push;
+          // Push more vertically to maintain horizontal hierarchy
+          const verticalBias = 1.5;
+          a.x += (dx / dist) * push * (Math.abs(dx) > Math.abs(dy) ? 1 : verticalBias);
+          a.y += (dy / dist) * push * (Math.abs(dy) > Math.abs(dx) ? 1 : verticalBias);
+          b.x -= (dx / dist) * push * (Math.abs(dx) > Math.abs(dy) ? 1 : verticalBias);
+          b.y -= (dy / dist) * push * (Math.abs(dy) > Math.abs(dx) ? 1 : verticalBias);
           moved = true;
         }
       }
       if (!moved) break;
     }
+    // Final sort and minor adjustment to align vertically within groups
+    arr.sort((a, b) => nodeMap[a.id].x - nodeMap[b.id].x || nodeMap[a.id].y - nodeMap[b.id].y);
   }
 
   function renderNodes() {
@@ -368,9 +363,9 @@
     edges.forEach(function([from, to], idx) {
       const f = nodeMap[from], t = nodeMap[to];
       if (!f || !t || !f.el || !t.el) return;
-      const parentRect = container.getBoundingClientRect();
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
       let x1 = aRect.left - parentRect.left + aRect.width / 2;
       let y1 = aRect.top - parentRect.top + aRect.height / 2;
       let x2 = bRect.left - parentRect.left + bRect.width / 2;
@@ -378,9 +373,7 @@
 
       const dx = x2 - x1;
       const dy = y2 - y1;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-      if (absDx > absDy) {
+      if (Math.abs(dx) > Math.abs(dy)) {
         x1 = dx > 0 ? aRect.right - parentRect.left : aRect.left - parentRect.left;
         x2 = dx > 0 ? bRect.left - parentRect.left : bRect.right - parentRect.left;
       } else {
@@ -388,15 +381,15 @@
         y2 = dy > 0 ? bRect.top - parentRect.top : bRect.bottom - parentRect.top;
       }
 
-      const dist = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2) || 1;
-      const lift = Math.max(20, dist * 0.15); // Reduced lift for less curve in long distances
-      const perpX = - (y2 - y1) / dist * lift;
-      const perpY = (x2 - x1) / dist * lift;
-      const cx1 = x1 + (x2 - x1) * 0.3 + perpX * 0.6;
-      const cy1 = y1 + (y2 - y1) * 0.3 + perpY * 0.6;
-      const cx2 = x1 + (x2 - x1) * 0.7 + perpX * 0.4;
-      const cy2 = y1 + (y2 - y1) * 0.7 + perpY * 0.4;
-      const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const lift = Math.max(20, dist * 0.3); // Increased lift for smoother curves
+      const perpX = -dy / dist * lift;
+      const perpY = dx / dist * lift;
+      const cx1 = x1 + dx * 0.3 + perpX * 0.6;
+      const cy1 = y1 + dy * 0.3 + perpY * 0.6;
+      const cx2 = x1 + dx * 0.7 + perpX * 0.4;
+      const cy2 = y1 + dy * 0.7 + perpY * 0.4;
+      const d = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + x2 + ' ' + y2;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
@@ -437,7 +430,7 @@
     const svgpaths = svg.querySelectorAll('path.flow-line');
     svgpaths.forEach(function(p) {
       const from = p.dataset.from, to = p.dataset.to;
-      const match = pairs.some(function(pair) { return (pair[0] === from && pair[1] === to) || (pair[0] === to && pair[1] === from); });
+      const match = pairs.some(function(pair) { return pair[0] === from && pair[1] === to; });
       if (match) {
         if (on) p.classList.add('flow-highlight-advanced');
         else p.classList.remove('flow-highlight-advanced');
@@ -481,7 +474,7 @@
   }
 
   function fitCanvas(padding) {
-    padding = padding || PADDING * 2; // Increased padding for larger graphs
+    padding = padding || PADDING;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(function(n) {
       if (!n.el) return;
@@ -519,7 +512,7 @@
     const stageH = stage.clientHeight;
     const fitScaleW = (stageW - 10) / width;
     const fitScaleH = (stageH - 10) / height;
-    const fitScale = Math.min(1, fitScaleW, fitScaleH) * 0.8; // Slightly zoom out for large graphs
+    const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
     stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
     stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
@@ -547,7 +540,7 @@
       visited.add(id);
       edges.forEach(([from, to]) => {
         if (from === id) queue.push({ id: to, path: [...path, to] });
-        if (to === id) queue.push({ id: from, path: [...path, from] });
+        if (to === id) queue.push({ id: from, path: [...path, from] }); // Bidirectional for paths
       });
     }
     return [];
@@ -686,9 +679,7 @@
       document.removeEventListener('touchmove', drag);
       document.removeEventListener('mouseup', endDrag);
       document.removeEventListener('touchend', endDrag);
-      resolveCollisionsAndLayout(() => {
-        fitCanvas(PADDING);
-      });
+      fitCanvas(PADDING);
     }
   }
 
@@ -711,7 +702,7 @@
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
-        setScale(Math.max(0.4, Math.min(2.0, initialScale * (distance / initialDistance)))); // Wider zoom range
+        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
       }
     }, { passive: false });
   }
@@ -747,13 +738,13 @@
 
   function setScale(s) {
     scale = s;
-    container.style.transform = `scale(${scale})`;
-    svg.style.transform = `scale(${scale})`;
+    container.style.transform = 'scale(' + scale + ')';
+    svg.style.transform = 'scale(' + scale + ')';
     drawEdges(false);
   }
 
-  document.getElementById('zoom-in').addEventListener('click', function() { setScale(Math.min(2.0, scale + 0.12)); });
-  document.getElementById('zoom-out').addEventListener('click', function() { setScale(Math.max(0.4, scale - 0.12)); });
+  document.getElementById('zoom-in').addEventListener('click', function() { setScale(Math.min(1.6, scale + 0.12)); });
+  document.getElementById('zoom-out').addEventListener('click', function() { setScale(Math.max(0.5, scale - 0.12)); });
   document.getElementById('reset-view').addEventListener('click', function() {
     setScale(1);
     stage.scrollLeft = 0;
@@ -762,11 +753,6 @@
     const paths = svg.querySelectorAll('path.flow-line');
     paths.forEach(function(p) { p.style.opacity = ''; });
     activeCluster = null;
-    computeGuidedPositions();
-    resolveCollisionsAndLayout(function() {
-      fitCanvas(PADDING);
-      drawEdges(false);
-    });
   });
 
   useWorkerBtn.addEventListener('click', function() {
