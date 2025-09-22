@@ -123,7 +123,10 @@
   }
 
   function boot() {
-    buildGraph();
+    if (!window.Leetree.initialized) {
+      console.error('boot: Graph not initialized');
+      return;
+    }
     window.LeetreeLayout.computeGuidedPositions();
     window.LeetreeRender.renderNodes();
     window.LeetreeRender.setupSvgDefs();
@@ -157,21 +160,24 @@
   }
 
   function start() {
+    // Build graph first to ensure nodes, nodeMap, and clusters are ready
+    buildGraph();
+    // Store globals for access in other modules
+    window.Leetree.nodes = nodes;
+    window.Leetree.edges = edges;
+    window.Leetree.nodeMap = nodeMap;
+    window.Leetree.clusters = clusters;
+    window.Leetree.problems = problems;
+    window.Leetree.scale = scale;
+    window.Leetree.worker = worker;
+    window.Leetree.workerEnabled = workerEnabled;
+    window.Leetree.animationsEnabled = animationsEnabled;
+    window.Leetree.NODE_W = NODE_W;
+    window.Leetree.NODE_H = NODE_H;
+    window.Leetree.PADDING = PADDING;
+    window.Leetree.isMobile = isMobile;
+
     if (checkDependencies()) {
-      // Store globals for access in other modules
-      window.Leetree.nodes = nodes;
-      window.Leetree.edges = edges;
-      window.Leetree.nodeMap = nodeMap;
-      window.Leetree.clusters = clusters;
-      window.Leetree.problems = problems;
-      window.Leetree.scale = scale;
-      window.Leetree.worker = worker;
-      window.Leetree.workerEnabled = workerEnabled;
-      window.Leetree.animationsEnabled = animationsEnabled;
-      window.Leetree.NODE_W = NODE_W;
-      window.Leetree.NODE_H = NODE_H;
-      window.Leetree.PADDING = PADDING;
-      window.Leetree.isMobile = isMobile;
       boot();
     } else {
       setTimeout(start, 50); // Retry every 50ms until dependencies are loaded
