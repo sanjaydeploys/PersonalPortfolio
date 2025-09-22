@@ -132,64 +132,68 @@
     z-index: 1001;
   }
 
-/* leetree-clean.css - compact, responsive, glowing edges */
-.leetree-clean { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px; }
-.lt-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
-.lt-title { font-size:20px; margin:0; font-weight:700; color:#fff; }
-.lt-controls { display:flex; gap:10px; align-items:center; }
+/* leetree-advanced.css - advanced map styles (white text; no bg color) */
+.leetcode-3d-map, .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px; }
+.map-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.map-title { font-size:20px; margin:0; font-weight:700; color:#fff; }
+.map-controls { display:flex; gap:10px; align-items:center; }
+.map-search, .map-search:focus { min-width:300px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
+.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
 
-.lt-search { min-width:300px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
-.lt-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
+/* Stage */
+.map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
+.map-svg { position:absolute; left:0; top:0; pointer-events:none; transition: transform 180ms ease; }
+.map-nodes { position:absolute; left:0; top:0; transition: transform 180ms ease; }
 
-.lt-stage { position:relative; height:520px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
-.lt-svg { position:absolute; left:0; top:0; pointer-events:none; transition: transform 180ms ease; }
-.lt-nodes { position:absolute; left:0; top:0; transition: transform 180ms ease; }
-
-/* Node appearance */
+/* Node */
 .node-box { position:absolute; display:block; min-width:160px; padding:10px 12px; border-radius:10px; color:#fff; text-decoration:none; box-shadow:0 8px 26px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); font-weight:700; cursor:pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
 .node-title { display:block; font-size:13px; }
 .node-sub { display:block; font-size:11px; opacity:0.88; margin-top:6px; font-weight:600; color:rgba(255,255,255,0.9); }
 
 /* sizes */
 .root-node { min-width:220px; padding:14px; font-size:15px; }
-.hub-node { min-width:180px; padding:12px; }
+.intermediate-node { min-width:180px; padding:12px; }
 .leaf-node { min-width:150px; padding:10px; }
 
-/* hover lift (subtle) */
+/* hover lift */
 .node-box:hover { transform: translateY(-8px) scale(1.03); box-shadow:0 18px 50px rgba(0,0,0,0.75); }
 
-/* colored accent bar */
+/* accent */
 .cluster-accent { position:absolute; left:8px; top:8px; width:8px; height:36px; border-radius:4px; }
 
-/* edges: default & glow */
+/* edges */
 .flow-line { stroke: rgba(255,255,255,0.14); stroke-width:2.6; fill:none; stroke-linecap:round; transition: stroke 160ms, opacity 160ms; }
-.flow-glow { filter: url(#lt-glow); stroke: rgba(255,255,255,0.22); stroke-width:3.2; }
+.flow-glow { filter: url(#map-glow); stroke: rgba(255,255,255,0.22); stroke-width:3.2; }
 
-/* initial draw animation class */
+/* initial draw and continuous motion */
 .path-draw { transition: stroke-dashoffset 900ms cubic-bezier(.2,.9,.2,1); }
-
-/* continuous small dash to imply flow (subtle) */
-.flow-anim { stroke-dasharray: 200; animation: lt-dash 2.6s linear infinite; }
-@keyframes lt-dash { to { stroke-dashoffset: -200; } }
+.flow-anim { stroke-dasharray: 200; animation: map-dash 2.6s linear infinite; }
+@keyframes map-dash { to { stroke-dashoffset: -200; } }
 
 /* highlight */
 .flow-highlight { stroke: rgba(255,255,255,0.96) !important; stroke-width:3.2 !important; opacity:1 !important; }
 
 /* tooltip */
-.lt-tooltip { position:fixed; z-index:9999; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.82); color:#fff; font-size:12px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+.node-tooltip { position:fixed; z-index:9999; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.82); color:#fff; font-size:12px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
 
-/* legend */
-.lt-legend { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:#fff; }
+/* legend & actions */
+.map-legend { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:#fff; }
 .legend-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; }
 .legend-swatch { width:14px; height:14px; border-radius:4px; }
 
-/* ascii guide style */
-.lt-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:12px; margin-top:12px; }
+/* action buttons list */
+.map-actions { margin-top:12px; }
+.actions-header { margin-bottom:8px; font-size:13px; }
+.problem-buttons { display:flex; gap:8px; flex-wrap:wrap; }
+.problem-buttons button { padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; }
+
+/* ASCII guide */
+.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:12px; margin-top:12px; }
 
 /* responsive */
 @media (max-width: 980px) {
-  .lt-search { min-width:180px; }
-  .lt-stage { height:420px; }
+  .map-search { min-width:140px; }
+  .map-stage { height:420px; }
   .node-box { min-width:130px; }
 }
 
