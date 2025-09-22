@@ -131,14 +131,18 @@
     cursor: pointer;
     z-index: 1001;
   }
-.leetocode-tree-section, .leetcode-hierarchy-guide {
-    padding: 2rem;
+
+
+
+
+.leetocode-pattern-tree {
     font-family: 'Inter', sans-serif;
+    padding: 2rem;
     color: #222;
 }
 
 .tree-container {
-    overflow-x: auto; /* horizontal scroll for tree */
+    overflow-x: auto;
     padding: 1rem 0;
 }
 
@@ -175,8 +179,7 @@
     text-decoration: underline;
 }
 
-/* ASCII tree style */
-.ascii-tree {
+.ascii-guidance pre {
     background-color: #f5f5f5;
     padding: 1rem;
     font-family: monospace;
@@ -185,16 +188,14 @@
     border-left: 3px solid #1a73e8;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .tree-container {
         padding: 0.5rem;
     }
-    .leetcode-tree-section h2, .leetcode-hierarchy-guide h2 {
-        font-size: 1.25rem;
+    .leetocode-pattern-tree h2, .ascii-guidance h3 {
+        font-size: 1.2rem;
     }
 }
-
 
 .social-sticky-container {
   position: fixed;
