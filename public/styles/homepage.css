@@ -134,47 +134,69 @@
 
 
 
-.leetcode-tree {
+.leetcode-3d-tree {
   color: white;
   font-family: monospace;
   padding: 1rem;
+  perspective: 1000px; /* 3D perspective */
 }
 
-.tree-title {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
+.tree-root {
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  transform-style: preserve-3d;
 }
 
-.tree-container {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.tree-root, .tree-root ul {
-  list-style: none;
-  padding-left: 1rem;
-}
-
-.node, .node-link {
-  cursor: pointer;
+.node {
+  margin: 2rem;
+  position: relative;
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.node-link {
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 5px;
   text-decoration: none;
   color: white;
+  display: inline-block;
+  transition: transform 0.3s ease, background 0.3s ease;
 }
 
-.node:hover, .node-link:hover {
-  background-color: rgba(255,255,255,0.1);
+.node-link:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateZ(20px) scale(1.1);
 }
 
-.tree-root ul {
-  display: none;
+/* Branches (diagonal lines) */
+.branch {
+  position: relative;
+  margin-left: 2rem;
+  margin-top: 1rem;
 }
 
-.tree-root li.active > ul {
-  display: block;
+.branch::before {
+  content: "";
+  position: absolute;
+  top: -1rem;
+  left: -2rem;
+  width: 2rem;
+  height: 2rem;
+  border-left: 1px solid rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  transform: rotate(-45deg);
+}
+
+.level-2 .branch::before { transform: rotate(-35deg); }
+.level-3 .branch::before { transform: rotate(-25deg); }
+.level-4 .branch::before { transform: rotate(-15deg); }
+
+.ascii-guidance {
+  margin-top: 2rem;
+  white-space: pre;
+  font-size: 0.85rem;
 }
 
 
