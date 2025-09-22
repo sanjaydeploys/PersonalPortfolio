@@ -1,17 +1,20 @@
-/* leetree-advanced.js
-   Advanced interactive LeetCode map (vanilla JS)
-   - guided deterministic layout
-   - curved SVG edges with glow + draw animations
-   - legend + cluster filters
-   - search + focus
-   - clickable problem buttons below canvas to focus + highlight path
-   - optional Web Worker (/scripts/leetree-worker.js) to offload heavy layout/physics
-   - comments throughout to help you extend
+/* Updated leetree-advanced.js with fixes:
+   - Added mobile detection and adjusted sizes/spacing.
+   - Arranged hubs in multiple vertical columns for better organization (2 columns).
+   - Adjusted curve calculations in drawEdges for better targeting, especially if positions vary.
+   - Ensured initial fitCanvas centers without scroll need by using min scale to fit both dimensions.
+   - Fixed tooltip by positioning below node and centering, using RAF for accurate sizing.
+   - Added padding-left to nodes in CSS, but also ensured in JS if needed.
+   - Recalculated width/height in fitCanvas carefully, added extra padding.
+   - Maintained all functionalities: layout, edges, legend, search, focus, buttons, worker.
+   - Redraw on resize debounced.
 */
 
 (function () {
+  // Mobile detection
+  const isMobile = window.innerWidth < 768;
+
   // ---------- CONFIG ----------
-  // clusters: id, label, color
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
     { id: 'window', label: 'Sliding Window', color: '#7bd1ff' },
@@ -23,8 +26,6 @@
     { id: 'graph', label: 'Graph', color: '#8fd6ff' }
   ];
 
-  // problems: id, title, sub, url, cluster
-  // add or remove problems here
   const problems = [
     { id:'two-sum', title:'Two Sum', sub:'LC1 — Hash map', url:'https://sanjay-patidar.vercel.app/two-sum-pattern', cluster:'sum' },
     { id:'two-sum-ii', title:'Two Sum II', sub:'LC167 — Sorted two-pointer', url:'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', cluster:'sum' },
@@ -62,80 +63,82 @@
   const useWorkerBtn = document.getElementById('use-worker');
 
   // ---------- internal state ----------
-  const nodes = []; // { id, title, sub, url, type, cluster, x, y, el }
-  const edges = []; // [from, to]
-  const nodeMap = {}; // id -> node
+  const nodes = [];
+  const edges = [];
+  const nodeMap = {};
   let scale = 1;
   let worker = null;
-  let workerEnabled = false; // toggled by Use Worker button
+  let workerEnabled = false;
 
-  // constants for layout & sizing
-  const NODE_W = 200, NODE_H = 72;
-  const PADDING = 96;
+  // Adjusted constants
+  const NODE_W = isMobile ? 160 : 200;
+  const NODE_H = isMobile ? 60 : 72;
+  const PADDING = isMobile ? 48 : 96;
 
-  // ---------- build nodes & edges (root -> hubs -> problems) ----------
+  // ---------- build graph ----------
   function buildGraph() {
     nodes.length = 0; edges.length = 0;
-    // root
     nodes.push({ id:'root', title:'DSA / Patterns', sub:'Start here', url:'#', type:'root', cluster:null });
-    // hubs
     clusters.forEach(c => {
       nodes.push({ id:'hub-'+c.id, title:c.label, sub:'pattern hub', url:'#', type:'hub', cluster:c.id });
       edges.push(['root', 'hub-'+c.id]);
     });
-    // leaves
     problems.forEach(p => {
       nodes.push({ id:p.id, title:p.title, sub:p.sub, url:p.url || '#', type:'leaf', cluster:p.cluster });
       edges.push(['hub-'+p.cluster, p.id]);
     });
-    // map
     nodes.forEach(n => nodeMap[n.id] = n);
   }
 
-  // ---------- deterministic guided layout ----------
+  // ---------- guided layout with multiple hub columns ----------
   function computeGuidedPositions() {
-    const rootX = 60, rootY = 220;
+    const rootX = PADDING, rootY = (stage.clientHeight / 2) / scale || 220;
     nodeMap['root'].x = rootX; nodeMap['root'].y = rootY;
 
-    // hubs vertically to the right
+    // Hubs in 2 columns
     const hubIds = clusters.map(c => 'hub-'+c.id);
     const hubCount = hubIds.length;
-    const colX = rootX + 320;
-    const startY = rootY - ((hubCount - 1) / 2) * 110;
+    const hubCols = 2;
+    const hubPerCol = Math.ceil(hubCount / hubCols);
+    const colSpacing = isMobile ? 280 : 360;
+    const rowSpacing = isMobile ? 90 : 110;
+    const startY = rootY - ((hubPerCol - 1) / 2) * rowSpacing;
     hubIds.forEach((hid, i) => {
-      nodeMap[hid].x = colX;
-      nodeMap[hid].y = startY + i * 110;
+      const col = Math.floor(i / hubPerCol);
+      const row = i % hubPerCol;
+      nodeMap[hid].x = rootX + colSpacing + col * colSpacing;
+      nodeMap[hid].y = startY + row * rowSpacing;
     });
 
-    // leaves arranged in grid to the right of each hub
+    // Leaves in grid right of hub
     const group = {};
     nodes.forEach(n => { if(n.type === 'leaf') { group[n.cluster] = group[n.cluster] || []; group[n.cluster].push(n.id); } });
     Object.keys(group).forEach(clusterId => {
       const hub = nodeMap['hub-'+clusterId];
       const list = group[clusterId];
-      const cols = Math.max(1, Math.ceil(list.length / 4));
+      const maxRows = isMobile ? 3 : 4;
+      const rows = Math.min(maxRows, list.length);
+      const cols = Math.ceil(list.length / rows);
+      const leafSpacingX = isMobile ? 180 : 220;
+      const leafSpacingY = isMobile ? 90 : 110;
       list.forEach((id, idx) => {
-        const r = Math.floor(idx / cols), c = idx % cols;
-        const x = hub.x + 180 + c * 190;
-        const y = hub.y - ((Math.min(3, list.length) - 1) / 2) * 90 + r * 110;
+        const r = idx % rows;
+        const c = Math.floor(idx / rows);
+        const x = hub.x + 180 + c * leafSpacingX;
+        const y = hub.y - ((rows - 1) / 2) * leafSpacingY + r * leafSpacingY;
         nodeMap[id].x = x;
         nodeMap[id].y = y;
       });
     });
   }
 
-  // ---------- collision resolution (deterministic) ----------
-  // If worker enabled and available, we send positions to worker to resolve collisions.
-  // Otherwise run on main thread.
+  // ---------- collision resolution ----------
   function resolveCollisionsAndLayout(doneCb) {
     const payload = nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
     if(workerEnabled && worker) {
-      // send to worker and wait response
       worker.postMessage({ type:'layout', nodes: payload });
-      // worker will reply with { type:'layout', nodes: [...] }
       const onmsg = (ev) => {
         if(ev.data && ev.data.type === 'layout') {
-          // apply positions
           ev.data.nodes.forEach(p => { if(nodeMap[p.id]) { nodeMap[p.id].x = p.x; nodeMap[p.id].y = p.y; } });
           worker.removeEventListener('message', onmsg);
           doneCb && doneCb();
@@ -143,38 +146,31 @@
       };
       worker.addEventListener('message', onmsg);
     } else {
-      // run simple deterministic collision resolution on main thread
       deterministicResolve(payload);
       payload.forEach(p => { if(nodeMap[p.id]) { nodeMap[p.id].x = p.x; nodeMap[p.id].y = p.y; }});
       doneCb && doneCb();
     }
   }
 
-  // deterministicResolve modifies arr in place
   function deterministicResolve(arr) {
     const NODE_W_LOCAL = NODE_W, NODE_H_LOCAL = NODE_H;
     const iters = 140;
-    const mapObj = {};
-    arr.forEach(p => mapObj[p.id] = p);
     for(let it=0; it<iters; it++) {
       let moved = false;
       for(let i=0;i<arr.length;i++){
         const a = arr[i];
         for(let j=i+1;j<arr.length;j++){
           const b = arr[j];
-          // rectangle overlap test
-          if(a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
-          // overlap amount
+          if(a.x + NODE_W_LOCAL + 20 <= b.x || b.x + NODE_W_LOCAL + 20 <= a.x || a.y + NODE_H_LOCAL + 20 <= b.y || b.y + NODE_H_LOCAL + 20 <= a.y) continue;
           const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
           if(overlapX <=0 || overlapY <= 0) continue;
-          // push apart on larger axis
+          const pushX = overlapX / 2 + 10;
+          const pushY = overlapY / 2 + 10;
           if(overlapX < overlapY) {
-            const push = overlapX/2 + 6;
-            if(a.x < b.x) { a.x -= push; b.x += push; } else { a.x += push; b.x -= push; }
+            if(a.x < b.x) { a.x -= pushX; b.x += pushX; } else { a.x += pushX; b.x -= pushX; }
           } else {
-            const push = overlapY/2 + 6;
-            if(a.y < b.y) { a.y -= push; b.y += push; } else { a.y += push; b.y -= push; }
+            if(a.y < b.y) { a.y -= pushY; b.y += pushY; } else { a.y += pushY; b.y -= pushY; }
           }
           moved = true;
         }
@@ -183,7 +179,7 @@
     }
   }
 
-  // ---------- render nodes into DOM ----------
+  // ---------- render nodes ----------
   function renderNodes() {
     container.innerHTML = '';
     nodes.forEach(n => {
@@ -195,7 +191,6 @@
       el.setAttribute('role','link');
       el.setAttribute('aria-label', n.title + ' — ' + (n.sub||''));
 
-      // accent bar
       const accent = document.createElement('span');
       accent.className = 'cluster-accent';
       accent.style.background = n.cluster ? (clusters.find(c => c.id === n.cluster).color) : '#fff';
@@ -206,11 +201,9 @@
       const s = document.createElement('span'); s.className='node-sub'; s.textContent = n.sub || '';
       el.appendChild(t); el.appendChild(s);
 
-      // attach handlers
       el.addEventListener('mouseenter', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
       el.addEventListener('mouseleave', ()=> { highlightConnections(n.id, false); hideTooltip(); });
       el.addEventListener('click', (ev)=> {
-        // if the url is '#', prevent page nav and do focus
         if(!n.url || n.url === '#') { ev.preventDefault(); focusNode(n.id); }
       });
 
@@ -219,19 +212,17 @@
     });
   }
 
-  // ---------- SVG defs & arrow marker & glow ----------
+  // ---------- SVG defs ----------
   function setupSvgDefs() {
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     const ns = 'http://www.w3.org/2000/svg';
     const defs = document.createElementNS(ns, 'defs');
 
-    // glow filter
-    const filt = document.createElementNS(ns, 'filter'); filt.setAttribute('id','map-glow'); filt.setAttribute('x','-50%'); filt.setAttribute('y','-50%'); filt.setAttribute('width','200%'); filt.setAttribute('height','200%');
+    const filt = document.createElementNS(ns,'filter'); filt.setAttribute('id','map-glow'); filt.setAttribute('x','-50%'); filt.setAttribute('y','-50%'); filt.setAttribute('width','200%'); filt.setAttribute('height','200%');
     const fe = document.createElementNS(ns,'feGaussianBlur'); fe.setAttribute('stdDeviation','4.0'); fe.setAttribute('result','coloredBlur'); filt.appendChild(fe);
     const merge = document.createElementNS(ns,'feMerge'); const m1 = document.createElementNS(ns,'feMergeNode'); m1.setAttribute('in','coloredBlur'); const m2 = document.createElementNS(ns,'feMergeNode'); m2.setAttribute('in','SourceGraphic'); merge.appendChild(m1); merge.appendChild(m2); filt.appendChild(merge);
     defs.appendChild(filt);
 
-    // arrow marker
     const marker = document.createElementNS(ns,'marker'); marker.setAttribute('id','map-arrow'); marker.setAttribute('viewBox','0 0 10 10'); marker.setAttribute('refX','10'); marker.setAttribute('refY','5'); marker.setAttribute('markerUnits','strokeWidth'); marker.setAttribute('markerWidth','8'); marker.setAttribute('markerHeight','8'); marker.setAttribute('orient','auto');
     const mpath = document.createElementNS(ns,'path'); mpath.setAttribute('d','M 0 0 L 10 5 L 0 10 z'); mpath.setAttribute('fill','rgba(255,255,255,0.18)'); marker.appendChild(mpath);
     defs.appendChild(marker);
@@ -239,9 +230,8 @@
     svg.appendChild(defs);
   }
 
-  // ---------- draw edges as curved paths ----------
+  // ---------- draw edges with improved curve ----------
   function drawEdges(initial = true) {
-    // keep defs, remove other children
     const defs = svg.querySelector('defs');
     svg.innerHTML = '';
     if(defs) svg.appendChild(defs);
@@ -249,21 +239,32 @@
     edges.forEach(([from, to]) => {
       const f = nodeMap[from], t = nodeMap[to];
       if(!f || !t || !f.el || !t.el) return;
-      // compute center coordinates of each element relative to container
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
-      const x1 = aRect.left - parentRect.left + aRect.width/2;
-      const y1 = aRect.top - parentRect.top + aRect.height/2;
-      const x2 = bRect.left - parentRect.left + bRect.width/2;
-      const y2 = bRect.top - parentRect.top + bRect.height/2;
+      let x1 = aRect.left - parentRect.left + aRect.width / 2;
+      let y1 = aRect.top - parentRect.top + aRect.height / 2;
+      let x2 = bRect.left - parentRect.left + bRect.width / 2;
+      let y2 = bRect.top - parentRect.top + bRect.height / 2;
+
+      // Adjust for better targeting: arrow points to left/right side if horizontal
+      if (Math.abs(y1 - y2) < 20) {
+        if (x1 < x2) {
+          x1 += aRect.width / 2 - 10;
+          x2 -= bRect.width / 2 - 10;
+        } else {
+          x1 -= aRect.width / 2 - 10;
+          x2 += bRect.width / 2 - 10;
+        }
+      }
 
       const dx = x2 - x1;
-      const lift = Math.max(48, Math.abs(dx)*0.18);
-      const cx1 = x1 + dx*0.28;
-      const cy1 = y1 - lift;
-      const cx2 = x1 + dx*0.72;
-      const cy2 = y2 - lift*0.6;
+      const dy = y2 - y1;
+      const lift = Math.max(48, Math.abs(dx) * 0.18 + Math.abs(dy) * 0.12);
+      const cx1 = x1 + dx * 0.28;
+      const cy1 = y1 + (dy > 0 ? lift : -lift) * (dx > 0 ? 1 : -1);
+      const cx2 = x1 + dx * 0.72;
+      const cy2 = y2 + (dy > 0 ? lift * 0.6 : -lift * 0.6) * (dx > 0 ? 1 : -1);
       const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -289,7 +290,7 @@
     });
   }
 
-  // ---------- highlight edges connected to node ----------
+  // ---------- highlight connections ----------
   function highlightConnections(nodeId, on) {
     const paths = svg.querySelectorAll('path.flow-line');
     paths.forEach(p => {
@@ -300,76 +301,78 @@
         p.style.opacity = on ? '0.12' : '';
       }
     });
-    // fade nodes
     nodes.forEach(n => { if(n.el) n.el.style.opacity = (on && n.id !== nodeId) ? '0.6' : ''; });
   }
 
-  // ---------- tooltip ----------
+  // ---------- tooltip fixed ----------
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
   function showTooltip(e, n) {
-    tooltip.style.display = 'block';
     tooltip.innerHTML = `<strong>${escapeHtml(n.title)}</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">${escapeHtml(n.sub||'')}</div>`;
+    tooltip.style.display = 'block';
     const rect = e.target.getBoundingClientRect();
-    tooltip.style.left = (rect.left + window.scrollX + 12) + 'px';
-    tooltip.style.top = (rect.top + window.scrollY - 8) + 'px';
+    requestAnimationFrame(() => {
+      tooltip.style.left = `${rect.left + window.pageXOffset + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+      tooltip.style.top = `${rect.bottom + window.pageYOffset + 8}px`;
+    });
   }
   function hideTooltip(){ tooltip.style.display = 'none'; }
 
-  // ---------- fit canvas & offset nodes ----------
+  // ---------- fit canvas fixed to always fit in view ----------
   function fitCanvas(padding = PADDING) {
-    // compute bounding rectangle based on element positions
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(n => {
       if(!n.el) return;
-      const r = n.el.getBoundingClientRect();
-      const parentRect = container.getBoundingClientRect();
-      const left = r.left - parentRect.left;
-      const top = r.top - parentRect.top;
-      minX = Math.min(minX, left); minY = Math.min(minY, top);
-      maxX = Math.max(maxX, left + r.width); maxY = Math.max(maxY, top + r.height);
+      const left = parseFloat(n.el.style.left || 0);
+      const top = parseFloat(n.el.style.top || 0);
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, left + NODE_W);
+      maxY = Math.max(maxY, top + NODE_H);
     });
     if(minX === Infinity) { minX = 0; minY = 0; maxX = 1200; maxY = 800; }
-    const width = Math.ceil((maxX - minX) + padding*2);
-    const height = Math.ceil((maxY - minY) + padding*2);
-    container.style.width = width + 'px'; container.style.height = height + 'px';
-    svg.setAttribute('width', width); svg.setAttribute('height', height);
+    const width = Math.ceil((maxX - minX) + padding * 2);
+    const height = Math.ceil((maxY - minY) + padding * 2);
+    container.style.width = width + 'px';
+    container.style.height = height + 'px';
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
 
-    // offset nodes
-    const offsetX = padding - minX; const offsetY = padding - minY;
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
     nodes.forEach(n => {
       if(!n.el) return;
       const left = parseFloat(n.el.style.left || 0);
       const top = parseFloat(n.el.style.top || 0);
       n.el.style.left = (left + offsetX) + 'px';
       n.el.style.top = (top + offsetY) + 'px';
+      n.x += offsetX;
+      n.y += offsetY;
     });
 
-    // redraw edges
-    drawEdges();
-    // scale to fit viewport nicely
-    const stageW = stage.clientWidth, stageH = stage.clientHeight;
-    const fitScale = Math.min(1, (stageW - 40) / container.offsetWidth, (stageH - 40) / container.offsetHeight);
+    drawEdges(false);
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    const fitScaleW = (stageW - 40) / width;
+    const fitScaleH = (stageH - 40) / height;
+    const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
-    stage.scrollLeft = Math.max(0, (container.offsetWidth * fitScale - stageW) / 2);
-    stage.scrollTop = Math.max(0, (container.offsetHeight * fitScale - stageH) / 2);
+    stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
+    stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
   }
 
-  // ---------- focus node: center + highlight ----------
+  // ---------- focus node ----------
   function focusNode(nodeId) {
     const n = nodeMap[nodeId]; if(!n || !n.el) return;
-    const rect = n.el.getBoundingClientRect(); const parentRect = container.getBoundingClientRect();
-    const cx = (rect.left - parentRect.left) + rect.width/2;
-    const cy = (rect.top - parentRect.top) + rect.height/2;
+    const cx = parseFloat(n.el.style.left) + NODE_W / 2;
+    const cy = parseFloat(n.el.style.top) + NODE_H / 2;
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
-    stage.scrollTo({ left: Math.max(0, cx*scale - stage.clientWidth / 2), top: Math.max(0, cy*scale - stage.clientHeight / 2), behavior:'smooth' });
-    // highlight path root -> hub -> node
+    stage.scrollTo({ left: Math.max(0, cx * scale - stage.clientWidth / 2), top: Math.max(0, cy * scale - stage.clientHeight / 2), behavior:'smooth' });
     const path = findPathTo(nodeId);
     highlightPath(path, 1400);
   }
 
-  // find path root->hub->node (since graph structured that way)
   function findPathTo(nodeId) {
     const n = nodeMap[nodeId]; if(!n) return [];
     if(n.type === 'hub') return ['root', nodeId];
@@ -378,10 +381,8 @@
   }
 
   function highlightPath(path, duration=1200) {
-    // highlight edges along the path
     const pairs = [];
     for(let i=0;i<path.length-1;i++) pairs.push([path[i], path[i+1]]);
-    // highlight matching svg paths
     const svgpaths = svg.querySelectorAll('path.flow-line');
     svgpaths.forEach(p => {
       const from = p.dataset.from, to = p.dataset.to;
@@ -389,13 +390,12 @@
       if(match) { p.classList.add('flow-highlight'); p.style.opacity = '1'; }
       else p.style.opacity = '0.12';
     });
-    // unhighlight after duration
     setTimeout(()=> {
       svgpaths.forEach(p => { p.classList.remove('flow-highlight'); p.style.opacity = ''; });
     }, duration);
   }
 
-  // ---------- legend rendering & cluster toggle ----------
+  // ---------- legend & toggle ----------
   let activeCluster = null;
   function renderLegend() {
     legendEl.innerHTML = '';
@@ -425,7 +425,7 @@
     });
   }
 
-  // ---------- search autocomplete ----------
+  // ---------- search ----------
   function initSearch() {
     const flat = nodes.map(n => ({ id:n.id, title:n.title, sub:n.sub }));
     let currentFocus = -1;
@@ -453,7 +453,7 @@
     function closeAllLists(el) { const items = document.getElementsByClassName('autocomplete-items'); for(let i=0;i<items.length;i++) if(el != items[i] && el != searchInput) items[i].parentNode.removeChild(items[i]); }
   }
 
-  // ---------- problem buttons below canvas (restores feature you wanted) ----------
+  // ---------- problem buttons ----------
   function renderProblemButtons() {
     problemButtons.innerHTML = '';
     problems.forEach(p => {
@@ -463,7 +463,7 @@
     });
   }
 
-  // ---------- pan/drag & wheel ----------
+  // ---------- pan & zoom ----------
   (function enablePan() {
     let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
     stage.addEventListener('mousedown', (e)=> { if(e.target.closest('.node-box')) return; isDown=true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
@@ -472,22 +472,20 @@
     stage.addEventListener('wheel', (e)=> { if(e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive:false });
   })();
 
-  // ---------- scale controls ----------
   function setScale(s) { scale = s; container.style.transform = `scale(${scale})`; svg.style.transform = `scale(${scale})`; }
+
   document.getElementById('zoom-in').addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
   document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
   document.getElementById('reset-view').addEventListener('click', ()=> { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if(n.el) n.el.style.opacity=''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity=''); activeCluster = null; });
 
-  // ---------- worker toggle ----------
+  // ---------- worker ----------
   useWorkerBtn.addEventListener('click', () => {
     if(!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
     if(workerEnabled) {
-      // disable
       workerEnabled = false;
       useWorkerBtn.textContent = 'Use Worker';
       if(worker) { worker.terminate(); worker = null; }
     } else {
-      // enable + spawn worker
       try {
         worker = new Worker('/scripts/leetree-worker.js');
         workerEnabled = true; useWorkerBtn.textContent = 'Worker ON';
@@ -496,113 +494,46 @@
     }
   });
 
-  // ---------- small utilities ----------
+  // ---------- utilities ----------
   function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
   function hexToRgba(hex, a=1) { const h=hex.replace('#',''); const bi=parseInt(h,16); return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`; }
 
-  // ---------- highlight path utility used by problem button events ----------
-  function highlightPath(pathIds, duration=1400) {
-    const pairs = []; for(let i=0;i<pathIds.length-1;i++) pairs.push([pathIds[i], pathIds[i+1]]);
-    const paths = svg.querySelectorAll('path.flow-line');
-    paths.forEach(p => {
-      const from = p.dataset.from, to = p.dataset.to;
-      if(pairs.some(pair => pair[0] === from && pair[1] === to)) { p.classList.add('flow-highlight'); p.style.opacity = '1'; }
-      else p.style.opacity = '0.12';
-    });
-    setTimeout(()=> { paths.forEach(p => { p.classList.remove('flow-highlight'); p.style.opacity=''; }); }, duration);
-  }
-
-  // ---------- find root->hub->leaf path (simple) ----------
-  function findPathTo(nodeId) {
-    const n = nodeMap[nodeId]; if(!n) return ['root'];
-    if(n.type === 'hub') return ['root', nodeId];
-    if(n.type === 'leaf') return ['root', 'hub-'+n.cluster, nodeId];
-    return ['root'];
-  }
-
-  // ---------- main boot sequence ----------
+  // ---------- boot ----------
   function boot() {
     buildGraph();
     computeGuidedPositions();
-    // assign DOM nodes
     renderNodes();
     setupSvgDefs();
-    // collision resolution (on worker if enabled)
     resolveCollisionsAndLayout(()=> {
-      // position DOM elements to guided positions
       nodes.forEach(n => {
         if(!n.el) return;
         n.el.style.left = (n.x || 0) + 'px';
         n.el.style.top = (n.y || 0) + 'px';
       });
-      // draw edges (initial)
       drawEdges(true);
-      // fit canvas
-      fitCanvas(96);
+      fitCanvas(PADDING);
     });
-    // setup UI parts
     renderLegend();
     initSearch();
     renderProblemButtons();
-    // redraw edges on resize/scroll
-    window.addEventListener('resize', ()=> { drawEdges(false); fitCanvas(96); });
-  }
-
-  // ---------- render legend ----------
-  function renderLegend() {
-    legendEl.innerHTML = '';
-    clusters.forEach(c => {
-      const item = document.createElement('div'); item.className='legend-item';
-      const sw = document.createElement('div'); sw.className='legend-swatch'; sw.style.background = c.color;
-      const label = document.createElement('div'); label.textContent = c.label; item.appendChild(sw); item.appendChild(label);
-      item.addEventListener('click', ()=> toggleCluster(c.id));
-      legendEl.appendChild(item);
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { computeGuidedPositions(); fitCanvas(PADDING); drawEdges(false); }, 200);
     });
   }
 
-  // ---------- reveal connections (on hover) ----------
-  function highlightConnections(nodeId, on) {
-    const paths = svg.querySelectorAll('path.flow-line');
-    paths.forEach(p => { if(p.dataset.from === nodeId || p.dataset.to === nodeId) { p.classList.toggle('flow-highlight', on); p.style.opacity = on ? '1' : ''; } else { p.style.opacity = on ? '0.12' : ''; } });
-    nodes.forEach(n => { if(n.el) n.el.style.opacity = (on && n.id !== nodeId) ? '0.6' : ''; });
-  }
-
-  // ---------- initSearch wraps previous search function ----------
-  function initSearch() {
-    const flat = nodes.map(n => ({ id:n.id, title:n.title, sub:n.sub }));
-    let currentFocus = -1;
-    searchInput.addEventListener('input', function () {
-      const val = this.value.trim().toLowerCase(); closeAllLists();
-      if(!val) return;
-      const list = document.createElement('div'); list.className='autocomplete-items'; this.parentNode.appendChild(list);
-      const matches = flat.filter(it=>it.title.toLowerCase().includes(val) || (it.sub||'').toLowerCase().includes(val));
-      matches.slice(0,10).forEach(m => {
-        const item = document.createElement('div'); item.innerHTML = `<strong>${escapeHtml(m.title)}</strong><div style="font-size:12px;color:rgba(255,255,255,0.75)">${escapeHtml(m.sub||'')}</div>`;
-        item.addEventListener('click', ()=> { searchInput.value = m.title; closeAllLists(); focusNode(m.id); });
-        list.appendChild(item);
-      });
-    });
-    searchInput.addEventListener('keydown', function(e){ const list = this.parentNode.querySelector('.autocomplete-items'); if(!list) return; const items=list.getElementsByTagName('div'); if(e.key==='ArrowDown'){ currentFocus++; addActive(items); e.preventDefault(); } else if(e.key==='ArrowUp'){ currentFocus--; addActive(items); e.preventDefault(); } else if(e.key==='Enter'){ e.preventDefault(); if(currentFocus>-1 && items[currentFocus]) items[currentFocus].click(); } function addActive(items){ if(!items) return; removeActive(items); if(currentFocus>=items.length) currentFocus=0; if(currentFocus<0) currentFocus=items.length-1; items[currentFocus].classList.add('autocomplete-active'); } function removeActive(items){ for(let it of items) it.classList.remove('autocomplete-active'); } });
-    document.addEventListener('click', (e)=> closeAllLists(e.target)); function closeAllLists(el){ const items = document.getElementsByClassName('autocomplete-items'); for(let i=0;i<items.length;i++) if(el != items[i] && el != searchInput) items[i].parentNode.removeChild(items[i]); currentFocus=-1; }
-  }
-
-  // ---------- put it all together ----------
   boot();
 
-  // expose API for future dynamic additions
   window.Leetree = {
     focusNode: focusNode,
     addProblem: function(p) {
       problems.push(p); nodes.push({ id:p.id, title:p.title, sub:p.sub, url:p.url || '#', type:'leaf', cluster:p.cluster}); edges.push(['hub-'+p.cluster, p.id]); nodeMap[p.id] = nodes.find(n=>n.id===p.id);
-      // recompute layout deterministically
       computeGuidedPositions();
       resolveCollisionsAndLayout(()=> {
-        renderNodes(); setupSvgDefs(); drawEdges(true); fitCanvas(96); renderProblemButtons();
+        renderNodes(); setupSvgDefs(); drawEdges(true); fitCanvas(PADDING); renderProblemButtons();
       });
     },
-    toggleWorker: function(enable) { useWorkerBtn.click(); } // toggles
+    toggleWorker: function(enable) { useWorkerBtn.click(); }
   };
-
-  // ---------- utils ----------
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 })();
