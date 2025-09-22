@@ -132,19 +132,21 @@
     z-index: 1001;
   }
 
+
 /* Updated leetree-advanced.css with fixes:
-   - Added padding-left to .node-box to prevent text overlap with accent.
-   - Adjusted .cluster-accent size.
-   - Enhanced mobile responsiveness with adjusted sizes and heights.
-   - No other changes, maintained styles.
+   - Improved mobile: Flex-wrap for header, smaller fonts, adjusted paddings.
+   - Autocomplete-items: Styled as overlay with background, border, max-height scroll.
+   - No white space: Set body margin 0 if needed, but assume it's handled.
+   - Tooltip: Adjusted for mobile with smaller size.
 */
 
-.leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px; }
-.map-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px 8px; }
+.map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
 .map-title { font-size:20px; margin:0; font-weight:700; color:#fff; }
-.map-controls { display:flex; gap:10px; align-items:center; }
-.map-search, .map-search:focus { min-width:300px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
-.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
+.map-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.map-search, .map-search:focus { min-width:240px; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
+.control-buttons { display:flex; gap:4px; }
+.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
 
 /* Stage */
 .map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
@@ -180,40 +182,58 @@
 .flow-highlight { stroke: rgba(255,255,255,0.96) !important; stroke-width:3.2 !important; opacity:1 !important; }
 
 /* tooltip */
-.node-tooltip { position:fixed; z-index:9999; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.82); color:#fff; font-size:12px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+.node-tooltip { position:fixed; z-index:9999; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.82); color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 6px 24px rgba(0,0,0,0.6); max-width:200px; }
 
 /* legend & actions */
-.map-legend { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:#fff; }
-.legend-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; }
-.legend-swatch { width:14px; height:14px; border-radius:4px; }
+.map-legend { margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; color:#fff; }
+.legend-item { display:flex; align-items:center; gap:6px; padding:4px 6px; border-radius:6px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; font-size:12px; }
+.legend-swatch { width:12px; height:12px; border-radius:3px; }
 
 /* action buttons list */
-.map-actions { margin-top:12px; }
-.actions-header { margin-bottom:8px; font-size:13px; }
-.problem-buttons { display:flex; gap:8px; flex-wrap:wrap; }
-.problem-buttons button { padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; }
+.map-actions { margin-top:10px; }
+.actions-header { margin-bottom:6px; font-size:12px; }
+.problem-buttons { display:flex; gap:6px; flex-wrap:wrap; }
+.problem-buttons button { padding:4px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; font-size:11px; }
 
 /* ASCII guide */
-.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:12px; margin-top:12px; }
+.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:11px; margin-top:10px; }
+
+/* autocomplete overlay */
+.autocomplete-items { background:rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:6px; max-height:240px; overflow-y:auto; z-index:1000; }
+.autocomplete-items div { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.06); }
+.autocomplete-items div:hover, .autocomplete-active { background:rgba(255,255,255,0.08); }
 
 /* responsive */
 @media (max-width: 768px) {
-  .map-search { min-width:200px; }
-  .map-stage { height:400px; }
-  .node-box { min-width:140px; padding:8px 10px 8px 20px; }
-  .root-node { min-width:180px; padding:10px 12px 10px 24px; font-size:14px; }
-  .intermediate-node { min-width:160px; padding:10px 12px 10px 22px; }
-  .leaf-node { min-width:130px; padding:8px 10px 8px 20px; }
-  .node-title { font-size:12px; }
-  .node-sub { font-size:10px; }
-  .control-buttons button { padding:4px 8px; }
-  .cluster-accent { left:6px; width:5px; }
+  .leetcode-3d-map { padding:8px; }
+  .map-header { flex-direction:column; align-items:flex-start; }
   .map-title { font-size:18px; }
-  .map-actions { margin-top:10px; }
-  .actions-header { font-size:12px; }
-  .problem-buttons button { padding:4px 6px; font-size:11px; }
-  .map-ascii { font-size:11px; }
+  .map-search { min-width:100%; margin-bottom:8px; }
+  .control-buttons { justify-content:center; width:100%; }
+  .control-buttons button { padding:4px 6px; font-size:11px; }
+  .map-stage { height:360px; }
+  .node-box { min-width:120px; padding:6px 8px 6px 18px; }
+  .root-node { min-width:160px; padding:8px 10px 8px 22px; font-size:14px; }
+  .intermediate-node { min-width:140px; padding:8px 10px 8px 20px; }
+  .leaf-node { min-width:110px; padding:6px 8px 6px 18px; }
+  .node-title { font-size:11px; }
+  .node-sub { font-size:9px; margin-top:4px; }
+  .cluster-accent { left:6px; width:4px; top:6px; height:calc(100% - 12px); }
+  .map-legend { gap:4px; }
+  .legend-item { padding:4px 6px; font-size:11px; }
+  .legend-swatch { width:10px; height:10px; }
+  .map-actions { margin-top:8px; }
+  .actions-header { font-size:11px; }
+  .problem-buttons button { padding:4px 6px; font-size:10px; }
+  .map-ascii { font-size:10px; }
+  .autocomplete-items { max-height:200px; }
+  .autocomplete-items div { padding:6px 8px; font-size:11px; }
+  .node-tooltip { padding:4px 6px; font-size:10px; max-width:160px; }
 }
+
+/* Section HTML unchanged, but added use-worker button if missing */
+
+
 .social-sticky-container {
   position: fixed;
   bottom: 1.5rem;
