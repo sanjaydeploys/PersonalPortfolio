@@ -132,12 +132,10 @@
     z-index: 1001;
   }
 
-
-/* Updated leetree-advanced.css with fixes:
-   - Improved mobile: Flex-wrap for header, smaller fonts, adjusted paddings.
-   - Autocomplete-items: Styled as overlay with background, border, max-height scroll.
-   - No white space: Set body margin 0 if needed, but assume it's handled.
-   - Tooltip: Adjusted for mobile with smaller size.
+/* Updated leetree-advanced.css with mobile improvements:
+   - Adjusted paddings, sizes for closer nodes on mobile.
+   - Tooltip visibility: Higher z-index, adjusted positioning.
+   - No changes to curves as they are in JS.
 */
 
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px 8px; }
@@ -149,7 +147,7 @@
 .control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
 
 /* Stage */
-.map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
+.map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; touch-action: pan-x pan-y pinch-zoom; }
 .map-svg { position:absolute; left:0; top:0; pointer-events:none; transition: transform 180ms ease; }
 .map-nodes { position:absolute; left:0; top:0; transition: transform 180ms ease; }
 
@@ -182,7 +180,7 @@
 .flow-highlight { stroke: rgba(255,255,255,0.96) !important; stroke-width:3.2 !important; opacity:1 !important; }
 
 /* tooltip */
-.node-tooltip { position:fixed; z-index:9999; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.82); color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 6px 24px rgba(0,0,0,0.6); max-width:200px; }
+.node-tooltip { position:fixed; z-index:10000; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.82); color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 6px 24px rgba(0,0,0,0.6); max-width:200px; }
 
 /* legend & actions */
 .map-legend { margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; color:#fff; }
@@ -205,13 +203,13 @@
 
 /* responsive */
 @media (max-width: 768px) {
-  .leetcode-3d-map { padding:8px; }
+  .leetcode-3d-map { padding:8px 4px; }
   .map-header { flex-direction:column; align-items:flex-start; }
   .map-title { font-size:18px; }
   .map-search { min-width:100%; margin-bottom:8px; }
-  .control-buttons { justify-content:center; width:100%; }
+  .control-buttons { justify-content:center; width:100%; flex-wrap:wrap; gap:4px; }
   .control-buttons button { padding:4px 6px; font-size:11px; }
-  .map-stage { height:360px; }
+  .map-stage { height:400px; }
   .node-box { min-width:120px; padding:6px 8px 6px 18px; }
   .root-node { min-width:160px; padding:8px 10px 8px 22px; font-size:14px; }
   .intermediate-node { min-width:140px; padding:8px 10px 8px 20px; }
@@ -228,11 +226,8 @@
   .map-ascii { font-size:10px; }
   .autocomplete-items { max-height:200px; }
   .autocomplete-items div { padding:6px 8px; font-size:11px; }
-  .node-tooltip { padding:4px 6px; font-size:10px; max-width:160px; }
+  .node-tooltip { padding:4px 6px; font-size:10px; max-width:160px; z-index:10001; }
 }
-
-/* Section HTML unchanged, but added use-worker button if missing */
-
 
 .social-sticky-container {
   position: fixed;
