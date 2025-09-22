@@ -1,5 +1,6 @@
 (function () {
   window.Leetree = window.Leetree || {};
+  window.Leetree.initialized = false; // Flag to signal buildGraph completion
 
   const isMobile = window.innerWidth < 768;
 
@@ -116,6 +117,9 @@
     nodes.forEach((n) => {
       nodeMap[n.id] = n;
     });
+
+    // Signal that graph is built
+    window.Leetree.initialized = true;
   }
 
   function boot() {
