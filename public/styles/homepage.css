@@ -134,68 +134,50 @@
 
 
 
+.leetcode-tree {
+  color: white;
+  font-family: monospace;
+  padding: 1rem;
+}
 
-.leetocode-pattern-tree {
-    font-family: 'Inter', sans-serif;
-    padding: 2rem;
-    color: #222;
+.tree-title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
 }
 
 .tree-container {
-    overflow-x: auto;
-    padding: 1rem 0;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .tree-root, .tree-root ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  list-style: none;
+  padding-left: 1rem;
 }
 
-.tree-root li {
-    margin: 0.5rem 0;
-    position: relative;
-    padding-left: 1rem;
+.node, .node-link {
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
 }
 
-.tree-root li::before {
-    content: "├─";
-    position: absolute;
-    left: 0;
-    color: #999;
+.node:hover, .node-link:hover {
+  background-color: rgba(255,255,255,0.1);
 }
 
-.tree-root li:last-child::before {
-    content: "└─";
+.tree-root ul {
+  display: none;
 }
 
-.tree-node {
-    text-decoration: none;
-    color: #1a73e8;
-    font-weight: 500;
+.tree-root li.active > ul {
+  display: block;
 }
 
-.tree-node:hover {
-    text-decoration: underline;
-}
 
-.ascii-guidance pre {
-    background-color: #f5f5f5;
-    padding: 1rem;
-    font-family: monospace;
-    white-space: pre;
-    overflow-x: auto;
-    border-left: 3px solid #1a73e8;
-}
-
-@media (max-width: 768px) {
-    .tree-container {
-        padding: 0.5rem;
-    }
-    .leetocode-pattern-tree h2, .ascii-guidance h3 {
-        font-size: 1.2rem;
-    }
-}
 
 .social-sticky-container {
   position: fixed;
