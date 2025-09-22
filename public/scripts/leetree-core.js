@@ -1,6 +1,6 @@
 (function () {
   window.Leetree = window.Leetree || {};
-  window.Leetree.initialized = false;
+  window.Leetree.initialized = false; // Flag to signal buildGraph completion
 
   const isMobile = window.innerWidth < 768;
 
@@ -141,22 +141,6 @@
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
 
-    // Setup animation toggle button
-    let animationButton = document.getElementById('use-animations');
-    if (!animationButton) {
-      animationButton = document.createElement('button');
-      animationButton.id = 'use-animations';
-      animationButton.textContent = `Toggle Animations: ${animationsEnabled ? 'ON' : 'OFF'}`;
-      animationButton.style.position = 'fixed';
-      animationButton.style.top = '10px';
-      animationButton.style.right = '10px';
-      animationButton.style.zIndex = '1000';
-      animationButton.style.padding = '5px 10px';
-      document.body.appendChild(animationButton);
-    }
-    animationButton.onclick = () => window.Leetree.toggleAnimations();
-    window.dispatchEvent(new CustomEvent('leetree:animationsToggled', { detail: { animationsEnabled } }));
-
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
@@ -193,7 +177,7 @@
     if (checkDependencies()) {
       boot();
     } else {
-      setTimeout(start, 50);
+      setTimeout(start, 50); // Retry every 50ms until dependencies are loaded
     }
   }
 
@@ -215,16 +199,6 @@
 
   window.Leetree.toggleWorker = function(enable) {
     document.getElementById('use-worker').click();
-  };
-
-  window.Leetree.toggleAnimations = function() {
-    animationsEnabled = !animationsEnabled;
-    window.Leetree.animationsEnabled = animationsEnabled;
-    const button = document.getElementById('use-animations');
-    if (button) {
-      button.textContent = `Toggle Animations: ${animationsEnabled ? 'ON' : 'OFF'}`;
-    }
-    window.dispatchEvent(new CustomEvent('leetree:animationsToggled', { detail: { animationsEnabled } }));
   };
 
   start();
