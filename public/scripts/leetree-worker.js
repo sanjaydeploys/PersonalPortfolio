@@ -1,4 +1,4 @@
-/* leetree-worker.js unchanged */
+/* leetree-worker.js unchanged, but added more iterations for better resolution */
 
 self.addEventListener('message', (ev) => {
   const data = ev.data;
@@ -10,7 +10,7 @@ self.addEventListener('message', (ev) => {
   if(data.type === 'layout') {
     const arr = data.nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
     const NODE_W = 200, NODE_H = 72;
-    const ITER = 180;
+    const ITER = 220; // Increased
     for(let iter=0; iter<ITER; iter++) {
       let moved = false;
       for(let i=0;i<arr.length;i++) {
@@ -38,7 +38,7 @@ self.addEventListener('message', (ev) => {
         const a=arr[i], b=arr[j];
         const dx=a.x-b.x, dy=a.y-b.y;
         const dist2 = dx*dx+dy*dy;
-        if(dist2===0){ a.x += (Math.random()-0.5)*4; a.y += (Math.random()-0.5)*4; }
+        if(dist2<100){ a.x += (Math.random()-0.5)*8; a.y += (Math.random()-0.5)*8; }
       }
     }
     self.postMessage({ type:'layout', nodes: arr });
