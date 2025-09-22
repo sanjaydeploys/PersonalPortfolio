@@ -1,17 +1,21 @@
-// leetree-layout.js - Layout computations, positioning, and worker handling
-
 window.Leetree = window.Leetree || {};
 window.LeetreeLayout = (function () {
   const nodes = window.Leetree.nodes || [];
   const nodeMap = window.Leetree.nodeMap || {};
-  const PADDING = window.Leetree.PADDING;
-  const NODE_W = window.Leetree.NODE_W;
-  const NODE_H = window.Leetree.NODE_H;
-  const isMobile = window.Leetree.isMobile;
+  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 15 : 80);
+  const NODE_W = window.Leetree.NODE_W || (window.innerWidth < 768 ? 100 : 180);
+  const NODE_H = window.Leetree.NODE_H || (window.innerWidth < 768 ? 40 : 68);
+  const isMobile = window.Leetree.isMobile || window.innerWidth < 768;
   let worker = window.Leetree.worker;
   let workerEnabled = window.Leetree.workerEnabled;
 
   function computeGuidedPositions() {
+    // Guard clause to ensure required data is available
+    if (!nodeMap['root'] || !window.Leetree.clusters || nodes.length === 0) {
+      console.error('computeGuidedPositions: nodeMap, clusters, or nodes not initialized');
+      return;
+    }
+
     const rootX = PADDING, rootY = PADDING + 30;
     nodeMap['root'].x = rootX;
     nodeMap['root'].y = rootY;
@@ -21,6 +25,10 @@ window.LeetreeLayout = (function () {
     const hubSpacing = isMobile ? 80 : 120;
     let currentY = rootY + hubSpacing;
     hubIds.forEach((hid) => {
+      if (!nodeMap[hid]) {
+        console.warn(`Hub node ${hid} not found in nodeMap`);
+        return;
+      }
       nodeMap[hid].x = rootX + (isMobile ? 200 : 350);
       nodeMap[hid].y = currentY;
       currentY += hubSpacing;
@@ -35,6 +43,10 @@ window.LeetreeLayout = (function () {
     });
     Object.keys(subhubGroups).forEach((clusterId) => {
       const hub = nodeMap['hub-' + clusterId];
+      if (!hub) {
+        console.warn(`Hub hub-${clusterId} not found for subhub group`);
+        return;
+      }
       const list = subhubGroups[clusterId];
       const cols = Math.max(1, Math.ceil(Math.sqrt(list.length)));
       const rows = Math.ceil(list.length / cols);
@@ -42,6 +54,10 @@ window.LeetreeLayout = (function () {
       const spacingY = isMobile ? 60 : 90;
       let startY = hub.y - (rows - 1) * spacingY / 2;
       list.forEach((id, idx) => {
+        if (!nodeMap[id]) {
+          console.warn(`Subhub node ${id} not found in nodeMap`);
+          return;
+        }
         const c = idx % cols;
         const r = Math.floor(idx / cols);
         nodeMap[id].x = hub.x + 140 + c * spacingX;
@@ -59,6 +75,10 @@ window.LeetreeLayout = (function () {
     });
     Object.keys(group).forEach((key) => {
       const parent = nodeMap[key];
+      if (!parent) {
+        console.warn(`Parent node ${key} not found for leaf group`);
+        return;
+      }
       const list = group[key];
       const cols = Math.max(1, Math.ceil(Math.sqrt(list.length)));
       const rows = Math.ceil(list.length / cols);
@@ -66,6 +86,10 @@ window.LeetreeLayout = (function () {
       const leafSpacingY = isMobile ? 50 : 80;
       let startY = parent.y - (rows - 1) * leafSpacingY / 2;
       list.forEach((id, idx) => {
+        if (!nodeMap[id]) {
+          console.warn(`Leaf node ${id} not found in nodeMap`);
+          return;
+        }
         const c = idx % cols;
         const r = Math.floor(idx / cols);
         nodeMap[id].x = parent.x + 160 + c * leafSpacingX;
