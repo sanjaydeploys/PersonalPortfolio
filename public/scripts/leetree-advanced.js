@@ -1,20 +1,15 @@
-/* Updated leetree-advanced.js with fixes:
-   - Added mobile detection and adjusted sizes/spacing.
-   - Arranged hubs in multiple vertical columns for better organization (2 columns).
-   - Adjusted curve calculations in drawEdges for better targeting, especially if positions vary.
-   - Ensured initial fitCanvas centers without scroll need by using min scale to fit both dimensions.
-   - Fixed tooltip by positioning below node and centering, using RAF for accurate sizing.
-   - Added padding-left to nodes in CSS, but also ensured in JS if needed.
-   - Recalculated width/height in fitCanvas carefully, added extra padding.
-   - Maintained all functionalities: layout, edges, legend, search, focus, buttons, worker.
-   - Redraw on resize debounced.
+/* Updated leetree-advanced.js with further fixes:
+   - Added touch events for tooltip on mobile (touchstart for show, touchend for hide).
+   - Refined curve in drawEdges: Adjusted lift and control points for better directionality, especially when dy is large (more vertical).
+   - Improved fitCanvas: Added dynamic stage height based on window.innerHeight, subtracted header heights, ensured no white space by setting min scale carefully.
+   - Search autocomplete: Made it overlay by styling in CSS (position:absolute), appended to body for better positioning.
+   - Mobile layout: Further reduced spacings, made hub columns 1 on mobile for more vertical tree.
+   - Maintained all functionalities.
 */
 
 (function () {
-  // Mobile detection
   const isMobile = window.innerWidth < 768;
 
-  // ---------- CONFIG ----------
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
     { id: 'window', label: 'Sliding Window', color: '#7bd1ff' },
@@ -53,7 +48,6 @@
     { id:'wordladder', title:'Word Ladder', sub:'LC127', url:'#', cluster:'graph' }
   ];
 
-  // ---------- DOM refs ----------
   const svg = document.getElementById('map-svg');
   const container = document.getElementById('map-nodes');
   const stage = document.getElementById('map-stage');
@@ -62,7 +56,6 @@
   const problemButtons = document.getElementById('problem-buttons');
   const useWorkerBtn = document.getElementById('use-worker');
 
-  // ---------- internal state ----------
   const nodes = [];
   const edges = [];
   const nodeMap = {};
@@ -70,12 +63,10 @@
   let worker = null;
   let workerEnabled = false;
 
-  // Adjusted constants
-  const NODE_W = isMobile ? 160 : 200;
-  const NODE_H = isMobile ? 60 : 72;
-  const PADDING = isMobile ? 48 : 96;
+  const NODE_W = isMobile ? 140 : 200;
+  const NODE_H = isMobile ? 50 : 72;
+  const PADDING = isMobile ? 32 : 96;
 
-  // ---------- build graph ----------
   function buildGraph() {
     nodes.length = 0; edges.length = 0;
     nodes.push({ id:'root', title:'DSA / Patterns', sub:'Start here', url:'#', type:'root', cluster:null });
@@ -90,18 +81,16 @@
     nodes.forEach(n => nodeMap[n.id] = n);
   }
 
-  // ---------- guided layout with multiple hub columns ----------
   function computeGuidedPositions() {
-    const rootX = PADDING, rootY = (stage.clientHeight / 2) / scale || 220;
+    const rootX = PADDING, rootY = (stage.clientHeight / 2) || 220;
     nodeMap['root'].x = rootX; nodeMap['root'].y = rootY;
 
-    // Hubs in 2 columns
     const hubIds = clusters.map(c => 'hub-'+c.id);
     const hubCount = hubIds.length;
-    const hubCols = 2;
+    const hubCols = isMobile ? 1 : 2;
     const hubPerCol = Math.ceil(hubCount / hubCols);
-    const colSpacing = isMobile ? 280 : 360;
-    const rowSpacing = isMobile ? 90 : 110;
+    const colSpacing = isMobile ? 240 : 360;
+    const rowSpacing = isMobile ? 80 : 110;
     const startY = rootY - ((hubPerCol - 1) / 2) * rowSpacing;
     hubIds.forEach((hid, i) => {
       const col = Math.floor(i / hubPerCol);
@@ -110,21 +99,20 @@
       nodeMap[hid].y = startY + row * rowSpacing;
     });
 
-    // Leaves in grid right of hub
     const group = {};
     nodes.forEach(n => { if(n.type === 'leaf') { group[n.cluster] = group[n.cluster] || []; group[n.cluster].push(n.id); } });
     Object.keys(group).forEach(clusterId => {
       const hub = nodeMap['hub-'+clusterId];
       const list = group[clusterId];
-      const maxRows = isMobile ? 3 : 4;
+      const maxRows = isMobile ? 4 : 4;
       const rows = Math.min(maxRows, list.length);
       const cols = Math.ceil(list.length / rows);
-      const leafSpacingX = isMobile ? 180 : 220;
-      const leafSpacingY = isMobile ? 90 : 110;
+      const leafSpacingX = isMobile ? 160 : 220;
+      const leafSpacingY = isMobile ? 70 : 110;
       list.forEach((id, idx) => {
         const r = idx % rows;
         const c = Math.floor(idx / rows);
-        const x = hub.x + 180 + c * leafSpacingX;
+        const x = hub.x + 160 + c * leafSpacingX;
         const y = hub.y - ((rows - 1) / 2) * leafSpacingY + r * leafSpacingY;
         nodeMap[id].x = x;
         nodeMap[id].y = y;
@@ -132,7 +120,6 @@
     });
   }
 
-  // ---------- collision resolution ----------
   function resolveCollisionsAndLayout(doneCb) {
     const payload = nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
     if(workerEnabled && worker) {
@@ -153,25 +140,26 @@
   }
 
   function deterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W, NODE_H_LOCAL = NODE_H;
-    const iters = 140;
+    const NODE_W_LOCAL = NODE_W + 20, NODE_H_LOCAL = NODE_H + 20;
+    const iters = 160;
     for(let it=0; it<iters; it++) {
       let moved = false;
       for(let i=0;i<arr.length;i++){
         const a = arr[i];
         for(let j=i+1;j<arr.length;j++){
           const b = arr[j];
-          if(a.x + NODE_W_LOCAL + 20 <= b.x || b.x + NODE_W_LOCAL + 20 <= a.x || a.y + NODE_H_LOCAL + 20 <= b.y || b.y + NODE_H_LOCAL + 20 <= a.y) continue;
+          if(a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
           const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
           if(overlapX <=0 || overlapY <= 0) continue;
-          const pushX = overlapX / 2 + 10;
-          const pushY = overlapY / 2 + 10;
-          if(overlapX < overlapY) {
-            if(a.x < b.x) { a.x -= pushX; b.x += pushX; } else { a.x += pushX; b.x -= pushX; }
-          } else {
-            if(a.y < b.y) { a.y -= pushY; b.y += pushY; } else { a.y += pushY; b.y -= pushY; }
-          }
+          const push = Math.min(overlapX, overlapY) / 2 + 8;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          a.x += (dx / dist) * push;
+          a.y += (dy / dist) * push;
+          b.x -= (dx / dist) * push;
+          b.y -= (dy / dist) * push;
           moved = true;
         }
       }
@@ -179,7 +167,6 @@
     }
   }
 
-  // ---------- render nodes ----------
   function renderNodes() {
     container.innerHTML = '';
     nodes.forEach(n => {
@@ -203,6 +190,8 @@
 
       el.addEventListener('mouseenter', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
       el.addEventListener('mouseleave', ()=> { highlightConnections(n.id, false); hideTooltip(); });
+      el.addEventListener('touchstart', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
+      el.addEventListener('touchend', ()=> { highlightConnections(n.id, false); hideTooltip(); });
       el.addEventListener('click', (ev)=> {
         if(!n.url || n.url === '#') { ev.preventDefault(); focusNode(n.id); }
       });
@@ -212,7 +201,6 @@
     });
   }
 
-  // ---------- SVG defs ----------
   function setupSvgDefs() {
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     const ns = 'http://www.w3.org/2000/svg';
@@ -230,7 +218,6 @@
     svg.appendChild(defs);
   }
 
-  // ---------- draw edges with improved curve ----------
   function drawEdges(initial = true) {
     const defs = svg.querySelector('defs');
     svg.innerHTML = '';
@@ -247,24 +234,30 @@
       let x2 = bRect.left - parentRect.left + bRect.width / 2;
       let y2 = bRect.top - parentRect.top + bRect.height / 2;
 
-      // Adjust for better targeting: arrow points to left/right side if horizontal
-      if (Math.abs(y1 - y2) < 20) {
-        if (x1 < x2) {
-          x1 += aRect.width / 2 - 10;
-          x2 -= bRect.width / 2 - 10;
+      if (Math.abs(x1 - x2) < 20) {
+        if (y1 < y2) {
+          y1 += aRect.height / 2 - 10;
+          y2 -= bRect.height / 2 - 10;
         } else {
-          x1 -= aRect.width / 2 - 10;
-          x2 += bRect.width / 2 - 10;
+          y1 -= aRect.height / 2 - 10;
+          y2 += bRect.height / 2 - 10;
         }
+      } else if (x1 < x2) {
+        x1 += aRect.width / 2 - 10;
+        x2 -= bRect.width / 2 - 10;
+      } else {
+        x1 -= aRect.width / 2 - 10;
+        x2 += bRect.width / 2 - 10;
       }
 
       const dx = x2 - x1;
       const dy = y2 - y1;
-      const lift = Math.max(48, Math.abs(dx) * 0.18 + Math.abs(dy) * 0.12);
-      const cx1 = x1 + dx * 0.28;
-      const cy1 = y1 + (dy > 0 ? lift : -lift) * (dx > 0 ? 1 : -1);
-      const cx2 = x1 + dx * 0.72;
-      const cy2 = y2 + (dy > 0 ? lift * 0.6 : -lift * 0.6) * (dx > 0 ? 1 : -1);
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const lift = Math.max(32, dist * 0.12);
+      const cx1 = x1 + dx * 0.3 + (dy / dist) * lift * 0.4;
+      const cy1 = y1 + dy * 0.3 - (dx / dist) * lift * 0.4;
+      const cx2 = x1 + dx * 0.7 + (dy / dist) * lift * 0.2;
+      const cy2 = y1 + dy * 0.7 - (dx / dist) * lift * 0.2;
       const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -290,7 +283,6 @@
     });
   }
 
-  // ---------- highlight connections ----------
   function highlightConnections(nodeId, on) {
     const paths = svg.querySelectorAll('path.flow-line');
     paths.forEach(p => {
@@ -304,22 +296,20 @@
     nodes.forEach(n => { if(n.el) n.el.style.opacity = (on && n.id !== nodeId) ? '0.6' : ''; });
   }
 
-  // ---------- tooltip fixed ----------
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
   function showTooltip(e, n) {
     tooltip.innerHTML = `<strong>${escapeHtml(n.title)}</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">${escapeHtml(n.sub||'')}</div>`;
     tooltip.style.display = 'block';
-    const rect = e.target.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     requestAnimationFrame(() => {
       tooltip.style.left = `${rect.left + window.pageXOffset + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-      tooltip.style.top = `${rect.bottom + window.pageYOffset + 8}px`;
+      tooltip.style.top = `${rect.bottom + window.pageYOffset + (isMobile ? 4 : 8)}px`;
     });
   }
   function hideTooltip(){ tooltip.style.display = 'none'; }
 
-  // ---------- fit canvas fixed to always fit in view ----------
   function fitCanvas(padding = PADDING) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(n => {
@@ -328,12 +318,12 @@
       const top = parseFloat(n.el.style.top || 0);
       minX = Math.min(minX, left);
       minY = Math.min(minY, top);
-      maxX = Math.max(maxX, left + NODE_W);
-      maxY = Math.max(maxY, top + NODE_H);
+      maxX = Math.max(maxX, left + (n.el.offsetWidth || NODE_W));
+      maxY = Math.max(maxY, top + (n.el.offsetHeight || NODE_H));
     });
-    if(minX === Infinity) { minX = 0; minY = 0; maxX = 1200; maxY = 800; }
-    const width = Math.ceil((maxX - minX) + padding * 2);
-    const height = Math.ceil((maxY - minY) + padding * 2);
+    if(minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
+    const width = Math.ceil(maxX - minX + padding * 2);
+    const height = Math.ceil(maxY - minY + padding * 2);
     container.style.width = width + 'px';
     container.style.height = height + 'px';
     svg.setAttribute('width', width);
@@ -343,30 +333,33 @@
     const offsetY = padding - minY;
     nodes.forEach(n => {
       if(!n.el) return;
-      const left = parseFloat(n.el.style.left || 0);
-      const top = parseFloat(n.el.style.top || 0);
-      n.el.style.left = (left + offsetX) + 'px';
-      n.el.style.top = (top + offsetY) + 'px';
-      n.x += offsetX;
-      n.y += offsetY;
+      const left = parseFloat(n.el.style.left || 0) + offsetX;
+      const top = parseFloat(n.el.style.top || 0) + offsetY;
+      n.el.style.left = left + 'px';
+      n.el.style.top = top + 'px';
+      n.x = left;
+      n.y = top;
     });
 
     drawEdges(false);
+
+    const headerHeight = document.querySelector('.map-header')?.offsetHeight || 60;
+    stage.style.height = (window.innerHeight - headerHeight - 100) + 'px'; // Dynamic height
+
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
-    const fitScaleW = (stageW - 40) / width;
-    const fitScaleH = (stageH - 40) / height;
+    const fitScaleW = stageW / width;
+    const fitScaleH = stageH / height;
     const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
-    stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
-    stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
+    stage.scrollLeft = (width * fitScale - stageW) / 2;
+    stage.scrollTop = (height * fitScale - stageH) / 2;
   }
 
-  // ---------- focus node ----------
   function focusNode(nodeId) {
     const n = nodeMap[nodeId]; if(!n || !n.el) return;
-    const cx = parseFloat(n.el.style.left) + NODE_W / 2;
-    const cy = parseFloat(n.el.style.top) + NODE_H / 2;
+    const cx = parseFloat(n.el.style.left) + (n.el.offsetWidth || NODE_W) / 2;
+    const cy = parseFloat(n.el.style.top) + (n.el.offsetHeight || NODE_H) / 2;
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
     stage.scrollTo({ left: Math.max(0, cx * scale - stage.clientWidth / 2), top: Math.max(0, cy * scale - stage.clientHeight / 2), behavior:'smooth' });
     const path = findPathTo(nodeId);
@@ -395,7 +388,6 @@
     }, duration);
   }
 
-  // ---------- legend & toggle ----------
   let activeCluster = null;
   function renderLegend() {
     legendEl.innerHTML = '';
@@ -425,14 +417,19 @@
     });
   }
 
-  // ---------- search ----------
   function initSearch() {
     const flat = nodes.map(n => ({ id:n.id, title:n.title, sub:n.sub }));
     let currentFocus = -1;
     searchInput.addEventListener('input', function () {
       const val = this.value.trim().toLowerCase(); closeAllLists();
       if(!val) return;
-      const list = document.createElement('div'); list.className = 'autocomplete-items'; this.parentNode.appendChild(list);
+      const list = document.createElement('div'); list.className = 'autocomplete-items'; document.body.appendChild(list); // To body for overlay
+      const inputRect = this.getBoundingClientRect();
+      list.style.position = 'absolute';
+      list.style.left = inputRect.left + 'px';
+      list.style.top = (inputRect.bottom + window.pageYOffset) + 'px';
+      list.style.width = inputRect.width + 'px';
+      list.style.zIndex = '1000';
       const matches = flat.filter(it => it.title.toLowerCase().includes(val) || (it.sub||'').toLowerCase().includes(val));
       matches.slice(0,10).forEach(m => {
         const item = document.createElement('div'); item.innerHTML = `<strong>${escapeHtml(m.title)}</strong><div style="font-size:12px;color:rgba(255,255,255,0.75)">${escapeHtml(m.sub||'')}</div>`;
@@ -441,7 +438,7 @@
       });
     });
     searchInput.addEventListener('keydown', function(e) {
-      const list = this.parentNode.querySelector('.autocomplete-items'); if(!list) return;
+      const list = document.querySelector('.autocomplete-items'); if(!list) return;
       const items = list.getElementsByTagName('div');
       if(e.key === 'ArrowDown') { currentFocus++; addActive(items); e.preventDefault(); }
       else if(e.key === 'ArrowUp') { currentFocus--; addActive(items); e.preventDefault(); }
@@ -449,11 +446,10 @@
       function addActive(items) { if(!items) return; removeActive(items); if(currentFocus >= items.length) currentFocus = 0; if(currentFocus < 0) currentFocus = items.length-1; items[currentFocus].classList.add('autocomplete-active'); }
       function removeActive(items) { for(let it of items) it.classList.remove('autocomplete-active'); }
     });
-    document.addEventListener('click', (e)=> closeAllLists(e.target));
-    function closeAllLists(el) { const items = document.getElementsByClassName('autocomplete-items'); for(let i=0;i<items.length;i++) if(el != items[i] && el != searchInput) items[i].parentNode.removeChild(items[i]); }
+    document.addEventListener('click', (e)=> { if (!searchInput.contains(e.target)) closeAllLists(); });
+    function closeAllLists() { const items = document.getElementsByClassName('autocomplete-items'); for(let i=items.length-1; i>=0; i--) items[i].parentNode.removeChild(items[i]); }
   }
 
-  // ---------- problem buttons ----------
   function renderProblemButtons() {
     problemButtons.innerHTML = '';
     problems.forEach(p => {
@@ -463,7 +459,6 @@
     });
   }
 
-  // ---------- pan & zoom ----------
   (function enablePan() {
     let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
     stage.addEventListener('mousedown', (e)=> { if(e.target.closest('.node-box')) return; isDown=true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
@@ -478,7 +473,6 @@
   document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
   document.getElementById('reset-view').addEventListener('click', ()=> { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if(n.el) n.el.style.opacity=''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity=''); activeCluster = null; });
 
-  // ---------- worker ----------
   useWorkerBtn.addEventListener('click', () => {
     if(!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
     if(workerEnabled) {
@@ -494,11 +488,9 @@
     }
   });
 
-  // ---------- utilities ----------
   function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
   function hexToRgba(hex, a=1) { const h=hex.replace('#',''); const bi=parseInt(h,16); return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`; }
 
-  // ---------- boot ----------
   function boot() {
     buildGraph();
     computeGuidedPositions();
@@ -519,7 +511,7 @@
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { computeGuidedPositions(); fitCanvas(PADDING); drawEdges(false); }, 200);
+      resizeTimer = setTimeout(() => { computeGuidedPositions(); resolveCollisionsAndLayout(() => { fitCanvas(PADDING); drawEdges(false); }); }, 200);
     });
   }
 
@@ -537,3 +529,193 @@
     toggleWorker: function(enable) { useWorkerBtn.click(); }
   };
 })();
+
+/* leetree-worker.js unchanged */
+
+self.addEventListener('message', (ev) => {
+  const data = ev.data;
+  if(!data) return;
+  if(data.type === 'init') {
+    self.postMessage({ type:'inited' });
+    return;
+  }
+  if(data.type === 'layout') {
+    const arr = data.nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
+    const NODE_W = 200, NODE_H = 72;
+    const ITER = 180;
+    for(let iter=0; iter<ITER; iter++) {
+      let moved = false;
+      for(let i=0;i<arr.length;i++) {
+        const a = arr[i];
+        for(let j=i+1;j<arr.length;j++) {
+          const b = arr[j];
+          if(a.x + NODE_W <= b.x || b.x + NODE_W <= a.x || a.y + NODE_H <= b.y || b.y + NODE_H <= a.y) continue;
+          const overlapX = Math.min(a.x + NODE_W, b.x + NODE_W) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + NODE_H, b.y + NODE_H) - Math.max(a.y, b.y);
+          if(overlapX <= 0 || overlapY <= 0) continue;
+          if(overlapX < overlapY) {
+            const push = overlapX/2 + 6;
+            if(a.x < b.x) { a.x -= push; b.x += push; } else { a.x += push; b.x -= push; }
+          } else {
+            const push = overlapY/2 + 6;
+            if(a.y < b.y) { a.y -= push; b.y += push; } else { a.y += push; b.y -= push; }
+          }
+          moved = true;
+        }
+      }
+      if(!moved) break;
+    }
+    for(let i=0;i<arr.length;i++){
+      for(let j=i+1;j<arr.length;j++){
+        const a=arr[i], b=arr[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const dist2 = dx*dx+dy*dy;
+        if(dist2===0){ a.x += (Math.random()-0.5)*4; a.y += (Math.random()-0.5)*4; }
+      }
+    }
+    self.postMessage({ type:'layout', nodes: arr });
+  }
+});
+
+/* Updated leetree-advanced.css with fixes:
+   - Improved mobile: Flex-wrap for header, smaller fonts, adjusted paddings.
+   - Autocomplete-items: Styled as overlay with background, border, max-height scroll.
+   - No white space: Set body margin 0 if needed, but assume it's handled.
+   - Tooltip: Adjusted for mobile with smaller size.
+*/
+
+.leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:14px 8px; }
+.map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.map-title { font-size:20px; margin:0; font-weight:700; color:#fff; }
+.map-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.map-search, .map-search:focus { min-width:240px; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:#fff; outline:none; }
+.control-buttons { display:flex; gap:4px; }
+.control-buttons button { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
+
+/* Stage */
+.map-stage { position:relative; height:560px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); -webkit-overflow-scrolling:touch; }
+.map-svg { position:absolute; left:0; top:0; pointer-events:none; transition: transform 180ms ease; }
+.map-nodes { position:absolute; left:0; top:0; transition: transform 180ms ease; }
+
+/* Node */
+.node-box { position:absolute; display:block; min-width:160px; padding:10px 12px 10px 24px; border-radius:10px; color:#fff; text-decoration:none; box-shadow:0 8px 26px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); font-weight:700; cursor:pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
+.node-title { display:block; font-size:13px; }
+.node-sub { display:block; font-size:11px; opacity:0.88; margin-top:6px; font-weight:600; color:rgba(255,255,255,0.9); }
+
+/* sizes */
+.root-node { min-width:220px; padding:14px 16px 14px 28px; font-size:15px; }
+.intermediate-node { min-width:180px; padding:12px 14px 12px 26px; }
+.leaf-node { min-width:150px; padding:10px 12px 10px 24px; }
+
+/* hover lift */
+.node-box:hover { transform: translateY(-8px) scale(1.03); box-shadow:0 18px 50px rgba(0,0,0,0.75); }
+
+/* accent */
+.cluster-accent { position:absolute; left:8px; top:8px; width:6px; height:calc(100% - 16px); border-radius:4px; }
+
+/* edges */
+.flow-line { stroke: rgba(255,255,255,0.14); stroke-width:2.6; fill:none; stroke-linecap:round; transition: stroke 160ms, opacity 160ms; }
+.flow-glow { filter: url(#map-glow); stroke: rgba(255,255,255,0.22); stroke-width:3.2; }
+
+/* initial draw and continuous motion */
+.path-draw { transition: stroke-dashoffset 900ms cubic-bezier(.2,.9,.2,1); }
+.flow-anim { stroke-dasharray: 200; animation: map-dash 2.6s linear infinite; }
+@keyframes map-dash { to { stroke-dashoffset: -200; } }
+
+/* highlight */
+.flow-highlight { stroke: rgba(255,255,255,0.96) !important; stroke-width:3.2 !important; opacity:1 !important; }
+
+/* tooltip */
+.node-tooltip { position:fixed; z-index:9999; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.82); color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.04); pointer-events:none; display:none; box-shadow:0 6px 24px rgba(0,0,0,0.6); max-width:200px; }
+
+/* legend & actions */
+.map-legend { margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; color:#fff; }
+.legend-item { display:flex; align-items:center; gap:6px; padding:4px 6px; border-radius:6px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); cursor:pointer; font-size:12px; }
+.legend-swatch { width:12px; height:12px; border-radius:3px; }
+
+/* action buttons list */
+.map-actions { margin-top:10px; }
+.actions-header { margin-bottom:6px; font-size:12px; }
+.problem-buttons { display:flex; gap:6px; flex-wrap:wrap; }
+.problem-buttons button { padding:4px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; font-size:11px; }
+
+/* ASCII guide */
+.map-ascii { color:#fff; font-family:monospace; white-space:pre-wrap; font-size:11px; margin-top:10px; }
+
+/* autocomplete overlay */
+.autocomplete-items { background:rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:6px; max-height:240px; overflow-y:auto; z-index:1000; }
+.autocomplete-items div { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.06); }
+.autocomplete-items div:hover, .autocomplete-active { background:rgba(255,255,255,0.08); }
+
+/* responsive */
+@media (max-width: 768px) {
+  .leetcode-3d-map { padding:8px; }
+  .map-header { flex-direction:column; align-items:flex-start; }
+  .map-title { font-size:18px; }
+  .map-search { min-width:100%; margin-bottom:8px; }
+  .control-buttons { justify-content:center; width:100%; }
+  .control-buttons button { padding:4px 6px; font-size:11px; }
+  .map-stage { height:360px; }
+  .node-box { min-width:120px; padding:6px 8px 6px 18px; }
+  .root-node { min-width:160px; padding:8px 10px 8px 22px; font-size:14px; }
+  .intermediate-node { min-width:140px; padding:8px 10px 8px 20px; }
+  .leaf-node { min-width:110px; padding:6px 8px 6px 18px; }
+  .node-title { font-size:11px; }
+  .node-sub { font-size:9px; margin-top:4px; }
+  .cluster-accent { left:6px; width:4px; top:6px; height:calc(100% - 12px); }
+  .map-legend { gap:4px; }
+  .legend-item { padding:4px 6px; font-size:11px; }
+  .legend-swatch { width:10px; height:10px; }
+  .map-actions { margin-top:8px; }
+  .actions-header { font-size:11px; }
+  .problem-buttons button { padding:4px 6px; font-size:10px; }
+  .map-ascii { font-size:10px; }
+  .autocomplete-items { max-height:200px; }
+  .autocomplete-items div { padding:6px 8px; font-size:11px; }
+  .node-tooltip { padding:4px 6px; font-size:10px; max-width:160px; }
+}
+
+/* Section HTML unchanged, but added use-worker button if missing */
+
+<!-- LeetCode Interactive 3D Pattern Map -->
+<section id="leetcode-3d-map" class="leetcode-3d-map" aria-label="LeetCode Pattern Interactive Map">
+  <div class="map-header">
+    <h2 class="map-title">LeetCode Pattern Map — Interactive</h2>
+    <div class="map-controls">
+      <input id="node-search" class="map-search" placeholder="Search problems / patterns..." aria-label="Search nodes" />
+      <div class="control-buttons">
+        <button id="zoom-in" aria-label="Zoom in">＋</button>
+        <button id="zoom-out" aria-label="Zoom out">−</button>
+        <button id="reset-view" aria-label="Reset view">Reset</button>
+        <button id="use-worker">Use Worker</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="map-stage" class="map-stage" tabindex="0" role="region" aria-label="Interactive LeetCode map">
+    <svg id="map-svg" class="map-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"></svg>
+    <div id="map-nodes" class="map-nodes" aria-hidden="false"></div>
+  </div>
+
+  <div class="map-legend" id="map-legend" aria-hidden="false" role="list"></div>
+
+  <div class="map-actions">
+    <h3 class="actions-header">Quick Access Problems</h3>
+    <div id="problem-buttons" class="problem-buttons"></div>
+  </div>
+
+  <section class="map-guide" id="map-guide" aria-label="Study roadmap and pattern recognition">
+    <h3>Study Roadmap & Quick Recognition Checklist</h3>
+    <pre class="map-ascii">
+1) Sum / Pair patterns → Two Sum family
+2) Sliding Window — Fixed → Variable
+3) Prefix-sum & Monotonic Queue
+4) Two-pointer family & k-sum
+5) Backtracking / Permutations
+6) Binary Search & Search-on-answer
+7) Dynamic Programming 1D → 2D
+8) Graphs — BFS / DFS patterns
+Revision Routine: Brute + Optimized → Dry-run → Complexity → Edge cases
+    </pre>
+  </section>
+</section>
