@@ -130,20 +130,24 @@
   }
 
   function computeGuidedPositions() {
-    const rootX = PADDING, rootY = PADDING + 30;
+    // Improved for organization: arrange in grid for scalability
+    const gridCols = Math.ceil(Math.sqrt(clusters.length));
+    const gridSpacingX = isMobile ? 300 : 500;
+    const gridSpacingY = isMobile ? 200 : 300;
+    const rootX = PADDING + (gridCols * gridSpacingX) / 2;
+    const rootY = PADDING;
     nodeMap['root'].x = rootX;
     nodeMap['root'].y = rootY;
 
     const hubIds = clusters.map(function(c) { return 'hub-' + c.id; });
-    const hubSpacing = isMobile ? 70 : 100;
-    let currentY = rootY + hubSpacing;
-    hubIds.forEach(function(hid) {
-      nodeMap[hid].x = rootX + (isMobile ? 180 : 300);
-      nodeMap[hid].y = currentY;
-      currentY += hubSpacing;
+    hubIds.forEach(function(hid, idx) {
+      const col = idx % gridCols;
+      const row = Math.floor(idx / gridCols);
+      nodeMap[hid].x = PADDING + col * gridSpacingX + (isMobile ? 100 : 200);
+      nodeMap[hid].y = rootY + gridSpacingY + row * gridSpacingY;
     });
 
-    // Position sub-hubs
+    // Position sub-hubs in a mini-grid around hub
     const subhubGroups = {};
     nodes.forEach(function(n) {
       if (n.type === 'subhub') {
@@ -154,44 +158,52 @@
     Object.keys(subhubGroups).forEach(function(clusterId) {
       const hub = nodeMap['hub-' + clusterId];
       const list = subhubGroups[clusterId];
-      const spacingY = isMobile ? 60 : 80;
-      let startY = hub.y - (list.length - 1) * spacingY / 2;
+      const subCols = Math.ceil(Math.sqrt(list.length));
+      const subSpacingX = isMobile ? 150 : 250;
+      const subSpacingY = isMobile ? 100 : 150;
+      const startX = hub.x + 100;
+      const startY = hub.y + 50;
       list.forEach(function(id, idx) {
-        nodeMap[id].x = hub.x + (isMobile ? 120 : 200);
-        nodeMap[id].y = startY + idx * spacingY;
+        const col = idx % subCols;
+        const row = Math.floor(idx / subCols);
+        nodeMap[id].x = startX + col * subSpacingX;
+        nodeMap[id].y = startY + row * subSpacingY;
       });
     });
 
+    // Position leaves in dynamic grid based on count for scalability
     const group = {};
     nodes.forEach(function(n) {
       if (n.type === 'leaf') {
-        const key = n.subcluster || n.cluster;
+        const key = n.subcluster || 'hub-' + n.cluster;
         if (!group[key]) group[key] = [];
         group[key].push(n.id);
       }
     });
     Object.keys(group).forEach(function(key) {
-      const parent = nodeMap[key.startsWith('hub-') ? key : key] || nodeMap['hub-' + key];
+      const parent = nodeMap[key];
       const list = group[key];
-      const cols = isMobile ? 1 : 2;
-      const rows = Math.ceil(list.length / cols);
-      const leafSpacingX = isMobile ? 160 : 220;
-      const leafSpacingY = isMobile ? 50 : 90;
-      let startY = parent.y - (rows - 1) * leafSpacingY / 2;
+      const leafCount = list.length;
+      const cols = Math.max(1, Math.ceil(Math.sqrt(leafCount)));
+      const rows = Math.ceil(leafCount / cols);
+      const leafSpacingX = isMobile ? 160 : Math.max(220, 220 + (leafCount > 10 ? (leafCount / 10) * 20 : 0)); // Dynamic spacing
+      const leafSpacingY = isMobile ? 50 : Math.max(90, 90 + (leafCount > 10 ? (leafCount / 10) * 10 : 0));
+      const totalWidth = (cols - 1) * leafSpacingX;
+      let startX = parent.x + 100 - totalWidth / 2;
+      let startY = parent.y + (parent.type === 'hub' ? gridSpacingY / 2 : subSpacingY) - (rows * leafSpacingY) / 2;
       list.forEach(function(id, idx) {
-        const c = Math.floor(idx / rows);
-        const r = idx % rows;
-        nodeMap[id].x = parent.x + 140 + c * leafSpacingX;
-        nodeMap[id].y = startY + r * leafSpacingY;
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        nodeMap[id].x = startX + col * leafSpacingX;
+        nodeMap[id].y = startY + row * leafSpacingY;
       });
     });
   }
 
   function resolveCollisionsAndLayout(doneCb) {
-    const payloadNodes = nodes.map(function(n) { return { id: n.id, x: n.x, y: n.y }; });
-    const payloadEdges = edges.map(function(e) { return { source: e[0], target: e[1] }; });
+    const payload = nodes.map(function(n) { return { id: n.id, x: n.x, y: n.y }; });
     if (workerEnabled && worker) {
-      worker.postMessage({ type: 'layout', nodes: payloadNodes, edges: payloadEdges });
+      worker.postMessage({ type: 'layout', nodes: payload });
       const onmsg = function(ev) {
         if (ev.data && ev.data.type === 'layout') {
           ev.data.nodes.forEach(function(p) {
@@ -206,8 +218,8 @@
       };
       worker.addEventListener('message', onmsg);
     } else {
-      forceDirectedLayout(payloadNodes, payloadEdges);
-      payloadNodes.forEach(function(p) {
+      enhancedDeterministicResolve(payload);
+      payload.forEach(function(p) {
         if (nodeMap[p.id]) {
           nodeMap[p.id].x = p.x;
           nodeMap[p.id].y = p.y;
@@ -217,56 +229,35 @@
     }
   }
 
-  function forceDirectedLayout(arr, edgs) {
-    const REPULSION_STRENGTH = 12000;
-    const ATTRACTION_STRENGTH = 0.04;
-    const IDEAL_EDGE_LENGTH = 140;
-    const DAMPING = 0.85;
-    const ITER = 350; // Increased for better convergence
-    const velocities = arr.map(() => ({ vx: 0, vy: 0 }));
-
-    for (let iter = 0; iter < ITER; iter++) {
-      // Repulsion
+  function enhancedDeterministicResolve(arr) {
+    const NODE_W_LOCAL = NODE_W + 20; // Increased buffer
+    const NODE_H_LOCAL = NODE_H + 20;
+    const iters = 500; // More iterations for better resolution
+    const directions = [[1,0], [0,1], [-1,0], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]]; // Multi-directional push
+    for (let it = 0; it < iters; it++) {
+      let moved = false;
       for (let i = 0; i < arr.length; i++) {
+        const a = arr[i];
         for (let j = i + 1; j < arr.length; j++) {
-          const a = arr[i], b = arr[j];
-          let dx = a.x - b.x;
-          let dy = a.y - b.y;
-          let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          let force = REPULSION_STRENGTH / (dist * dist);
-          let fx = (dx / dist) * force;
-          let fy = (dy / dist) * force;
-          velocities[i].vx += fx;
-          velocities[i].vy += fy;
-          velocities[j].vx -= fx;
-          velocities[j].vy -= fy;
+          const b = arr[j];
+          if (a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
+          const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
+          if (overlapX <= 0 || overlapY <= 0) continue;
+          const push = Math.min(overlapX, overlapY) / 2 + 8;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const dirIdx = Math.floor(Math.random() * directions.length); // Slight randomness in direction to avoid stuck
+          const [dirX, dirY] = directions[dirIdx];
+          a.x += (dx / dist + dirX * 0.2) * push;
+          a.y += (dy / dist + dirY * 0.2) * push;
+          b.x -= (dx / dist + dirX * 0.2) * push;
+          b.y -= (dy / dist + dirY * 0.2) * push;
+          moved = true;
         }
       }
-
-      // Attraction
-      edgs.forEach((e) => {
-        const a = arr.find((n) => n.id === e.source);
-        const b = arr.find((n) => n.id === e.target);
-        if (!a || !b) return;
-        let dx = a.x - b.x;
-        let dy = a.y - b.y;
-        let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        let force = (dist - IDEAL_EDGE_LENGTH) * ATTRACTION_STRENGTH;
-        let fx = (dx / dist) * force;
-        let fy = (dy / dist) * force;
-        velocities[arr.indexOf(a)].vx -= fx;
-        velocities[arr.indexOf(a)].vy -= fy;
-        velocities[arr.indexOf(b)].vx += fx;
-        velocities[arr.indexOf(b)].vy += fy;
-      });
-
-      // Update positions with damping
-      arr.forEach((n, i) => {
-        n.x += velocities[i].vx * DAMPING;
-        n.y += velocities[i].vy * DAMPING;
-        velocities[i].vx *= DAMPING;
-        velocities[i].vy *= DAMPING;
-      });
+      if (!moved) break;
     }
   }
 
@@ -369,7 +360,7 @@
   }
 
   function drawEdges(initial) {
-    initial = initial || false; // Changed to false by default for updates
+    initial = initial || false;
     const defs = svg.querySelector('defs');
     svg.innerHTML = '';
     if (defs) svg.appendChild(defs);
@@ -377,9 +368,9 @@
     edges.forEach(function([from, to], idx) {
       const f = nodeMap[from], t = nodeMap[to];
       if (!f || !t || !f.el || !t.el) return;
+      const parentRect = container.getBoundingClientRect();
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
-      const parentRect = container.getBoundingClientRect();
       let x1 = aRect.left - parentRect.left + aRect.width / 2;
       let y1 = aRect.top - parentRect.top + aRect.height / 2;
       let x2 = bRect.left - parentRect.left + bRect.width / 2;
@@ -387,7 +378,9 @@
 
       const dx = x2 - x1;
       const dy = y2 - y1;
-      if (Math.abs(dx) > Math.abs(dy)) {
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx > absDy) {
         x1 = dx > 0 ? aRect.right - parentRect.left : aRect.left - parentRect.left;
         x2 = dx > 0 ? bRect.left - parentRect.left : bRect.right - parentRect.left;
       } else {
@@ -395,15 +388,15 @@
         y2 = dy > 0 ? bRect.top - parentRect.top : bRect.bottom - parentRect.top;
       }
 
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const lift = Math.max(20, dist * 0.25);
-      const perpX = -dy / dist * lift;
-      const perpY = dx / dist * lift;
-      const cx1 = x1 + dx * 0.3 + perpX * 0.6;
-      const cy1 = y1 + dy * 0.3 + perpY * 0.6;
-      const cx2 = x1 + dx * 0.7 + perpX * 0.4;
-      const cy2 = y1 + dy * 0.7 + perpY * 0.4;
-      const d = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + x2 + ' ' + y2;
+      const dist = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2) || 1;
+      const lift = Math.max(20, dist * 0.15); // Reduced lift for less curve in long distances
+      const perpX = - (y2 - y1) / dist * lift;
+      const perpY = (x2 - x1) / dist * lift;
+      const cx1 = x1 + (x2 - x1) * 0.3 + perpX * 0.6;
+      const cy1 = y1 + (y2 - y1) * 0.3 + perpY * 0.6;
+      const cx2 = x1 + (x2 - x1) * 0.7 + perpX * 0.4;
+      const cy2 = y1 + (y2 - y1) * 0.7 + perpY * 0.4;
+      const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
@@ -444,7 +437,7 @@
     const svgpaths = svg.querySelectorAll('path.flow-line');
     svgpaths.forEach(function(p) {
       const from = p.dataset.from, to = p.dataset.to;
-      const match = pairs.some(function(pair) { return pair[0] === from && pair[1] === to; });
+      const match = pairs.some(function(pair) { return (pair[0] === from && pair[1] === to) || (pair[0] === to && pair[1] === from); });
       if (match) {
         if (on) p.classList.add('flow-highlight-advanced');
         else p.classList.remove('flow-highlight-advanced');
@@ -467,7 +460,6 @@
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
   function showTooltip(e, n) {
-    // Enhanced tooltip with short description
     let desc = n.sub || 'No description';
     if (n.type === 'leaf') desc += '<br>Click to view solution';
     tooltip.innerHTML = '<strong>' + escapeHtml(n.title) + '</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">' + escapeHtml(desc) + '</div>';
@@ -489,7 +481,7 @@
   }
 
   function fitCanvas(padding) {
-    padding = padding || PADDING;
+    padding = padding || PADDING * 2; // Increased padding for larger graphs
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(function(n) {
       if (!n.el) return;
@@ -527,7 +519,7 @@
     const stageH = stage.clientHeight;
     const fitScaleW = (stageW - 10) / width;
     const fitScaleH = (stageH - 10) / height;
-    const fitScale = Math.min(1, fitScaleW, fitScaleH);
+    const fitScale = Math.min(1, fitScaleW, fitScaleH) * 0.8; // Slightly zoom out for large graphs
     setScale(fitScale);
     stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
     stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
@@ -546,7 +538,6 @@
   }
 
   function findPathTo(nodeId) {
-    // Enhanced to find multiple paths in web, but for simplicity, find one path (BFS)
     const visited = new Set();
     const queue = [{ id: 'root', path: ['root'] }];
     while (queue.length) {
@@ -556,7 +547,7 @@
       visited.add(id);
       edges.forEach(([from, to]) => {
         if (from === id) queue.push({ id: to, path: [...path, to] });
-        if (to === id) queue.push({ id: from, path: [...path, from] }); // Bidirectional for paths
+        if (to === id) queue.push({ id: from, path: [...path, from] });
       });
     }
     return [];
@@ -695,7 +686,9 @@
       document.removeEventListener('touchmove', drag);
       document.removeEventListener('mouseup', endDrag);
       document.removeEventListener('touchend', endDrag);
-      fitCanvas(PADDING);
+      resolveCollisionsAndLayout(() => {
+        fitCanvas(PADDING);
+      });
     }
   }
 
@@ -718,7 +711,7 @@
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
-        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
+        setScale(Math.max(0.4, Math.min(2.0, initialScale * (distance / initialDistance)))); // Wider zoom range
       }
     }, { passive: false });
   }
@@ -754,13 +747,13 @@
 
   function setScale(s) {
     scale = s;
-    container.style.transform = 'scale(' + scale + ')';
-    svg.style.transform = 'scale(' + scale + ')';
+    container.style.transform = `scale(${scale})`;
+    svg.style.transform = `scale(${scale})`;
     drawEdges(false);
   }
 
-  document.getElementById('zoom-in').addEventListener('click', function() { setScale(Math.min(1.6, scale + 0.12)); });
-  document.getElementById('zoom-out').addEventListener('click', function() { setScale(Math.max(0.5, scale - 0.12)); });
+  document.getElementById('zoom-in').addEventListener('click', function() { setScale(Math.min(2.0, scale + 0.12)); });
+  document.getElementById('zoom-out').addEventListener('click', function() { setScale(Math.max(0.4, scale - 0.12)); });
   document.getElementById('reset-view').addEventListener('click', function() {
     setScale(1);
     stage.scrollLeft = 0;
@@ -769,6 +762,11 @@
     const paths = svg.querySelectorAll('path.flow-line');
     paths.forEach(function(p) { p.style.opacity = ''; });
     activeCluster = null;
+    computeGuidedPositions();
+    resolveCollisionsAndLayout(function() {
+      fitCanvas(PADDING);
+      drawEdges(false);
+    });
   });
 
   useWorkerBtn.addEventListener('click', function() {
@@ -808,7 +806,6 @@
   toggleAnimBtn.addEventListener('click', function() {
     animationsEnabled = !animationsEnabled;
     toggleAnimBtn.textContent = animationsEnabled ? 'Animations ON' : 'Animations OFF';
-    // Re-draw edges to apply/remove advanced classes
     drawEdges(false);
   });
 
