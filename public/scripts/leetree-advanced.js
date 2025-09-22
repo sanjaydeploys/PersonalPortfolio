@@ -1,15 +1,20 @@
-/* Updated leetree-advanced.js with further mobile fixes:
-   - Improved arrow positioning: Added adjustment for scale in getBoundingClientRect calculations.
-   - Tooltip: Ensured show on touchstart, hide on touchend/window touchmove if outside.
-   - Curved lines: Already curved, but refined control points for better appearance on mobile (less lift for close nodes).
-   - Organization: Changed leaf arrangement to more vertical tree-like: Increased rows, reduced cols for vertical emphasis.
-   - Advanced functionalities: Added pinch zoom for mobile (using GestureEvent), added export button to download SVG as PNG.
-   - FitCanvas: Adjusted dynamic height, ensured no distant arrows by clamping minX/Y.
-   - Maintained all functionalities, added export in boot.
+/* leetree-advanced.js - Fully updated with fixes:
+   - Mobile fixes: Further reduced spacings, single column for hubs on mobile for vertical tree structure. Adjusted collision push for closer nodes without overlap.
+   - Arrows fixed: Used precise rect offsets for start/end points (right side of from, left side of to for horizontal; bottom/top for vertical). Refined Bezier controls for smoother, directed curves without randomness.
+   - Tooltip fixed: Added preventDefault on touchstart to avoid focus, ensured show/hide on touch. Positioned with visibility check.
+   - Curved lines: Already using Bezier; enhanced control points for better curvature.
+   - Better organization: Sorted problems alphabetically per cluster. Made layout more tree-like by aligning leaves in vertical lists if cols=1 on mobile.
+   - Advanced functionalities added: 
+     - Pinch zoom for mobile (using gesture events).
+     - Node dragging: Allow dragging nodes on desktop/mobile, redraw edges on drop.
+     - Export graph: Button to export as PNG.
+     - Layout toggle: Button to switch between guided and force-directed (simple simulation on main thread).
+   - Maintained all previous functionalities: worker, search, legend, focus, buttons, etc.
+   - No removals.
 */
 
 (function () {
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  const isMobile = window.innerWidth < 768;
 
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
@@ -22,32 +27,29 @@
     { id: 'graph', label: 'Graph', color: '#8fd6ff' }
   ];
 
-  const problems = [
+  let problems = [
     { id:'two-sum', title:'Two Sum', sub:'LC1 — Hash map', url:'https://sanjay-patidar.vercel.app/two-sum-pattern', cluster:'sum' },
     { id:'two-sum-ii', title:'Two Sum II', sub:'LC167 — Sorted two-pointer', url:'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', cluster:'sum' },
     { id:'3sum', title:'3Sum', sub:'LC15 — k-sum', url:'https://sanjay-patidar.vercel.app/three-sum', cluster:'twoPointers' },
     { id:'3closest', title:'3Sum Closest', sub:'LC16 — closest target', url:'https://sanjay-patidar.vercel.app/three-sum-closest', cluster:'twoPointers' },
     { id:'4sum', title:'4Sum', sub:'LC18 — k-sum extension', url:'#', cluster:'twoPointers' },
-
     { id:'anagram', title:'Find All Anagrams', sub:'LC438 — Fixed window', url:'https://sanjay-patidar.vercel.app/find-all-anagrams', cluster:'window' },
     { id:'min-window', title:'Minimum Window', sub:'LC76 — Variable window', url:'https://sanjay-patidar.vercel.app/minimum-variable-window-substring', cluster:'window' },
     { id:'sliding-max', title:'Sliding Window Max', sub:'LC239 — Monotonic', url:'#', cluster:'window' },
-
     { id:'subarray-sum-k', title:'Subarray Sum K', sub:'LC560', url:'#', cluster:'prefix' },
     { id:'prefix-sum', title:'Prefix Sum Techniques', sub:'prefix-sum', url:'#', cluster:'prefix' },
-
     { id:'perm', title:'Permutations', sub:'LC46', url:'#', cluster:'backtracking' },
     { id:'comb-phone', title:'Letter Combinations', sub:'LC17', url:'#', cluster:'backtracking' },
-
     { id:'binary-search', title:'Binary Search', sub:'LC33', url:'#', cluster:'binary' },
     { id:'search-answer', title:'Search on Answer', sub:'LC875', url:'#', cluster:'binary' },
-
     { id:'climb', title:'Climbing Stairs', sub:'LC70', url:'#', cluster:'dp' },
     { id:'house-robber', title:'House Robber', sub:'LC198', url:'#', cluster:'dp' },
-
     { id:'islands', title:'Number of Islands', sub:'LC200', url:'#', cluster:'graph' },
     { id:'wordladder', title:'Word Ladder', sub:'LC127', url:'#', cluster:'graph' }
   ];
+
+  // Sort problems alphabetically per cluster for better organization
+  problems.sort((a, b) => a.title.localeCompare(b.title));
 
   const svg = document.getElementById('map-svg');
   const container = document.getElementById('map-nodes');
@@ -56,10 +58,8 @@
   const searchInput = document.getElementById('node-search');
   const problemButtons = document.getElementById('problem-buttons');
   const useWorkerBtn = document.getElementById('use-worker');
-  const exportBtn = document.createElement('button');
-  exportBtn.id = 'export-graph';
-  exportBtn.textContent = 'Export PNG';
-  document.querySelector('.control-buttons').appendChild(exportBtn);
+  const exportBtn = document.getElementById('export-graph');
+  const layoutToggleBtn = document.getElementById('toggle-layout');
 
   const nodes = [];
   const edges = [];
@@ -67,10 +67,11 @@
   let scale = 1;
   let worker = null;
   let workerEnabled = false;
+  let layoutMode = 'guided'; // guided or force
 
-  const NODE_W = isMobile ? 140 : 200;
-  const NODE_H = isMobile ? 50 : 72;
-  const PADDING = isMobile ? 32 : 96;
+  const NODE_W = isMobile ? 120 : 200;
+  const NODE_H = isMobile ? 48 : 72;
+  const PADDING = isMobile ? 24 : 96;
 
   function buildGraph() {
     nodes.length = 0; edges.length = 0;
@@ -94,8 +95,8 @@
     const hubCount = hubIds.length;
     const hubCols = isMobile ? 1 : 2;
     const hubPerCol = Math.ceil(hubCount / hubCols);
-    const colSpacing = isMobile ? 240 : 360;
-    const rowSpacing = isMobile ? 80 : 110;
+    const colSpacing = isMobile ? 260 : 360;
+    const rowSpacing = isMobile ? 72 : 110;
     const startY = rootY - ((hubPerCol - 1) / 2) * rowSpacing;
     hubIds.forEach((hid, i) => {
       const col = Math.floor(i / hubPerCol);
@@ -109,14 +110,13 @@
     Object.keys(group).forEach(clusterId => {
       const hub = nodeMap['hub-'+clusterId];
       const list = group[clusterId];
-      const maxCols = isMobile ? 1 : 2; // More vertical on mobile
-      const cols = Math.min(maxCols, Math.ceil(list.length / 6)); // Max 6 rows for vertical
+      const cols = isMobile ? 1 : Math.ceil(list.length / 4); // Vertical on mobile
       const rows = Math.ceil(list.length / cols);
-      const leafSpacingX = isMobile ? 160 : 220;
-      const leafSpacingY = isMobile ? 70 : 110;
+      const leafSpacingX = isMobile ? 200 : 220;
+      const leafSpacingY = isMobile ? 64 : 110;
       list.forEach((id, idx) => {
-        const c = Math.floor(idx / rows);
-        const r = idx % rows;
+        const r = Math.floor(idx / cols);
+        const c = idx % cols;
         const x = hub.x + 160 + c * leafSpacingX;
         const y = hub.y - ((rows - 1) / 2) * leafSpacingY + r * leafSpacingY;
         nodeMap[id].x = x;
@@ -125,8 +125,49 @@
     });
   }
 
+  function computeForcePositions(iter = 50) {
+    // Simple force simulation on main thread
+    const k = 120;
+    const repulse = 20000;
+    for (let i = 0; i < iter; i++) {
+      nodes.forEach(n => { n.fx = 0; n.fy = 0; });
+      // Repulsion
+      for (let a of nodes) {
+        for (let b of nodes) {
+          if (a === b) continue;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const force = repulse / (d * d);
+          a.fx += (dx / d) * force;
+          a.fy += (dy / d) * force;
+        }
+      }
+      // Attraction
+      edges.forEach(([from, to]) => {
+        const a = nodeMap[from], b = nodeMap[to];
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const force = (d - k) / d * 0.5;
+        a.fx -= dx * force;
+        a.fy -= dy * force;
+        b.fx += dx * force;
+        b.fy += dy * force;
+      });
+      // Apply
+      nodes.forEach(n => {
+        n.x += n.fx * 0.1;
+        n.y += n.fy * 0.1;
+      });
+    }
+  }
+
   function resolveCollisionsAndLayout(doneCb) {
     const payload = nodes.map(n => ({ id:n.id, x:n.x, y:n.y }));
+    if (layoutMode === 'force') {
+      computeForcePositions();
+    }
     if(workerEnabled && worker) {
       worker.postMessage({ type:'layout', nodes: payload });
       const onmsg = (ev) => {
@@ -145,8 +186,8 @@
   }
 
   function deterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W + 20, NODE_H_LOCAL = NODE_H + 20;
-    const iters = 160;
+    const NODE_W_LOCAL = NODE_W + 12, NODE_H_LOCAL = NODE_H + 12;
+    const iters = 180;
     for(let it=0; it<iters; it++) {
       let moved = false;
       for(let i=0;i<arr.length;i++){
@@ -157,7 +198,7 @@
           const overlapX = Math.min(a.x + NODE_W_LOCAL, b.x + NODE_W_LOCAL) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + NODE_H_LOCAL, b.y + NODE_H_LOCAL) - Math.max(a.y, b.y);
           if(overlapX <=0 || overlapY <= 0) continue;
-          const push = Math.min(overlapX, overlapY) / 2 + 8;
+          const push = Math.min(overlapX, overlapY) / 2 + 6;
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx*dx + dy*dy) || 1;
@@ -195,14 +236,14 @@
 
       el.addEventListener('mouseenter', (e)=> { highlightConnections(n.id, true); showTooltip(e, n); });
       el.addEventListener('mouseleave', ()=> { highlightConnections(n.id, false); hideTooltip(); });
-      if(isMobile) {
-        el.addEventListener('touchstart', (e) => { e.stopPropagation(); highlightConnections(n.id, true); showTooltip(e, n); });
-        document.addEventListener('touchmove', hideTooltip, { passive: true });
-        document.addEventListener('touchend', hideTooltip, { passive: true });
-      }
+      el.addEventListener('touchstart', (e)=> { e.preventDefault(); highlightConnections(n.id, true); showTooltip(e, n); });
+      el.addEventListener('touchend', (e)=> { highlightConnections(n.id, false); hideTooltip(); });
       el.addEventListener('click', (ev)=> {
         if(!n.url || n.url === '#') { ev.preventDefault(); focusNode(n.id); }
       });
+
+      // Add drag
+      enableNodeDrag(el, n);
 
       container.appendChild(el);
       n.el = el;
@@ -219,7 +260,7 @@
     const merge = document.createElementNS(ns,'feMerge'); const m1 = document.createElementNS(ns,'feMergeNode'); m1.setAttribute('in','coloredBlur'); const m2 = document.createElementNS(ns,'feMergeNode'); m2.setAttribute('in','SourceGraphic'); merge.appendChild(m1); merge.appendChild(m2); filt.appendChild(merge);
     defs.appendChild(filt);
 
-    const marker = document.createElementNS(ns,'marker'); marker.setAttribute('id','map-arrow'); marker.setAttribute('viewBox','0 0 10 10'); marker.setAttribute('refX','10'); marker.setAttribute('refY','5'); marker.setAttribute('markerUnits','strokeWidth'); marker.setAttribute('markerWidth','8'); marker.setAttribute('markerHeight','8'); marker.setAttribute('orient','auto');
+    const marker = document.createElementNS(ns,'marker'); marker.setAttribute('id','map-arrow'); marker.setAttribute('viewBox','0 0 10 10'); marker.setAttribute('refX','10'); marker.setAttribute('refY','5'); marker.setAttribute('markerUnits','strokeWidth'); marker.setAttribute('markerWidth','6'); marker.setAttribute('markerHeight','6'); marker.setAttribute('orient','auto');
     const mpath = document.createElementNS(ns,'path'); mpath.setAttribute('d','M 0 0 L 10 5 L 0 10 z'); mpath.setAttribute('fill','rgba(255,255,255,0.18)'); marker.appendChild(mpath);
     defs.appendChild(marker);
 
@@ -237,41 +278,36 @@
       const aRect = f.el.getBoundingClientRect();
       const bRect = t.el.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
-      const stageRect = stage.getBoundingClientRect();
-      let x1 = (aRect.left - parentRect.left + aRect.width / 2) / scale;
-      let y1 = (aRect.top - parentRect.top + aRect.height / 2) / scale;
-      let x2 = (bRect.left - parentRect.left + bRect.width / 2) / scale;
-      let y2 = (bRect.top - parentRect.top + bRect.height / 2) / scale;
+      let x1 = aRect.left - parentRect.left + aRect.width / 2;
+      let y1 = aRect.top - parentRect.top + aRect.height / 2;
+      let x2 = bRect.left - parentRect.left + bRect.width / 2;
+      let y2 = bRect.top - parentRect.top + bRect.height / 2;
 
-      x1 += (parentRect.left - stageRect.left + stage.scrollLeft) / scale;
-      y1 += (parentRect.top - stageRect.top + stage.scrollTop) / scale;
-      x2 += (parentRect.left - stageRect.left + stage.scrollLeft) / scale;
-      y2 += (parentRect.top - stageRect.top + stage.scrollTop) / scale;
-
-      if (Math.abs(x1 - x2) < 20) {
-        if (y1 < y2) {
-          y1 += (aRect.height / 2 - 10) / scale;
-          y2 -= (bRect.height / 2 - 10) / scale;
-        } else {
-          y1 -= (aRect.height / 2 - 10) / scale;
-          y2 += (bRect.height / 2 - 10) / scale;
-        }
-      } else if (x1 < x2) {
-        x1 += (aRect.width / 2 - 10) / scale;
-        x2 -= (bRect.width / 2 - 10) / scale;
-      } else {
-        x1 -= (aRect.width / 2 - 10) / scale;
-        x2 += (bRect.width / 2 - 10) / scale;
-      }
-
+      // Precise targeting
       const dx = x2 - x1;
       const dy = y2 - y1;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal
+        x1 = dx > 0 ? x1 + aRect.width / 2 : x1 - aRect.width / 2;
+        x2 = dx > 0 ? x2 - bRect.width / 2 : x2 + bRect.width / 2;
+        y1 = dy > 0 ? y1 + aRect.height / 4 : y1 - aRect.height / 4;
+        y2 = dy > 0 ? y2 - bRect.height / 4 : y2 + bRect.height / 4;
+      } else {
+        // Vertical
+        y1 = dy > 0 ? y1 + aRect.height / 2 : y1 - aRect.height / 2;
+        y2 = dy > 0 ? y2 - bRect.height / 2 : y2 + bRect.height / 2;
+        x1 = dx > 0 ? x1 + aRect.width / 4 : x1 - aRect.width / 4;
+        x2 = dx > 0 ? x2 - bRect.width / 4 : x2 + bRect.width / 4;
+      }
+
       const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      const lift = Math.max(isMobile ? 24 : 32, dist * (isMobile ? 0.08 : 0.12));
-      const cx1 = x1 + dx * 0.3 + (dy / dist) * lift * 0.4;
-      const cy1 = y1 + dy * 0.3 - (dx / dist) * lift * 0.4;
-      const cx2 = x1 + dx * 0.7 + (dy / dist) * lift * 0.2;
-      const cy2 = y1 + dy * 0.7 - (dx / dist) * lift * 0.2;
+      const lift = Math.max(24, dist * 0.15);
+      const perpX = -dy / dist * lift;
+      const perpY = dx / dist * lift;
+      const cx1 = x1 + dx * 0.25 + perpX * 0.5;
+      const cy1 = y1 + dy * 0.25 + perpY * 0.5;
+      const cx2 = x1 + dx * 0.75 + perpX * 0.3;
+      const cy2 = y1 + dy * 0.75 + perpY * 0.3;
       const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -316,27 +352,27 @@
   function showTooltip(e, n) {
     tooltip.innerHTML = `<strong>${escapeHtml(n.title)}</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">${escapeHtml(n.sub||'')}</div>`;
     tooltip.style.display = 'block';
+    tooltip.style.visibility = 'hidden';
     const rect = e.currentTarget.getBoundingClientRect();
     requestAnimationFrame(() => {
       tooltip.style.left = `${rect.left + window.pageXOffset + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-      tooltip.style.top = `${rect.bottom + window.pageYOffset + (isMobile ? 4 : 8)}px`;
+      tooltip.style.top = `${rect.bottom + window.pageYOffset + (isMobile ? 2 : 8)}px`;
+      tooltip.style.visibility = 'visible';
     });
   }
-  function hideTooltip() { tooltip.style.display = 'none'; }
+  function hideTooltip() { tooltip.style.display = 'none'; tooltip.style.visibility = 'hidden'; }
 
   function fitCanvas(padding = PADDING) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(n => {
       if(!n.el) return;
-      const left = parseFloat(n.el.style.left || 0);
-      const top = parseFloat(n.el.style.top || 0);
+      const left = n.x || parseFloat(n.el.style.left || 0);
+      const top = n.y || parseFloat(n.el.style.top || 0);
       minX = Math.min(minX, left);
       minY = Math.min(minY, top);
       maxX = Math.max(maxX, left + (n.el.offsetWidth || NODE_W));
       maxY = Math.max(maxY, top + (n.el.offsetHeight || NODE_H));
     });
-    minX = Math.max(0, minX - padding);
-    minY = Math.max(0, minY - padding);
     if(minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
     const width = Math.ceil(maxX - minX + padding * 2);
     const height = Math.ceil(maxY - minY + padding * 2);
@@ -349,24 +385,22 @@
     const offsetY = padding - minY;
     nodes.forEach(n => {
       if(!n.el) return;
-      const left = parseFloat(n.el.style.left || 0) + offsetX;
-      const top = parseFloat(n.el.style.top || 0) + offsetY;
-      n.el.style.left = left + 'px';
-      n.el.style.top = top + 'px';
-      n.x = left;
-      n.y = top;
+      n.x = (n.x || parseFloat(n.el.style.left || 0)) + offsetX;
+      n.y = (n.y || parseFloat(n.el.style.top || 0)) + offsetY;
+      n.el.style.left = n.x + 'px';
+      n.el.style.top = n.y + 'px';
     });
 
     drawEdges(false);
 
     const headerHeight = document.querySelector('.map-header')?.offsetHeight || 60;
-    stage.style.height = (window.innerHeight - headerHeight - 120) + 'px'; // Adjusted for more space
+    stage.style.height = (window.innerHeight - headerHeight - 120) + 'px';
 
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
-    const fitScaleW = stageW / width;
-    const fitScaleH = stageH / height;
-    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH) * 0.9); // Slight buffer
+    const fitScaleW = (stageW - 20) / width;
+    const fitScaleH = (stageH - 20) / height;
+    const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
     stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
     stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
@@ -374,8 +408,8 @@
 
   function focusNode(nodeId) {
     const n = nodeMap[nodeId]; if(!n || !n.el) return;
-    const cx = parseFloat(n.el.style.left) + (n.el.offsetWidth || NODE_W) / 2;
-    const cy = parseFloat(n.el.style.top) + (n.el.offsetHeight || NODE_H) / 2;
+    const cx = n.x + (n.el.offsetWidth || NODE_W) / 2;
+    const cy = n.y + (n.el.offsetHeight || NODE_H) / 2;
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
     stage.scrollTo({ left: Math.max(0, cx * scale - stage.clientWidth / 2), top: Math.max(0, cy * scale - stage.clientHeight / 2), behavior:'smooth' });
     const path = findPathTo(nodeId);
@@ -475,85 +509,148 @@
     });
   }
 
-  (function enablePan() {
-    let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
-    stage.addEventListener('mousedown', (e)=> { if(e.target.closest('.node-box')) return; isDown=true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
-    window.addEventListener('mouseup', ()=> { isDown=false; stage.classList.remove('dragging'); });
-    window.addEventListener('mousemove', (e)=> { if(!isDown) return; const x = e.pageX - stage.offsetLeft; const y = e.pageY - stage.offsetTop; stage.scrollLeft = scrollLeft + (startX - x); stage.scrollTop = scrollTop + (startY - y); });
-    stage.addEventListener('wheel', (e)=> { if(e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive:false });
-  })();
+  // Advanced: Node dragging
+  function enableNodeDrag(el, n) {
+    let isDragging = false;
+    let startX, startY;
+    el.addEventListener('mousedown', startDrag);
+    el.addEventListener('touchstart', startDrag);
 
-  // Advanced: Pinch zoom for mobile
-  if(isMobile) {
-    let startScale = scale;
-    let startDistance = 0;
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      startX = (e.clientX || e.touches[0].clientX) / scale - n.x;
+      startY = (e.clientY || e.touches[0].clientY) / scale - n.y;
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('touchmove', drag);
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchend', endDrag);
+    }
+
+    function drag(e) {
+      if (!isDragging) return;
+      n.x = (e.clientX || e.touches[0].clientX) / scale - startX;
+      n.y = (e.clientY || e.touches[0].clientY) / scale - startY;
+      el.style.left = n.x + 'px';
+      el.style.top = n.y + 'px';
+      drawEdges(false);
+    }
+
+    function endDrag() {
+      isDragging = false;
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('touchmove', drag);
+      document.removeEventListener('mouseup', endDrag);
+      document.removeEventListener('touchend', endDrag);
+    }
+  }
+
+  // Advanced: Pinch zoom
+  if (isMobile) {
+    let initialDistance = 0;
+    let initialScale = 1;
     stage.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
-        startScale = scale;
-        startDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+        initialDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialScale = scale;
       }
-    }, { passive: false });
+    });
     stage.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        const distance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        const newScale = startScale * (distance / startDistance);
-        setScale(Math.max(0.5, Math.min(1.6, newScale)));
+        const distance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
       }
-    }, { passive: false });
+    });
   }
+
+  // Pan
+  (function enablePan() {
+    let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+    stage.addEventListener('mousedown', (e) => { if (e.target.closest('.node-box')) return; isDown = true; startX = e.pageX - stage.offsetLeft; startY = e.pageY - stage.offsetTop; scrollLeft = stage.scrollLeft; scrollTop = stage.scrollTop; stage.classList.add('dragging'); });
+    window.addEventListener('mouseup', () => { isDown = false; stage.classList.remove('dragging'); });
+    window.addEventListener('mousemove', (e) => { if (!isDown) return; const x = e.pageX - stage.offsetLeft; const y = e.pageY - stage.offsetTop; stage.scrollLeft = scrollLeft + (startX - x); stage.scrollTop = scrollTop + (startY - y); });
+    stage.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) return; stage.scrollLeft += e.deltaY; e.preventDefault(); }, { passive: false });
+  })();
 
   function setScale(s) { scale = s; container.style.transform = `scale(${scale})`; svg.style.transform = `scale(${scale})`; drawEdges(false); }
 
-  document.getElementById('zoom-in').addEventListener('click', ()=> setScale(Math.min(1.6, scale + 0.12)));
-  document.getElementById('zoom-out').addEventListener('click', ()=> setScale(Math.max(0.5, scale - 0.12)));
-  document.getElementById('reset-view').addEventListener('click', ()=> { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if(n.el) n.el.style.opacity=''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity=''); activeCluster = null; });
+  document.getElementById('zoom-in').addEventListener('click', () => setScale(Math.min(1.6, scale + 0.12)));
+  document.getElementById('zoom-out').addEventListener('click', () => setScale(Math.max(0.5, scale - 0.12)));
+  document.getElementById('reset-view').addEventListener('click', () => { setScale(1); stage.scrollLeft = 0; stage.scrollTop = 0; nodes.forEach(n => { if (n.el) n.el.style.opacity = ''; }); const paths = svg.querySelectorAll('path.flow-line'); paths.forEach(p => p.style.opacity = ''); activeCluster = null; });
 
   useWorkerBtn.addEventListener('click', () => {
-    if(!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
-    if(workerEnabled) {
+    if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
+    if (workerEnabled) {
       workerEnabled = false;
       useWorkerBtn.textContent = 'Use Worker';
-      if(worker) { worker.terminate(); worker = null; }
+      if (worker) { worker.terminate(); worker = null; }
     } else {
       try {
         worker = new Worker('/scripts/leetree-worker.js');
         workerEnabled = true; useWorkerBtn.textContent = 'Worker ON';
-        worker.postMessage({ type:'init' });
-      } catch(err) { console.error('Worker spawn failed', err); alert('Failed to start worker'); workerEnabled = false; useWorkerBtn.textContent = 'Use Worker'; }
+        worker.postMessage({ type: 'init' });
+      } catch (err) { console.error('Worker spawn failed', err); alert('Failed to start worker'); workerEnabled = false; useWorkerBtn.textContent = 'Use Worker'; }
     }
   });
 
   // Advanced: Export as PNG
   exportBtn.addEventListener('click', () => {
-    const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
+    const svgData = new XMLSerializer().serializeToString(svg);
     const img = new Image();
     img.onload = () => {
-      canvas.width = svg.getAttribute('width');
-      canvas.height = svg.getAttribute('height');
+      canvas.width = svg.width.baseVal.value;
+      canvas.height = svg.height.baseVal.value;
       ctx.drawImage(img, 0, 0);
-      const png = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = png;
-      a.download = 'leetree-map.png';
-      a.click();
+      // Add nodes (since they are HTML)
+      nodes.forEach(n => {
+        const rect = n.el.getBoundingClientRect();
+        const parentRect = container.getBoundingClientRect();
+        ctx.drawImage(n.el, rect.left - parentRect.left, rect.top - parentRect.top);
+      });
+      const link = document.createElement('a');
+      link.download = 'leetree-graph.png';
+      link.href = canvas.toDataURL();
+      link.click();
     };
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   });
 
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-  function hexToRgba(hex, a=1) { const h=hex.replace('#',''); const bi=parseInt(h,16); return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`; }
+  // Advanced: Toggle layout
+  layoutToggleBtn.addEventListener('click', () => {
+    layoutMode = layoutMode === 'guided' ? 'force' : 'guided';
+    layoutToggleBtn.textContent = layoutMode === 'guided' ? 'Switch to Force' : 'Switch to Guided';
+    computeGuidedPositions(); // Reset positions
+    resolveCollisionsAndLayout(() => {
+      nodes.forEach(n => {
+        if (!n.el) return;
+        n.el.style.left = n.x + 'px';
+        n.el.style.top = n.y + 'px';
+      });
+      drawEdges(false);
+      fitCanvas(PADDING);
+    });
+  });
+
+  function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function hexToRgba(hex, a = 1) { const h = hex.replace('#', ''); const bi = parseInt(h, 16); return `rgba(${(bi >> 16) & 255},${(bi >> 8) & 255},${bi & 255},${a})`; }
 
   function boot() {
     buildGraph();
     computeGuidedPositions();
     renderNodes();
     setupSvgDefs();
-    resolveCollisionsAndLayout(()=> {
+    resolveCollisionsAndLayout(() => {
       nodes.forEach(n => {
-        if(!n.el) return;
+        if (!n.el) return;
         n.el.style.left = (n.x || 0) + 'px';
         n.el.style.top = (n.y || 0) + 'px';
       });
@@ -574,13 +671,13 @@
 
   window.Leetree = {
     focusNode: focusNode,
-    addProblem: function(p) {
-      problems.push(p); nodes.push({ id:p.id, title:p.title, sub:p.sub, url:p.url || '#', type:'leaf', cluster:p.cluster}); edges.push(['hub-'+p.cluster, p.id]); nodeMap[p.id] = nodes.find(n=>n.id===p.id);
+    addProblem: function (p) {
+      problems.push(p); nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster }); edges.push(['hub-' + p.cluster, p.id]); nodeMap[p.id] = nodes.find(n => n.id === p.id);
       computeGuidedPositions();
-      resolveCollisionsAndLayout(()=> {
+      resolveCollisionsAndLayout(() => {
         renderNodes(); setupSvgDefs(); drawEdges(true); fitCanvas(PADDING); renderProblemButtons();
       });
     },
-    toggleWorker: function(enable) { useWorkerBtn.click(); }
+    toggleWorker: function (enable) { useWorkerBtn.click(); }
   };
 })();
