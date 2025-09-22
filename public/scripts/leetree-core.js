@@ -146,10 +146,16 @@
     if (!animationButton) {
       animationButton = document.createElement('button');
       animationButton.id = 'use-animations';
-      animationButton.textContent = 'Toggle Animations: ON';
+      animationButton.textContent = `Toggle Animations: ${animationsEnabled ? 'ON' : 'OFF'}`;
+      animationButton.style.position = 'fixed';
+      animationButton.style.top = '10px';
+      animationButton.style.right = '10px';
+      animationButton.style.zIndex = '1000';
+      animationButton.style.padding = '5px 10px';
       document.body.appendChild(animationButton);
     }
     animationButton.onclick = () => window.Leetree.toggleAnimations();
+    window.dispatchEvent(new CustomEvent('leetree:animationsToggled', { detail: { animationsEnabled } }));
 
     let resizeTimer;
     window.addEventListener('resize', () => {
