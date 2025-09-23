@@ -45,6 +45,7 @@
 
 
 
+
 .navbar {
   display: flex;
   align-items: center;
@@ -56,10 +57,18 @@
   top: 0;
   z-index: 1000;
   border-radius: 16px;
-  overflow: visible;
 }
 
-/* --- Desktop Links --- */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo img {
+  height: 60px;
+  width: auto;
+}
+
 .nav-menu {
   display: flex;
   gap: 1rem;
@@ -80,7 +89,7 @@
   box-shadow: var(--glow);
 }
 
-/* --- Hamburger --- */
+/* Hamburger toggle */
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -111,32 +120,30 @@
   transform: translateY(-9px) rotate(-45deg);
 }
 
-/* --- Mobile --- */
+/* Mobile styles */
 @media (max-width: 768px) {
-  body {
-    overflow-x: hidden; /* fix horizontal scroll */
-  }
-
   .nav-menu {
     position: fixed;
     top: 0;
-    right: -100%;
-    width: 100vw; /* prevent extra width */
+    right: 0;
+    width: 100%;
+    max-width: 100%;
     height: 100vh;
     background: rgba(15,15,15,0.95);
     backdrop-filter: blur(18px);
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 1.5rem;
-    padding: 0; /* remove extra padding */
-    transition: right 0.4s ease;
+    padding: 2rem;
+    transform: translateX(100%);
+    transition: transform 0.4s ease;
     z-index: 1200;
+    overflow-y: auto;
   }
 
   .nav-menu.active {
-    right: 0;
+    transform: translateX(0);
   }
 
   .nav-link {
@@ -162,7 +169,7 @@
     display: flex;
   }
 
-  /* Signature glow in mobile overlay */
+  /* Signature inside overlay */
   .nav-signature-clone {
     margin-top: 3rem;
     height: 56px;
