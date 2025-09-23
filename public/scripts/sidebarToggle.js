@@ -1,5 +1,5 @@
 (function () {
-  console.log('[sidebarToggle.js] nav fixed v1');
+  console.log('[sidebarToggle.js] nav fixed v2');
 
   function initNav() {
     const toggle = document.querySelector('.nav-toggle');
@@ -19,7 +19,10 @@
     const origImg = document.querySelector('#nav-image');
 
     function addSignatureClone() {
-      if (!origImg) return;
+      if (!origImg) {
+        console.warn('[sidebarToggle.js] Original image (#nav-image) missing, cannot clone');
+        return;
+      }
       if (menu.querySelector('.nav-signature-clone')) return;
       const clone = origImg.cloneNode(true);
       clone.removeAttribute('id');
@@ -33,11 +36,15 @@
       cloneLi.setAttribute('role', 'presentation');
       cloneLi.appendChild(clone);
       menu.appendChild(cloneLi);
+      console.log('[sidebarToggle.js] Signature clone added');
     }
 
     function removeSignatureClone() {
       const existing = menu.querySelector('.nav-signature-li');
-      if (existing) existing.remove();
+      if (existing) {
+        existing.remove();
+        console.log('[sidebarToggle.js] Signature clone removed');
+      }
     }
 
     function open() {
@@ -47,6 +54,7 @@
       backdrop.classList.add('open');
       document.body.classList.add('nav-open');
       setTimeout(addSignatureClone, 100);
+      console.log('[sidebarToggle.js] Menu opened');
     }
 
     function close() {
@@ -56,6 +64,7 @@
       backdrop.classList.remove('open');
       document.body.classList.remove('nav-open');
       setTimeout(removeSignatureClone, 400);
+      console.log('[sidebarToggle.js] Menu closed');
     }
 
     toggle.addEventListener('click', (ev) => {
@@ -64,18 +73,29 @@
       if (menu.classList.contains('open')) close(); else open();
     });
 
-    backdrop.addEventListener('click', close);
+    backdrop.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      console.log('[sidebarToggle.js] Backdrop clicked');
+      close();
+    });
 
     menu.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', close);
+      link.addEventListener('click', (ev) => {
+        console.log(`[sidebarToggle.js] Nav link clicked: ${link.getAttribute('href')}`);
+        close();
+      });
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && menu.classList.contains('open')) close();
+      if (e.key === 'Escape' && menu.classList.contains('open')) {
+        console.log('[sidebarToggle.js] ESC key pressed');
+        close();
+      }
     });
 
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768 && menu.classList.contains('open')) {
+        console.log('[sidebarToggle.js] Window resized to desktop, closing menu');
         close();
       }
     });
