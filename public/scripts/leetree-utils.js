@@ -8,7 +8,7 @@ window.LeetreeUtils = (function () {
   const container = document.getElementById('map-nodes');
   const svg = document.getElementById('map-svg');
   const searchInput = document.getElementById('node-search');
-  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 10 : 20);
+  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 10 : 15);
   let activeCluster = null;
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
@@ -276,7 +276,9 @@ window.LeetreeUtils = (function () {
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
-      window.LeetreeRender.toggleEdgeAnimations();
+      toggleAnimations.classList.toggle('anim-on', window.Leetree.animationsEnabled);
+      toggleAnimations.classList.toggle('anim-off', !window.Leetree.animationsEnabled);
+      window.dispatchEvent(new Event('leetree:toggleAnimations'));
     });
     useWorker.addEventListener('click', () => {
       if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
