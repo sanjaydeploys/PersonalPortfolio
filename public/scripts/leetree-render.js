@@ -9,7 +9,7 @@ window.LeetreeRender = (function () {
   const legendEl = document.getElementById('map-legend');
   const problemButtons = document.getElementById('problem-buttons');
 
-  function renderNodes() {
+  function renderNodes(isInitial = false) {
     container.innerHTML = '';
     nodes.forEach((n, idx) => {
       const el = document.createElement('a');
@@ -51,7 +51,7 @@ window.LeetreeRender = (function () {
       container.appendChild(el);
       n.el = el;
 
-      if (window.Leetree.animationsEnabled) {
+      if (isInitial && window.Leetree.animationsEnabled) {
         el.style.opacity = 0;
         el.style.transform = 'scale(0.8) translateY(20px)';
         setTimeout(() => {
@@ -171,6 +171,18 @@ window.LeetreeRender = (function () {
     });
   }
 
+  function toggleEdgeAnimations() {
+    const paths = svg.querySelectorAll('path.flow-line');
+    paths.forEach((path) => {
+      path.classList.remove('path-draw-advanced', 'flow-anim-advanced', 'flow-anim');
+      if (window.Leetree.animationsEnabled) {
+        path.classList.add('flow-anim-advanced');
+      } else {
+        path.classList.add('flow-anim');
+      }
+    });
+  }
+
   function renderLegend() {
     legendEl.innerHTML = '';
     clusters.forEach((c) => {
@@ -200,14 +212,14 @@ window.LeetreeRender = (function () {
   }
 
   window.addEventListener('leetree:toggleAnimations', () => {
-    drawEdges(false);
-    renderNodes();
+    toggleEdgeAnimations();
   });
 
   return {
     renderNodes,
     setupSvgDefs,
     drawEdges,
+    toggleEdgeAnimations,
     renderLegend,
     renderProblemButtons
   };
