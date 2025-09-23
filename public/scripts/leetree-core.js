@@ -72,9 +72,9 @@
   let workerEnabled = false;
   let animationsEnabled = true;
 
-  const NODE_W = isMobile ? 100 : 180;
-  const NODE_H = isMobile ? 40 : 68;
-  const PADDING = isMobile ? 15 : 80;
+  const NODE_W = isMobile ? 90 : 160;
+  const NODE_H = isMobile ? 36 : 60;
+  const PADDING = isMobile ? 10 : 20;
 
   function buildGraph() {
     nodes.length = 0;
