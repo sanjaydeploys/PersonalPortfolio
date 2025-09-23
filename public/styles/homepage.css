@@ -43,13 +43,14 @@
       box-shadow: var(--shadow);
     }
 
+
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
+  position: sticky;    
   top: 0;
-  z-index: 1000;
+  z-index: 1400;        
   padding: 0.6rem 1.2rem;
   max-width: 1280px;
   margin: 0 auto;
@@ -59,18 +60,18 @@
   border-radius: 12px;
 }
 
-/* BRAND LOGO (single image) */
 .navbar-brand { display:flex; align-items:center; gap:0.6rem; }
 .nav-logo { display:flex; align-items:center; text-decoration:none; }
 .logo-img {
-  height: 40px;             /* compact desktop size */
+  height: 40px;     
   width: auto;
   object-fit: contain;
   display: block;
   border-radius: 6px;
+  transition: transform 0.28s ease;
 }
 
-/* Desktop nav menu (default) */
+/* desktop menu */
 .nav-menu {
   display: flex;
   gap: 1rem;
@@ -108,13 +109,11 @@
   box-shadow: var(--glow);
 }
 
-/* Hide toggle on desktop by default */
-.nav-toggle { display: none; }
+.nav-toggle,
+.nav-close { display: none; }
 
-/* ========= MOBILE (max-width: 768px) ========= */
 @media (max-width: 768px) {
 
-  /* Make desktop links hidden — we'll use full-screen overlay */
   .nav-menu {
     position: fixed;
     top: 0;
@@ -130,12 +129,18 @@
     align-items: center;
     gap: 1.6rem;
     transition: right 0.48s cubic-bezier(.2,.9,.2,1);
-    z-index: 1400;
+    z-index: 1500;            
     overflow: hidden;
+    pointer-events: none;     
   }
-  .nav-menu.active { right: 0; }
 
-  /* Hamburger (morphing) on right */
+  .nav-menu.active {
+    right: 0;
+    z-index: 1600;          
+    pointer-events: auto;
+  }
+
+  
   .nav-toggle {
     display: flex;
     flex-direction: column;
@@ -146,7 +151,7 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    z-index: 1500;
+    z-index: 1700;             
     align-items: center;
     gap: 4px;
   }
@@ -161,21 +166,20 @@
   .nav-toggle.active .burger-line:nth-child(1) {
     transform: translateY(8px) rotate(45deg);
   }
-  .nav-toggle.active .burger-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .nav-toggle.active .burger-line:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
   .nav-toggle.active .burger-line:nth-child(3) {
     transform: translateY(-8px) rotate(-45deg);
   }
 
-  /* Make the single logo image smaller + circular and show on the left within brand */
-  .logo-img {
-    height: 38px;
-    transition: transform 0.36s ease;
-  }
+  .logo-img { height: 38px; }
 
-  /* Mobile link styling (cursive) */
+  /* mobile links: cursive + staggered entrance */
   .nav-link {
     font-family: cursive;
-    font-size: 1.25rem;
+    font-size: 1.18rem;
     font-weight: 600;
     color: var(--text-color);
     opacity: 0;
@@ -186,34 +190,62 @@
     opacity: 1;
     transform: translateY(0);
   }
-  /* stagger timing using nth-child in the list */
-  .nav-menu.active li:nth-child(1) .nav-link { transition-delay: 0.14s; }
-  .nav-menu.active li:nth-child(2) .nav-link { transition-delay: 0.28s; }
-  .nav-menu.active li:nth-child(3) .nav-link { transition-delay: 0.42s; }
-  .nav-menu.active li:nth-child(4) .nav-link { transition-delay: 0.56s; }
-  .nav-menu.active li:nth-child(5) .nav-link { transition-delay: 0.70s; }
-  .nav-menu.active li:nth-child(6) .nav-link { transition-delay: 0.84s; }
+  /* stagger */
+  .nav-menu.active li:nth-child(1) .nav-link { transition-delay: 0.12s; }
+  .nav-menu.active li:nth-child(2) .nav-link { transition-delay: 0.26s; }
+  .nav-menu.active li:nth-child(3) .nav-link { transition-delay: 0.40s; }
+  .nav-menu.active li:nth-child(4) .nav-link { transition-delay: 0.54s; }
+  .nav-menu.active li:nth-child(5) .nav-link { transition-delay: 0.68s; }
+  .nav-menu.active li:nth-child(6) .nav-link { transition-delay: 0.82s; }
 
-  /* DYNAMIC CLONED SIGNATURE: appended into .nav-menu when open */
-  .nav-menu .nav-signature-clone {
+  /* ---------- Signature wrapper + clone animation ---------- */
+  .nav-signature-wrap {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width: 100%;
     margin-top: auto;
     margin-bottom: 3.4rem;
-    max-height: 60px;
     opacity: 0;
-    transform: translateY(26px) scale(0.98);
+    transform: translateY(28px) scale(0.96);
     transition: all 0.6s ease;
-    filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.18));
+    pointer-events: none;
   }
-  .nav-menu.active .nav-signature-clone {
+  .nav-signature-clone {
+    height: 56px;
+    width: auto;
+    display:block;
+    filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.18));
+    border-radius: 6px;
+    will-change: transform, filter, opacity;
+  }
+
+  @keyframes signatureRise {
+    0% { opacity:0; transform: translateY(28px) scale(0.94); }
+    60% { opacity:1; transform: translateY(-6px) scale(1.02); }
+    100% { opacity:1; transform: translateY(0) scale(1); }
+  }
+  @keyframes signatureGlow {
+    0% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.06)); }
+    50% { filter: drop-shadow(0 0 18px rgba(255,209,102,0.20)); }
+    100% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.06)); }
+  }
+
+  .nav-menu.active .nav-signature-wrap {
     opacity: 1;
     transform: translateY(0) scale(1);
-    transition-delay: 1.0s;
+    pointer-events: auto;
   }
-  .navbar { padding: 0.5rem 1rem; border-radius: 10px; }
+  .nav-menu.active .nav-signature-wrap .nav-signature-clone {
+    animation:
+      signatureRise 0.78s cubic-bezier(.2,.9,.2,1) 0.06s both,
+      signatureGlow 2.6s ease-in-out 1s infinite;
+  }
+
+  .navbar { padding: 0.52rem 0.92rem; border-radius: 10px; }
   .navbar-brand { flex: 1 1 auto; }
   .nav-toggle { margin-left: auto; }
 }
-
 
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
     .map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
