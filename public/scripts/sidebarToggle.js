@@ -43,14 +43,20 @@
           // inline safety sizes for clone
           clone.style.height = '34px';
           clone.style.width = 'auto';
-          menu.appendChild(clone);
+
+          const cloneLi = document.createElement('li');  // New wrapper
+          cloneLi.classList.add('nav-signature-li');
+          cloneLi.setAttribute('role', 'presentation');  // Non-menu item
+          cloneLi.appendChild(clone);
+          menu.appendChild(cloneLi);
+
           // reflow to trigger transitions
           // eslint-disable-next-line no-unused-expressions
           clone.offsetHeight;
         }
 
         function removeSignatureClone() {
-          const existing = menu.querySelector('.nav-signature-clone');
+          const existing = menu.querySelector('.nav-signature-li');  // Remove wrapper
           if (existing) existing.remove();
         }
 
