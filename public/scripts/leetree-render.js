@@ -91,15 +91,15 @@ window.LeetreeRender = (function () {
     const marker = document.createElementNS(ns, 'marker');
     marker.setAttribute('id', 'map-arrow');
     marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '10');
+    marker.setAttribute('refX', '9');
     marker.setAttribute('refY', '5');
     marker.setAttribute('markerUnits', 'strokeWidth');
-    marker.setAttribute('markerWidth', '6');
-    marker.setAttribute('markerHeight', '6');
+    marker.setAttribute('markerWidth', '4');
+    marker.setAttribute('markerHeight', '4');
     marker.setAttribute('orient', 'auto');
     const mpath = document.createElementNS(ns, 'path');
     mpath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    mpath.setAttribute('fill', 'rgba(255,255,255,0.18)');
+    mpath.setAttribute('fill', 'rgba(255,255,255,0.28)');
     marker.appendChild(mpath);
     defs.appendChild(marker);
 
@@ -134,13 +134,13 @@ window.LeetreeRender = (function () {
       }
 
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const lift = Math.max(20, dist * 0.3);
+      const lift = Math.max(20, dist * 0.25);
       const perpX = -dy / dist * lift;
       const perpY = dx / dist * lift;
-      const cx1 = x1 + dx * 0.3 + perpX * 0.6;
-      const cy1 = y1 + dy * 0.3 + perpY * 0.6;
-      const cx2 = x1 + dx * 0.7 + perpX * 0.4;
-      const cy2 = y1 + dy * 0.7 + perpY * 0.4;
+      const cx1 = x1 + dx * 0.35 + perpX * 0.55;
+      const cy1 = y1 + dy * 0.35 + perpY * 0.55;
+      const cx2 = x1 + dx * 0.65 + perpX * 0.45;
+      const cy2 = y1 + dy * 0.65 + perpY * 0.45;
       const d = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + x2 + ' ' + y2;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
