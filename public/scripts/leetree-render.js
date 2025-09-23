@@ -114,22 +114,23 @@ window.LeetreeRender = (function () {
     edges.forEach(([from, to], idx) => {
       const f = nodeMap[from], t = nodeMap[to];
       if (!f || !t || !f.el || !t.el) return;
-      const aRect = f.el.getBoundingClientRect();
-      const bRect = t.el.getBoundingClientRect();
-      const parentRect = container.getBoundingClientRect();
-      let x1 = aRect.left - parentRect.left + aRect.width / 2;
-      let y1 = aRect.top - parentRect.top + aRect.height / 2;
-      let x2 = bRect.left - parentRect.left + bRect.width / 2;
-      let y2 = bRect.top - parentRect.top + bRect.height / 2;
+      const w1 = f.el.offsetWidth;
+      const h1 = f.el.offsetHeight;
+      const w2 = t.el.offsetWidth;
+      const h2 = t.el.offsetHeight;
+      let x1 = f.x + w1 / 2;
+      let y1 = f.y + h1 / 2;
+      let x2 = t.x + w2 / 2;
+      let y2 = t.y + h2 / 2;
 
       const dx = x2 - x1;
       const dy = y2 - y1;
       if (Math.abs(dx) > Math.abs(dy)) {
-        x1 = dx > 0 ? aRect.right - parentRect.left : aRect.left - parentRect.left;
-        x2 = dx > 0 ? bRect.left - parentRect.left : bRect.right - parentRect.left;
+        x1 += dx > 0 ? w1 / 2 : -w1 / 2;
+        x2 += dx > 0 ? -w2 / 2 : w2 / 2;
       } else {
-        y1 = dy > 0 ? aRect.bottom - parentRect.top : aRect.top - parentRect.top;
-        y2 = dy > 0 ? bRect.top - parentRect.top : bRect.bottom - parentRect.top;
+        y1 += dy > 0 ? h1 / 2 : -h1 / 2;
+        y2 += dy > 0 ? -h2 / 2 : h2 / 2;
       }
 
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -152,7 +153,8 @@ window.LeetreeRender = (function () {
       path.dataset.cluster = f.cluster || t.cluster;
       svg.appendChild(path);
 
-      if (window.Leetree.animationsEnabled) {
+      const enabled = window.Leetree.animationsEnabled;
+      if (enabled) {
         if (initial) {
           const len = path.getTotalLength();
           path.style.strokeDasharray = len;
@@ -166,19 +168,25 @@ window.LeetreeRender = (function () {
           path.classList.add('flow-anim-advanced');
         }
       } else {
-        path.classList.add('flow-anim');
+        const cluster = path.dataset.cluster;
+        const color = cluster ? clusters.find((c) => c.id === cluster).color : '#ffffff';
+        path.style.stroke = window.LeetreeUtils.hexToRgba(color, 0.3);
       }
     });
   }
 
   function toggleEdgeAnimations() {
     const paths = svg.querySelectorAll('path.flow-line');
+    const enabled = window.Leetree.animationsEnabled;
     paths.forEach((path) => {
       path.classList.remove('path-draw-advanced', 'flow-anim-advanced', 'flow-anim');
-      if (window.Leetree.animationsEnabled) {
+      path.style.stroke = '';
+      if (enabled) {
         path.classList.add('flow-anim-advanced');
       } else {
-        path.classList.add('flow-anim');
+        const cluster = path.dataset.cluster;
+        const color = cluster ? clusters.find((c) => c.id === cluster).color : '#ffffff';
+        path.style.stroke = window.LeetreeUtils.hexToRgba(color, 0.3);
       }
     });
   }
