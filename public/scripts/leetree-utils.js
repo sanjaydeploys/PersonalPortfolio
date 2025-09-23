@@ -8,7 +8,7 @@ window.LeetreeUtils = (function () {
   const container = document.getElementById('map-nodes');
   const svg = document.getElementById('map-svg');
   const searchInput = document.getElementById('node-search');
-  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 15 : 80);
+  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 10 : 20);
   let activeCluster = null;
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
@@ -82,8 +82,11 @@ window.LeetreeUtils = (function () {
     svg.setAttribute('width', width);
     svg.setAttribute('height', height);
 
-    const offsetX = padding - minX;
-    const offsetY = padding - minY;
+    // Center the graph's centroid
+    const centroidX = (minX + maxX) / 2;
+    const centroidY = (minY + maxY) / 2;
+    const offsetX = padding - minX + (stage.clientWidth / window.Leetree.scale - width) / 2;
+    const offsetY = padding - minY + (stage.clientHeight / window.Leetree.scale - height) / 2;
     nodes.forEach((n) => {
       if (!n.el) return;
       n.x = (n.x || parseFloat(n.el.style.left || 0)) + offsetX;
@@ -94,17 +97,14 @@ window.LeetreeUtils = (function () {
 
     window.LeetreeRender.drawEdges(false);
 
-    const headerHeight = document.querySelector('.map-header')?.offsetHeight || 60;
-    stage.style.height = (window.innerHeight - headerHeight - 80) + 'px';
-
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
     const fitScaleW = (stageW - 10) / width;
     const fitScaleH = (stageH - 10) / height;
     const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
-    stage.scrollLeft = Math.max(0, (width * fitScale - stageW) / 2);
-    stage.scrollTop = Math.max(0, (height * fitScale - stageH) / 2);
+    stage.scrollLeft = Math.max(0, centroidX * fitScale - stageW / 2);
+    stage.scrollTop = 0; // Start at top
   }
 
   function focusNode(nodeId) {
@@ -271,12 +271,12 @@ window.LeetreeUtils = (function () {
       const paths = svg.querySelectorAll('path.flow-line');
       paths.forEach((p) => { p.style.opacity = ''; });
       activeCluster = null;
+      fitCanvas(PADDING);
     });
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
-      window.LeetreeRender.drawEdges(false);
-      window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled: window.Leetree.animationsEnabled } }));
+      window.LeetreeRender.toggleEdgeAnimations();
     });
     useWorker.addEventListener('click', () => {
       if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
