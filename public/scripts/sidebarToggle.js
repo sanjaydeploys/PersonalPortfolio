@@ -1,98 +1,117 @@
-
+<script>
 (function () {
-  function onReady(fn) {
+  function whenReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
   }
 
-  onReady(function () {
+  whenReady(function () {
     const menu = document.getElementById('nav-menu');
     const navToggle = document.querySelector('.nav-toggle');
     if (!menu) return;
 
-    // --- indicator (same behaviour as before) ---
-    const indicator = document.createElement('div');
-    indicator.className = 'nav-indicator';
-    indicator.style.pointerEvents = 'none'; // ensure it never blocks clicks
-    menu.appendChild(indicator);
+    // create indicator once
+    let indicator = menu.querySelector('.nav-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'nav-indicator';
+      menu.appendChild(indicator);
+    }
 
     const links = Array.from(menu.querySelectorAll('.nav-link'));
 
-    function moveIndicatorTo(el) {
-      if (!el || !menu) return;
-      const rect = el.getBoundingClientRect();
-      const menuRect = menu.getBoundingClientRect();
-      indicator.style.width = rect.width + 'px';
-      indicator.style.transform = 'translateX(' + (rect.left - menuRect.left) + 'px)';
+    // compute whether we are in desktop (indicator allowed)
+    function isDesktop() {
+      return window.innerWidth > 768;
+    }
+
+    // update indicator position using element offsetLeft relative to menu container
+    function placeIndicator(el) {
+      if (!el || !isDesktop()) {
+        indicator.style.opacity = '0';
+        return;
+      }
+      // Ensure the link is directly inside nav-menu or offsetParent is nav-menu
+      const left = el.offsetLeft - menu.scrollLeft;
+      const width = el.offsetWidth;
+      indicator.style.left = left + 'px';
+      indicator.style.width = width + 'px';
       indicator.style.opacity = '1';
     }
+
     function hideIndicator() {
+      // if there's a server-set .active link, snap to it, else hide
       const active = menu.querySelector('.nav-link.active');
-      if (active) moveIndicatorTo(active);
+      if (active && isDesktop()) placeIndicator(active);
       else { indicator.style.opacity = '0'; indicator.style.width = '0'; }
     }
 
+    // attach hover/focus handlers (desktop)
     links.forEach(link => {
-      link.addEventListener('mouseenter', (e) => moveIndicatorTo(e.currentTarget));
-      link.addEventListener('focus', (e) => moveIndicatorTo(e.currentTarget));
+      link.addEventListener('mouseenter', () => { if (isDesktop()) placeIndicator(link); });
+      link.addEventListener('focus', () => { if (isDesktop()) placeIndicator(link); });
       link.addEventListener('mouseleave', hideIndicator);
       link.addEventListener('blur', hideIndicator);
 
-      // close mobile menu on link click (robust)
-      link.addEventListener('click', () => {
+      // close mobile menu on link click: **directly** remove active class & sync attrs
+      link.addEventListener('click', (e) => {
         if (!menu.classList.contains('active')) return;
-        // Try trigger existing toggle first
+        // remove active class (non-invasive)
+        menu.classList.remove('active');
+        // sync toggle button aria + visual
         if (navToggle) {
-          navToggle.click();
-          // After tiny delay ensure it's closed, otherwise force close
-          setTimeout(() => {
-            if (menu.classList.contains('active')) {
-              menu.classList.remove('active');
-              navToggle.setAttribute('aria-expanded', 'false');
-              navToggle.classList.remove('active');
-            }
-          }, 60);
-        } else {
-          // fallback: force close
-          menu.classList.remove('active');
+          navToggle.setAttribute('aria-expanded', 'false');
+          navToggle.classList.remove('active');
         }
+        // hide indicator on mobile
+        hideIndicator();
       });
     });
 
-    // Snap to server-side active if present
+    // Snap indicator to server-side active initially (desktop only)
     const serverActive = menu.querySelector('.nav-link.active');
-    if (serverActive) moveIndicatorTo(serverActive);
+    if (serverActive) placeIndicator(serverActive);
 
-    // Recompute on resize (debounce)
-    let to = null;
+    // Reposition indicator on resize (debounced)
+    let rto = null;
     window.addEventListener('resize', () => {
-      clearTimeout(to);
-      to = setTimeout(hideIndicator, 120);
+      clearTimeout(rto);
+      rto = setTimeout(() => {
+        // If menu visible and desktop, recompute based on active or hide
+        if (isDesktop()) {
+          const active = menu.querySelector('.nav-link.active');
+          if (active) placeIndicator(active);
+        } else {
+          hideIndicator();
+        }
+      }, 120);
     });
 
-    // ---------------------------
-    // Fallback toggle handler:
-    // if your sidebarToggle.js doesn't change menu state,
-    // this runs *only then* (so we avoid double-toggle).
-    // ---------------------------
-    if (navToggle) {
-      let lastMenuState = menu.classList.contains('active');
-
-      navToggle.addEventListener('click', () => {
-        // give other handlers a chance to run first
-        setTimeout(() => {
-          const newMenuState = menu.classList.contains('active');
-          if (newMenuState === lastMenuState) {
-            // no handler changed the state => fallback toggling
-            const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
-            navToggle.setAttribute('aria-expanded', (!isExpanded).toString());
-            menu.classList.toggle('active', !isExpanded);
-            navToggle.classList.toggle('active', !isExpanded);
+    // Use a MutationObserver to react if your sidebarToggle.js toggles classes
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.attributeName === 'class') {
+          const isActive = menu.classList.contains('active');
+          // when dropdown opens (mobile), hide indicator (menu now a panel)
+          if (!isDesktop() && isActive) {
+            indicator.style.opacity = '0';
+          } else {
+            // when it closes on mobile, make sure indicator is hidden
+            if (!isActive) hideIndicator();
+            // If desktop and has active link, snap indicator
+            if (isDesktop()) {
+              const active = menu.querySelector('.nav-link.active');
+              if (active) placeIndicator(active);
+            }
           }
-          lastMenuState = menu.classList.contains('active');
-        }, 28); // small delay
-      });
-    }
+        }
+      }
+    });
+    mo.observe(menu, { attributes: true, attributeFilter: ['class'] });
+
+    // Also observe body class changes (if any) OR navigation layout changes (optional)
+    // Clean up when page unloads
+    window.addEventListener('unload', () => mo.disconnect());
   });
 })();
-
+</script>
