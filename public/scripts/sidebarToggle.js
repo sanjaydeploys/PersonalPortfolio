@@ -1,5 +1,5 @@
 (function () {
-  console.log('[sidebarToggle.js] nav final v1');
+  console.log('[sidebarToggle.js] nav updated v2');
 
   function waitFor(selector, cb, max = 12, interval = 80) {
     let tries = 0;
@@ -41,12 +41,12 @@
           clone.classList.add('nav-signature-clone');
           clone.setAttribute('aria-hidden', 'true');
           // inline safety sizes for clone
-          clone.style.height = '34px';
+          clone.style.height = '40px';
           clone.style.width = 'auto';
 
-          const cloneLi = document.createElement('li');  // New wrapper
+          const cloneLi = document.createElement('li');  // Wrapper
           cloneLi.classList.add('nav-signature-li');
-          cloneLi.setAttribute('role', 'presentation');  // Non-menu item
+          cloneLi.setAttribute('role', 'presentation');
           cloneLi.appendChild(clone);
           menu.appendChild(cloneLi);
 
@@ -56,7 +56,7 @@
         }
 
         function removeSignatureClone() {
-          const existing = menu.querySelector('.nav-signature-li');  // Remove wrapper
+          const existing = menu.querySelector('.nav-signature-li');
           if (existing) existing.remove();
         }
 
@@ -66,7 +66,7 @@
           menu.classList.add('open');
           backdrop.classList.add('open');
           document.body.classList.add('nav-open');
-          // append clone slightly after open for nicer timing
+          // append clone slightly after open
           setTimeout(addSignatureClone, 60);
         }
 
@@ -76,7 +76,7 @@
           menu.classList.remove('open');
           backdrop.classList.remove('open');
           document.body.classList.remove('nav-open');
-          // remove clone after animations finish
+          // remove clone after animations
           setTimeout(removeSignatureClone, 420);
         }
 
@@ -99,9 +99,8 @@
           if (e.key === 'Escape' && menu.classList.contains('open')) close();
         });
 
-        // Defensive: prevent injected width issues
+        // Defensive: close on resize beyond mobile
         window.addEventListener('resize', () => {
-          // If the drawer is open and viewport grew beyond mobile, close it
           if (window.innerWidth > 768 && menu.classList.contains('open')) {
             close();
           }
