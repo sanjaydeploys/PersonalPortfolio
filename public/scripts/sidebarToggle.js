@@ -1,5 +1,5 @@
+
 (function () {
-  // Ensure DOM is ready
   function onReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
@@ -7,11 +7,13 @@
 
   onReady(function () {
     const menu = document.getElementById('nav-menu');
+    const navToggle = document.querySelector('.nav-toggle');
     if (!menu) return;
 
-    // create and append indicator (absolute inside .nav-menu)
+    // --- indicator (same behaviour as before) ---
     const indicator = document.createElement('div');
     indicator.className = 'nav-indicator';
+    indicator.style.pointerEvents = 'none'; // ensure it never blocks clicks
     menu.appendChild(indicator);
 
     const links = Array.from(menu.querySelectorAll('.nav-link'));
@@ -24,45 +26,73 @@
       indicator.style.transform = 'translateX(' + (rect.left - menuRect.left) + 'px)';
       indicator.style.opacity = '1';
     }
-
     function hideIndicator() {
-      // try to snap to active link, otherwise hide
       const active = menu.querySelector('.nav-link.active');
-      if (active) {
-        moveIndicatorTo(active);
-      } else {
-        indicator.style.opacity = '0';
-        indicator.style.width = '0';
-      }
+      if (active) moveIndicatorTo(active);
+      else { indicator.style.opacity = '0'; indicator.style.width = '0'; }
     }
 
-    // Bind hover + focus to links (desktop interactions)
     links.forEach(link => {
       link.addEventListener('mouseenter', (e) => moveIndicatorTo(e.currentTarget));
       link.addEventListener('focus', (e) => moveIndicatorTo(e.currentTarget));
-      link.addEventListener('mouseleave', () => hideIndicator());
-      link.addEventListener('blur', () => hideIndicator());
+      link.addEventListener('mouseleave', hideIndicator);
+      link.addEventListener('blur', hideIndicator);
 
-      // On click: *if* mobile menu is open, close it by reusing your .nav-toggle handler
+      // close mobile menu on link click (robust)
       link.addEventListener('click', () => {
-        const navToggle = document.querySelector('.nav-toggle');
-        const navMenu = document.getElementById('nav-menu');
-        if (navToggle && navMenu && navMenu.classList.contains('active')) {
-          // trigger existing toggle logic (safe, re-uses your script)
+        if (!menu.classList.contains('active')) return;
+        // Try trigger existing toggle first
+        if (navToggle) {
           navToggle.click();
+          // After tiny delay ensure it's closed, otherwise force close
+          setTimeout(() => {
+            if (menu.classList.contains('active')) {
+              menu.classList.remove('active');
+              navToggle.setAttribute('aria-expanded', 'false');
+              navToggle.classList.remove('active');
+            }
+          }, 60);
+        } else {
+          // fallback: force close
+          menu.classList.remove('active');
         }
       });
     });
 
-    // Initialize: if there's an .active link set server-side, snap indicator to it
+    // Snap to server-side active if present
     const serverActive = menu.querySelector('.nav-link.active');
     if (serverActive) moveIndicatorTo(serverActive);
 
-    // Recompute on resize (debounced)
+    // Recompute on resize (debounce)
     let to = null;
     window.addEventListener('resize', () => {
       clearTimeout(to);
-      to = setTimeout(() => hideIndicator(), 120);
+      to = setTimeout(hideIndicator, 120);
     });
+
+    // ---------------------------
+    // Fallback toggle handler:
+    // if your sidebarToggle.js doesn't change menu state,
+    // this runs *only then* (so we avoid double-toggle).
+    // ---------------------------
+    if (navToggle) {
+      let lastMenuState = menu.classList.contains('active');
+
+      navToggle.addEventListener('click', () => {
+        // give other handlers a chance to run first
+        setTimeout(() => {
+          const newMenuState = menu.classList.contains('active');
+          if (newMenuState === lastMenuState) {
+            // no handler changed the state => fallback toggling
+            const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', (!isExpanded).toString());
+            menu.classList.toggle('active', !isExpanded);
+            navToggle.classList.toggle('active', !isExpanded);
+          }
+          lastMenuState = menu.classList.contains('active');
+        }, 28); // small delay
+      });
+    }
   });
 })();
+
