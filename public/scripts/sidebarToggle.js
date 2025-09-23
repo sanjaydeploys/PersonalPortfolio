@@ -1,5 +1,5 @@
 (function () {
-  console.log('[sidebarToggle.js] nav fresh v1');
+  console.log('[sidebarToggle.js] nav fixed v1');
 
   function initNav() {
     const toggle = document.querySelector('.nav-toggle');
@@ -60,6 +60,7 @@
 
     toggle.addEventListener('click', (ev) => {
       ev.stopPropagation();
+      console.log('[sidebarToggle.js] Hamburger clicked');
       if (menu.classList.contains('open')) close(); else open();
     });
 
