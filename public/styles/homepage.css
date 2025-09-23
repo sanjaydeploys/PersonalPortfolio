@@ -132,6 +132,62 @@
     z-index: 1001;
   }
 
+/* --- Advanced Mobile Nav Styles --- */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 1101;
+    transition: transform 0.3s ease;
+  }
+  .nav-toggle.active {
+    transform: rotate(90deg);
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(14px);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 4rem 2rem;
+    gap: 1rem;
+    transition: right 0.4s ease-in-out;
+    z-index: 1100;
+  }
+  .nav-menu.active {
+    right: 0;
+  }
+
+  .nav-link {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.4s ease;
+    font-size: 1.2rem;
+    width: 100%;
+  }
+  .nav-menu.active .nav-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .nav-menu.active .nav-link:nth-child(1) { transition-delay: 0.1s; }
+  .nav-menu.active .nav-link:nth-child(2) { transition-delay: 0.2s; }
+  .nav-menu.active .nav-link:nth-child(3) { transition-delay: 0.3s; }
+  .nav-menu.active .nav-link:nth-child(4) { transition-delay: 0.4s; }
+  .nav-menu.active .nav-link:nth-child(5) { transition-delay: 0.5s; }
+  .nav-menu.active .nav-link:nth-child(6) { transition-delay: 0.6s; }
+}
+
         .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
     .map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
     .map-title { font-size:16px; margin:0; font-weight:700; color:#fff; }
@@ -2068,23 +2124,7 @@ transform: translate(0);
 }
 }
 @media (max-width: 768px) {
-.nav-menu {
-display: none;
-position: absolute;
-top: 100%;
-left: 0;
-right: 0;
-background: var(--bg-light);
-flex-direction: column;
-padding: 1rem;
-box-shadow: var(--shadow);
-}
-.nav-menu.active {
-display: flex;
-}
-.nav-toggle {
-display: block;
-}
+    
 .hero-content {
 flex-direction: column;
 text-align: center;
