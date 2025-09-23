@@ -1,79 +1,70 @@
+<script>
 (function () {
-  console.log('[sidebarToggle.js] Script loaded');
-
-  function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
-    let attempts = 0;
-    const check = () => {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log(`[sidebarToggle.js] Found element: ${selector}`);
-        callback(element);
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        console.log(`[sidebarToggle.js] Waiting for ${selector}, attempt ${attempts}`);
-        setTimeout(check, interval);
-      } else {
-        console.warn(`[sidebarToggle.js] Element ${selector} not found after ${maxAttempts} attempts`);
-        callback(null); // allow execution even if not found
-      }
-    };
-    check();
+  // Ensure DOM is ready
+  function onReady(fn) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
   }
 
-  function toggleMenuLogic(toggle, menu) {
-    if (!toggle || !menu) return;
-    toggle.addEventListener('click', () => {
-      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-      toggle.setAttribute('aria-expanded', !isExpanded);
-      menu.classList.toggle('active', !isExpanded);
-      console.log(`[sidebarToggle.js] Toggled ${menu.id || menu.className}, expanded: ${!isExpanded}`);
-    });
-  }
+  onReady(function () {
+    const menu = document.getElementById('nav-menu');
+    if (!menu) return;
 
-  function initNavMenu() {
-    waitForElement('.nav-toggle', (navToggle) => {
-      waitForElement('#nav-menu', (navMenu) => {
-        toggleMenuLogic(navToggle, navMenu);
-      });
-    });
-  }
+    // create and append indicator (absolute inside .nav-menu)
+    const indicator = document.createElement('div');
+    indicator.className = 'nav-indicator';
+    menu.appendChild(indicator);
 
-  function initSidebar() {
-    const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-    const sidebarWrapper = document.getElementById('sidebar-wrapper');
+    const links = Array.from(menu.querySelectorAll('.nav-link'));
 
-    if (!toggleBtn || !sidebarWrapper) {
-      console.warn('[sidebarToggle.js] Sidebar toggle/button not found');
-      return;
+    function moveIndicatorTo(el) {
+      if (!el || !menu) return;
+      const rect = el.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      indicator.style.width = rect.width + 'px';
+      indicator.style.transform = 'translateX(' + (rect.left - menuRect.left) + 'px)';
+      indicator.style.opacity = '1';
     }
 
-    toggleBtn.addEventListener('click', () => {
-      const isOpen = sidebarWrapper.classList.toggle('open');
-      toggleBtn.classList.toggle('active', isOpen);
-      toggleBtn.setAttribute('aria-expanded', isOpen);
-      console.log(`[sidebarToggle.js] Sidebar ${isOpen ? 'opened' : 'closed'}`);
-    });
+    function hideIndicator() {
+      // try to snap to active link, otherwise hide
+      const active = menu.querySelector('.nav-link.active');
+      if (active) {
+        moveIndicatorTo(active);
+      } else {
+        indicator.style.opacity = '0';
+        indicator.style.width = '0';
+      }
+    }
 
-    // Auto close sidebar on link click (mobile only)
-    sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
+    // Bind hover + focus to links (desktop interactions)
+    links.forEach(link => {
+      link.addEventListener('mouseenter', (e) => moveIndicatorTo(e.currentTarget));
+      link.addEventListener('focus', (e) => moveIndicatorTo(e.currentTarget));
+      link.addEventListener('mouseleave', () => hideIndicator());
+      link.addEventListener('blur', () => hideIndicator());
+
+      // On click: *if* mobile menu is open, close it by reusing your .nav-toggle handler
       link.addEventListener('click', () => {
-        if (sidebarWrapper.classList.contains('open')) {
-          sidebarWrapper.classList.remove('open');
-          toggleBtn.classList.remove('active');
-          toggleBtn.setAttribute('aria-expanded', false);
+        const navToggle = document.querySelector('.nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        if (navToggle && navMenu && navMenu.classList.contains('active')) {
+          // trigger existing toggle logic (safe, re-uses your script)
+          navToggle.click();
         }
       });
     });
-  }
 
-  function initializeAll() {
-    initNavMenu();
-    initSidebar();
-  }
+    // Initialize: if there's an .active link set server-side, snap indicator to it
+    const serverActive = menu.querySelector('.nav-link.active');
+    if (serverActive) moveIndicatorTo(serverActive);
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAll);
-  } else {
-    initializeAll();
-  }
+    // Recompute on resize (debounced)
+    let to = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(to);
+      to = setTimeout(() => hideIndicator(), 120);
+    });
+  });
 })();
+</script>
