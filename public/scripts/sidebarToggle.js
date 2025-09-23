@@ -6,15 +6,13 @@
     const check = () => {
       const element = document.querySelector(selector);
       if (element) {
-        console.log(`[sidebarToggle.js] Found element: ${selector}`);
         callback(element);
       } else if (attempts < maxAttempts) {
         attempts++;
-        console.log(`[sidebarToggle.js] Waiting for ${selector}, attempt ${attempts}`);
         setTimeout(check, interval);
       } else {
-        console.warn(`[sidebarToggle.js] Element ${selector} not found after ${maxAttempts} attempts`);
-        callback(null); // allow execution even if not found
+        console.warn(`[sidebarToggle.js] Element ${selector} not found`);
+        callback(null);
       }
     };
     check();
@@ -22,11 +20,31 @@
 
   function toggleMenuLogic(toggle, menu) {
     if (!toggle || !menu) return;
+
+    function openMenu() {
+      toggle.classList.add('active');
+      toggle.setAttribute('aria-expanded', true);
+      menu.classList.add('active');
+    }
+
+    function closeMenu() {
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', false);
+      menu.classList.remove('active');
+    }
+
     toggle.addEventListener('click', () => {
-      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-      toggle.setAttribute('aria-expanded', !isExpanded);
-      menu.classList.toggle('active', !isExpanded);
-      console.log(`[sidebarToggle.js] Toggled ${menu.id || menu.className}, expanded: ${!isExpanded}`);
+      const isOpen = menu.classList.contains('active');
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // Close menu on link click (mobile)
+    menu.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', closeMenu);
     });
   }
 
@@ -41,20 +59,14 @@
   function initSidebar() {
     const toggleBtn = document.querySelector('.sidebar-toggle-btn');
     const sidebarWrapper = document.getElementById('sidebar-wrapper');
-
-    if (!toggleBtn || !sidebarWrapper) {
-      console.warn('[sidebarToggle.js] Sidebar toggle/button not found');
-      return;
-    }
+    if (!toggleBtn || !sidebarWrapper) return;
 
     toggleBtn.addEventListener('click', () => {
       const isOpen = sidebarWrapper.classList.toggle('open');
       toggleBtn.classList.toggle('active', isOpen);
       toggleBtn.setAttribute('aria-expanded', isOpen);
-      console.log(`[sidebarToggle.js] Sidebar ${isOpen ? 'opened' : 'closed'}`);
     });
 
-    // Auto close sidebar on link click (mobile only)
     sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', () => {
         if (sidebarWrapper.classList.contains('open')) {
