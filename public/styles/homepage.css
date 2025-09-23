@@ -44,10 +44,7 @@
     }
 
 
-
-/* ===========================
-   NAVBAR CORE
-=========================== */
+/* NAVBAR */
 .navbar {
   display: flex;
   position: sticky;
@@ -69,12 +66,6 @@
   box-shadow: var(--shadow);
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .logo-img {
   height: 56px;
   width: auto;
@@ -83,9 +74,7 @@
   vertical-align: middle;
 }
 
-/* ===========================
-   NAV LINKS (Desktop)
-=========================== */
+/* DESKTOP MENU */
 .nav-menu {
   display: flex;
   gap: 1rem;
@@ -97,12 +86,11 @@
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  font-family: cursive;   /* Creative cursive touch */
+  font-family: cursive;
   font-weight: 600;
   transition: var(--transition);
   position: relative;
 }
-
 .nav-link:hover,
 .nav-link:focus,
 .nav-link.active {
@@ -111,7 +99,6 @@
   transform: translateY(-2px);
   box-shadow: var(--glow);
 }
-
 .nav-link::after {
   content: '';
   position: absolute;
@@ -122,14 +109,11 @@
   background: var(--secondary-color);
   transition: width 0.3s ease;
 }
-
 .nav-link:hover::after {
   width: 100%;
 }
 
-/* ===========================
-   MOBILE MENU
-=========================== */
+/* TOGGLE BUTTON */
 .nav-toggle {
   display: none;
   background: none;
@@ -138,10 +122,7 @@
   cursor: pointer;
   z-index: 1100;
   color: white;
-  transition: transform 0.3s ease;
 }
-
-/* Hamburger → X animation */
 .nav-toggle span {
   display: block;
   width: 26px;
@@ -161,7 +142,7 @@
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* Mobile Drawer */
+/* MOBILE MENU */
 @media (max-width: 768px) {
   .nav-toggle {
     display: block;
@@ -170,7 +151,7 @@
   .nav-menu {
     position: fixed;
     top: 0;
-    right: -100%;
+    right: -100%;         
     height: 100vh;
     width: 80%;
     max-width: 300px;
@@ -181,10 +162,12 @@
     box-shadow: -2px 0 10px rgba(0,0,0,0.4);
     transition: right 0.4s ease;
     overflow-y: auto;
+    visibility: hidden;   
   }
 
   .nav-menu.active {
     right: 0;
+    visibility: visible;  
   }
 
   .nav-link {
@@ -193,7 +176,7 @@
   }
 
   body.menu-open {
-    overflow: hidden; /* Prevents horizontal/vertical scroll when open */
+    overflow: hidden;     
   }
 }
 
