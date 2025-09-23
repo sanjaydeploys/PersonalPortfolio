@@ -1,4 +1,4 @@
-<script>
+
 (function () {
   console.log('[navSidebar.js] Script loaded');
 
@@ -128,4 +128,4 @@
     initializeAll();
   }
 })();
-</script>
+
