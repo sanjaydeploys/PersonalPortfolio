@@ -43,90 +43,126 @@
       box-shadow: var(--shadow);
     }
 
-/* === NAV - Replace previous nav mobile rules with this block === */
-
-/* Core - keep your existing :root and base styles as-is */
 
 .navbar {
   display:flex;
   align-items:center;
   justify-content:space-between;
+  gap:1rem;
+  padding:0.5rem 1.2rem;
   position:sticky;
   top:0;
   z-index:1200;
-  padding:0.6rem 1.2rem;
   background:var(--glass-bg);
   backdrop-filter:blur(8px);
   border-radius:12px;
-  /* no overflow modifications here */
 }
 
-/* keep .navbar-brand/.logo-img etc as you currently have them */
+/* brand logo (desktop) */
+.logo-img,
+#nav-image {
+  max-height:40px;      /* compact on desktop */
+  width:auto;
+  object-fit:contain;
+  display:block;
+  vertical-align:middle;
+}
 
-/* Desktop nav (unchanged) */
-.nav-menu { display:flex; gap:1rem; list-style:none; margin:0; padding:0; }
+/* desktop menu (default layout) */
+.nav-menu {
+  display:flex;
+  gap:1rem;
+  list-style:none;
+  margin:0;
+  padding:0;
+}
 
-/* Mobile: use transform to keep off-screen and not affect layout */
+/* nav-link default (desktop) */
+.nav-link {
+  color:var(--text-color);
+  text-decoration:none;
+  padding:0.35rem 0.8rem;
+  border-radius:8px;
+  font-weight:600;
+  transition:var(--transition);
+}
+.nav-link:hover,
+.nav-link:focus {
+  color:var(--secondary-color);
+  background:var(--glass-bg);
+  box-shadow:var(--glow);
+}
+
+/* hide mobile toggle on desktop */
+.nav-toggle { display:none; border:0; background:none; }
+
+/* ---------------- MOBILE: transform-based drawer (no layout shift) ---------------- */
 @media (max-width: 768px) {
-
-  /* Hamburger toggle (keeps same class) */
+  /* show hamburger */
   .nav-toggle {
     display:flex;
     align-items:center;
     justify-content:center;
-    width:40px;
-    height:40px;
+    width:44px;
+    height:44px;
     background:none;
     border:none;
-    z-index:1400; /* above navbar but below backdrop when open */
     cursor:pointer;
+    z-index:1400;
   }
   .nav-toggle span {
     display:block;
-    width:24px;
-    height:2.6px;
+    width:26px;
+    height:3px;
     background:var(--text-color);
-    border-radius:2px;
+    border-radius:3px;
     transition: transform 0.32s cubic-bezier(.2,.9,.2,1), opacity 0.2s;
   }
-  .nav-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .nav-toggle.active span:nth-child(2) { opacity:0; transform: scaleX(0); }
-  .nav-toggle.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .nav-toggle span + span { margin-top:6px; }
 
-  /* Backdrop - sits behind the drawer; does not affect layout when hidden */
+  .nav-toggle.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav-toggle.active span:nth-child(2) { opacity:0; transform: scaleX(0); }
+  .nav-toggle.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* backdrop created by JS (.nav-backdrop) */
   .nav-backdrop {
     position:fixed;
-    inset:0;                          /* top:0; right:0; bottom:0; left:0 */
-    background: rgba(0,0,0,0.5);
-    opacity: 0;
-    pointer-events: none;
+    inset:0;                       /* top:0; right:0; bottom:0; left:0 */
+    background: rgba(0,0,0,0.48);
+    opacity:0;
+    pointer-events:none;
     transition: opacity 0.32s ease;
-    z-index:1450;                     /* above page content but below drawer (drawer z-index higher) */
-    will-change: opacity;
+    z-index:1450;
   }
-  .nav-backdrop.open { opacity:1; pointer-events:auto; }
+  .nav-backdrop.open {
+    opacity:1;
+    pointer-events:auto;
+  }
 
-  /* Drawer: fixed, transform-based (will not create extra width) */
+  /* drawer: fixed, transform-based (off-screen) */
   .nav-menu {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 84%;                       /* responsive width; does not use vw */
-    max-width: 360px;
-    background: var(--bg-light);
-    box-shadow: -10px 0 30px rgba(0,0,0,0.6);
-    transform: translateX(100%);      /* physically off-screen — no layout effect */
+    position:fixed;
+    top:0;
+    right:0;
+    bottom:0;
+    width:82%;                     /* responsive drawer width */
+    max-width:360px;
+    background:var(--bg-light);
+    box-shadow:-10px 0 30px rgba(0,0,0,0.6);
+    transform: translateX(100%);   /* OFF-SCREEN — DOES NOT AFFECT LAYOUT */
     transition: transform 0.36s cubic-bezier(.2,.9,.2,1);
     display:flex;
     flex-direction:column;
     align-items:stretch;
-    padding: 2.25rem 1.5rem;
-    gap:1.1rem;
-    z-index:1500;                     /* above backdrop */
+    padding:2.25rem 1.5rem;
+    gap:1rem;
+    z-index:1500;
+    overflow-y:auto;
     -webkit-overflow-scrolling: touch;
-    overflow-y: auto;
-    will-change: transform;
   }
 
   /* open state */
@@ -134,52 +170,54 @@
     transform: translateX(0);
   }
 
-  /* links */
+  /* menu links (mobile) */
   .nav-menu .nav-link {
-    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    font-weight:600;
-    font-size:1.06rem;
-    color: var(--text-color);
-    padding: 0.6rem 0.8rem;
-    border-radius:8px;
-    text-decoration:none;
     display:block;
-    transition: background var(--transition), transform var(--transition);
+    font-family: cursive;
+    font-size:1.05rem;
+    color:var(--text-color);
+    padding:0.7rem 0.9rem;
+    border-radius:10px;
+    opacity:0;
     transform: translateY(12px);
-    opacity: 0;
+    transition: transform 0.36s ease, opacity 0.36s ease;
   }
   .nav-menu.open .nav-link {
+    opacity:1;
     transform: translateY(0);
-    opacity: 1;
   }
-  /* stagger a little without JS (nth-child delays) */
-  .nav-menu.open li:nth-child(1) .nav-link { transition-delay: 0.08s; }
-  .nav-menu.open li:nth-child(2) .nav-link { transition-delay: 0.16s; }
-  .nav-menu.open li:nth-child(3) .nav-link { transition-delay: 0.24s; }
-  .nav-menu.open li:nth-child(4) .nav-link { transition-delay: 0.32s; }
-  .nav-menu.open li:nth-child(5) .nav-link { transition-delay: 0.40s; }
-  .nav-menu.open li:nth-child(6) .nav-link { transition-delay: 0.48s; }
+  /* stagger via nth-child */
+  .nav-menu.open li:nth-child(1) .nav-link { transition-delay: 0.06s; }
+  .nav-menu.open li:nth-child(2) .nav-link { transition-delay: 0.12s; }
+  .nav-menu.open li:nth-child(3) .nav-link { transition-delay: 0.18s; }
+  .nav-menu.open li:nth-child(4) .nav-link { transition-delay: 0.24s; }
+  .nav-menu.open li:nth-child(5) .nav-link { transition-delay: 0.30s; }
+  .nav-menu.open li:nth-child(6) .nav-link { transition-delay: 0.36s; }
 
-  /* signature clone inside the drawer (appended by JS) */
+  /* signature clone inside drawer */
   .nav-signature-clone {
     display:block;
-    margin: 2.4rem auto 0;
-    height:56px;
+    margin: 2.2rem auto 0;
+    height:34px;      /* small and tidy */
     width:auto;
-    filter: brightness(1) drop-shadow(0 0 14px rgba(255,255,255,0.22));
-    opacity: 0;
-    transform: translateY(14px) scale(.98);
+    object-fit:contain;
+    filter: brightness(1) drop-shadow(0 0 12px rgba(255,255,255,0.18));
+    opacity:0;
+    transform: translateY(8px) scale(.98);
     transition: opacity 0.46s ease, transform 0.46s ease;
   }
   .nav-menu.open .nav-signature-clone {
-    opacity: 1;
+    opacity:1;
     transform: translateY(0) scale(1);
-    transition-delay: 0.5s;
+    transition-delay:0.48s;
   }
 
-  /* lock body scroll when open (class added by JS) */
+  /* lock body scroll when nav open */
   body.nav-open { overflow: hidden; }
 }
+
+/* protective: prevent accidental full-viewport width usage elsewhere */
+html, body { max-width:100%; overflow-x:hidden; }
 
 
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
