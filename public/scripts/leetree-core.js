@@ -72,9 +72,9 @@
   let workerEnabled = false;
   let animationsEnabled = true;
 
-  const NODE_W = isMobile ? 90 : 160;
-  const NODE_H = isMobile ? 36 : 60;
-  const PADDING = isMobile ? 10 : 20;
+  const NODE_W = isMobile ? 80 : 150;
+  const NODE_H = isMobile ? 32 : 56;
+  const PADDING = isMobile ? 10 : 15;
 
   function buildGraph() {
     nodes.length = 0;
@@ -126,7 +126,7 @@
       return;
     }
     window.LeetreeLayout.computeGuidedPositions();
-    window.LeetreeRender.renderNodes();
+    window.LeetreeRender.renderNodes(true);
     window.LeetreeRender.setupSvgDefs();
     window.LeetreeLayout.resolveCollisionsAndLayout(() => {
       nodes.forEach((n) => {
@@ -190,7 +190,7 @@
     nodeMap[p.id] = nodes.find((n) => n.id === p.id);
     window.LeetreeLayout.computeGuidedPositions();
     window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-      window.LeetreeRender.renderNodes();
+      window.LeetreeRender.renderNodes(true);
       window.LeetreeRender.setupSvgDefs();
       window.LeetreeRender.drawEdges(true);
       window.LeetreeUtils.fitCanvas(PADDING);
