@@ -120,38 +120,11 @@
     window.Leetree.initialized = true;
   }
 
-  function setupControls() {
-    let controls = document.getElementById('leetree-controls');
-    if (!controls) {
-      controls = document.createElement('div');
-      controls.id = 'leetree-controls';
-      controls.style.position = 'fixed';
-      controls.style.top = '10px';
-      controls.style.right = '10px';
-      controls.style.zIndex = '1000';
-      controls.style.background = '#f0f0f0';
-      controls.style.padding = '10px';
-      controls.style.borderRadius = '5px';
-      controls.style.display = 'flex';
-      controls.style.gap = '5px';
-      document.body.appendChild(controls);
-    }
-    controls.innerHTML = `
-      <button id="zoom-in">+</button>
-      <button id="zoom-out">-</button>
-      <button id="reset-view">Reset</button>
-      <button id="toggle-animations">Anim: ${animationsEnabled ? 'ON' : 'OFF'}</button>
-      <button id="use-worker">Worker: ${workerEnabled ? 'ON' : 'OFF'}</button>
-      <button id="auto-layout">Auto Layout</button>
-    `;
-  }
-
   function boot() {
     if (!window.Leetree.initialized) {
       console.error('boot: Graph not initialized');
       return;
     }
-    setupControls();
     window.LeetreeLayout.computeGuidedPositions();
     window.LeetreeRender.renderNodes();
     window.LeetreeRender.setupSvgDefs();
@@ -167,6 +140,7 @@
     window.LeetreeRender.renderLegend();
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
+    window.LeetreeUtils.setupControlListeners();
 
     let resizeTimer;
     window.addEventListener('resize', () => {
@@ -225,7 +199,8 @@
   };
 
   window.Leetree.toggleWorker = function(enable) {
-    document.getElementById('use-worker').click();
+    const useWorker = document.getElementById('use-worker');
+    if (useWorker) useWorker.click();
   };
 
   start();
