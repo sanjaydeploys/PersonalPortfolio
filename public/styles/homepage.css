@@ -56,18 +56,10 @@
   top: 0;
   z-index: 1000;
   border-radius: 16px;
+  overflow: visible;
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-}
-
-.nav-logo img {
-  height: 60px;
-  width: auto;
-}
-
+/* --- Desktop Links --- */
 .nav-menu {
   display: flex;
   gap: 1rem;
@@ -88,7 +80,7 @@
   box-shadow: var(--glow);
 }
 
-/* Hamburger toggle */
+/* --- Hamburger --- */
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -121,22 +113,26 @@
 
 /* --- Mobile --- */
 @media (max-width: 768px) {
+  body {
+    overflow-x: hidden; /* fix horizontal scroll */
+  }
+
   .nav-menu {
     position: fixed;
     top: 0;
     right: -100%;
-    width: 100%;
+    width: 100vw; /* prevent extra width */
     height: 100vh;
     background: rgba(15,15,15,0.95);
     backdrop-filter: blur(18px);
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 1.5rem;
-    padding: 2rem;
+    padding: 0; /* remove extra padding */
     transition: right 0.4s ease;
     z-index: 1200;
-    overflow: hidden;
   }
 
   .nav-menu.active {
@@ -182,6 +178,7 @@
     transform: translateY(0) scale(1);
   }
 }
+
 
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
     .map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
