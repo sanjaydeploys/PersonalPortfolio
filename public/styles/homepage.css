@@ -134,33 +134,50 @@
 
 /* --- Premium Mobile Nav --- */
 @media (max-width: 768px) {
+  /* Toggle (hamburger → X) */
   .nav-toggle {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 28px;
+    height: 22px;
     background: none;
     border: none;
-    color: var(--text-color);
-    font-size: 2rem;
     cursor: pointer;
+    padding: 0;
     z-index: 1201;
-    transition: transform 0.3s ease;
   }
-  .nav-toggle.active {
-    transform: rotate(90deg) scale(1.2);
+  .nav-toggle span {
+    display: block;
+    height: 3px;
+    background: var(--text-color);
+    border-radius: 3px;
+    transition: all 0.4s ease;
+  }
+  .nav-toggle.active span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+  }
+  .nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle.active span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
   }
 
+  /* Fullscreen menu overlay */
   .nav-menu {
     position: fixed;
     top: 0;
     right: -100%;
     width: 100%;
     height: 100vh;
-    background: rgba(10, 10, 10, 0.9);
+    background: rgba(10, 10, 10, 0.92);
     backdrop-filter: blur(16px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
     transition: right 0.5s ease-in-out;
     z-index: 1200;
     overflow: hidden;
@@ -171,24 +188,26 @@
 
   /* Menu Links */
   .nav-link {
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-family: "Brush Script MT", cursive;
+    font-size: 1.4rem;
+    font-weight: 600;
     color: var(--text-color);
     text-decoration: none;
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(25px);
     transition: all 0.5s ease;
     position: relative;
   }
   .nav-link::after {
     content: '';
     position: absolute;
-    left: 0;
+    left: 50%;
     bottom: -6px;
     width: 0;
-    height: 3px;
+    height: 2px;
     background: var(--secondary-color);
-    transition: width 0.4s ease;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
   }
   .nav-link:hover::after {
     width: 100%;
@@ -197,21 +216,21 @@
     opacity: 1;
     transform: translateY(0);
   }
-  .nav-menu.active .nav-link:nth-child(1) { transition-delay: 0.2s; }
-  .nav-menu.active .nav-link:nth-child(2) { transition-delay: 0.35s; }
-  .nav-menu.active .nav-link:nth-child(3) { transition-delay: 0.5s; }
-  .nav-menu.active .nav-link:nth-child(4) { transition-delay: 0.65s; }
-  .nav-menu.active .nav-link:nth-child(5) { transition-delay: 0.8s; }
-  .nav-menu.active .nav-link:nth-child(6) { transition-delay: 0.95s; }
+  .nav-menu.active .nav-link:nth-child(1) { transition-delay: 0.15s; }
+  .nav-menu.active .nav-link:nth-child(2) { transition-delay: 0.3s; }
+  .nav-menu.active .nav-link:nth-child(3) { transition-delay: 0.45s; }
+  .nav-menu.active .nav-link:nth-child(4) { transition-delay: 0.6s; }
+  .nav-menu.active .nav-link:nth-child(5) { transition-delay: 0.75s; }
+  .nav-menu.active .nav-link:nth-child(6) { transition-delay: 0.9s; }
 
-  
+  /* Signature Image (slightly above bottom, with glow) */
   .nav-signature {
     margin-top: auto;
-    margin-bottom: 2rem;
+    margin-bottom: 4rem; /* higher placement */
     opacity: 0;
     transform: translateY(40px) scale(0.95);
     transition: all 0.6s ease;
-    filter: brightness(0) invert(1) drop-shadow(0 0 12px rgba(255,255,255,0.25));
+    filter: brightness(0) invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.25));
   }
   .nav-menu.active .nav-signature {
     opacity: 1;
