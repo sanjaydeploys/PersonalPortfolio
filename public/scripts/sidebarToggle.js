@@ -5,9 +5,8 @@
     let attempts = 0;
     const check = () => {
       const element = document.querySelector(selector);
-      if (element) {
-        callback(element);
-      } else if (attempts < maxAttempts) {
+      if (element) callback(element);
+      else if (attempts < maxAttempts) {
         attempts++;
         setTimeout(check, interval);
       } else {
@@ -18,39 +17,39 @@
     check();
   }
 
-  /**
-   * Nav toggle logic:
-   * - toggles `.active` class on .nav-toggle and #nav-menu
-   * - clones the single image (#nav-image) into .nav-menu when opening (clone gets class nav-signature-clone)
-   * - removes clone on close
-   */
   function toggleMenuLogic(toggle, menu) {
     if (!toggle || !menu) return;
 
-    const originalImage = document.querySelector('#nav-image');
+    const ORIGINAL_IMG_SELECTOR = '#nav-image';
+    const originalImage = document.querySelector(ORIGINAL_IMG_SELECTOR);
 
-    // helper: create clone and append to menu
-    function appendSignatureClone() {
-      if (!originalImage) return null;
-      // Avoid multiple clones
-      if (menu.querySelector('.nav-signature-clone')) return null;
-      const clone = originalImage.cloneNode(true);
-      clone.removeAttribute('id'); // avoid duplicate ids
-      clone.classList.add('nav-signature-clone');
-      clone.setAttribute('aria-hidden', 'true');
-      // reduce height for mobile clone
-      clone.style.height = '56px';
-      clone.style.width = 'auto';
-      // Append at the end of menu
-      menu.appendChild(clone);
-      // force reflow to ensure transitions run
+    function createSignatureWrapper() {
+      // Prevent duplicate wrapper
+      if (menu.querySelector('.nav-signature-wrap')) return null;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'nav-signature-wrap';
+
+      if (originalImage) {
+        const clone = originalImage.cloneNode(true);
+        clone.removeAttribute('id'); // avoid duplicate id
+        clone.classList.add('nav-signature-clone');
+        clone.setAttribute('aria-hidden', 'true');
+        // small inline guard to ensure consistent height
+        clone.style.height = '56px';
+        clone.style.width = 'auto';
+        wrapper.appendChild(clone);
+      }
+
+      menu.appendChild(wrapper);
+      // force reflow so transitions/animations trigger reliably
       // eslint-disable-next-line no-unused-expressions
-      clone.offsetHeight;
-      return clone;
+      wrapper.offsetHeight;
+      return wrapper;
     }
 
-    function removeSignatureClone() {
-      const existing = menu.querySelector('.nav-signature-clone');
+    function removeSignatureWrapper() {
+      const existing = menu.querySelector('.nav-signature-wrap');
       if (existing) existing.remove();
     }
 
@@ -58,54 +57,58 @@
       toggle.classList.add('active');
       toggle.setAttribute('aria-expanded', 'true');
       menu.classList.add('active');
-      // append clone after a tiny delay to let menu slide in
-      setTimeout(() => appendSignatureClone(), 60);
+
+      // append wrapper after menu starts sliding (tiny delay helps timing)
+      setTimeout(() => {
+        createSignatureWrapper();
+      }, 60);
     }
 
     function closeMenu() {
       toggle.classList.remove('active');
       toggle.setAttribute('aria-expanded', 'false');
-      // hide active first so CSS transitions run
+
+      // start close transition
       menu.classList.remove('active');
-      // remove clone after animation completes
-      setTimeout(() => removeSignatureClone(), 420);
+
+      // remove clone after overlay closes (match CSS transition ~480ms)
+      setTimeout(() => {
+        removeSignatureWrapper();
+      }, 480);
     }
 
-    // Toggle on click
+    // toggle via click
     toggle.addEventListener('click', () => {
-      const open = menu.classList.contains('active');
-      if (open) closeMenu(); else openMenu();
+      const isOpen = menu.classList.contains('active');
+      if (isOpen) closeMenu(); else openMenu();
     });
 
-    // Close on link click (mobile)
+    // close when link clicked (mobile)
     menu.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
-        // only close if menu currently open
-        if (menu.classList.contains('active')) {
-          closeMenu();
-        }
+        if (menu.classList.contains('active')) closeMenu();
       });
     });
 
-    // Close when clicking outside menu (optional protective UX)
+    // close on outside click (protective)
     document.addEventListener('click', (ev) => {
       if (!menu.classList.contains('active')) return;
       const target = ev.target;
-      if (target === toggle || toggle.contains(target)) return;
-      if (menu.contains(target)) return;
+      if (toggle.contains(target) || menu.contains(target)) return;
       closeMenu();
+    });
+
+    // keep keyboard accessible: close on ESC
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && menu.classList.contains('active')) closeMenu();
     });
   }
 
-  /* ========== Sidebar init (kept intact) ========== */
+  /* keep your existing sidebar logic intact (if any) */
   function initSidebar() {
     const toggleBtn = document.querySelector('.sidebar-toggle-btn');
     const sidebarWrapper = document.getElementById('sidebar-wrapper');
-
-    if (!toggleBtn || !sidebarWrapper) {
-      // it's okay if sidebar is not used on a page
-      return;
-    }
+    if (!toggleBtn || !sidebarWrapper) return;
 
     toggleBtn.addEventListener('click', () => {
       const isOpen = sidebarWrapper.classList.toggle('open');
@@ -125,7 +128,6 @@
     });
   }
 
-  /* ========== Wiring ========== */
   function initNavMenu() {
     waitForElement('.nav-toggle', (navToggle) => {
       waitForElement('#nav-menu', (navMenu) => {
