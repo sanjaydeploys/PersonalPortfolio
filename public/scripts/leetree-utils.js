@@ -1,17 +1,14 @@
-// leetree-utils.js - Utilities: events, tooltip, drag, search, etc.
-
 window.Leetree = window.Leetree || {};
 window.LeetreeUtils = (function () {
   const nodes = window.Leetree.nodes || [];
   const edges = window.Leetree.edges || [];
-  const nodeMap = window.Leetree.nodeMap || [];
+  const nodeMap = window.Leetree.nodeMap || {};
   const clusters = window.Leetree.clusters || [];
-  const scale = window.Leetree.scale;
   const stage = document.getElementById('map-stage');
   const container = document.getElementById('map-nodes');
   const svg = document.getElementById('map-svg');
   const searchInput = document.getElementById('node-search');
-  const PADDING = window.Leetree.PADDING;
+  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 15 : 80);
   let activeCluster = null;
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
@@ -160,6 +157,10 @@ window.LeetreeUtils = (function () {
   }
 
   function initSearch() {
+    if (!searchInput) {
+      console.warn('initSearch: #node-search element not found');
+      return;
+    }
     const flat = nodes.map((n) => ({ id: n.id, title: n.title, sub: n.sub }));
     let currentFocus = -1;
     searchInput.addEventListener('input', function() {
@@ -247,6 +248,77 @@ window.LeetreeUtils = (function () {
     }
   }
 
+  function setupControlListeners() {
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    const resetView = document.getElementById('reset-view');
+    const toggleAnimations = document.getElementById('toggle-animations');
+    const useWorker = document.getElementById('use-worker');
+    const autoLayout = document.getElementById('auto-layout');
+
+    if (zoomIn) {
+      zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
+    }
+    if (zoomOut) {
+      zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
+    }
+    if (resetView) {
+      resetView.addEventListener('click', () => {
+        setScale(1);
+        stage.scrollLeft = 0;
+        stage.scrollTop = 0;
+        nodes.forEach((n) => { if (n.el) n.el.style.opacity = ''; });
+        const paths = svg.querySelectorAll('path.flow-line');
+        paths.forEach((p) => { p.style.opacity = ''; });
+        activeCluster = null;
+      });
+    }
+    if (toggleAnimations) {
+      toggleAnimations.addEventListener('click', () => {
+        window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
+        toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
+        window.LeetreeRender.drawEdges(false);
+        window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled: window.Leetree.animationsEnabled } }));
+      });
+    }
+    if (useWorker) {
+      useWorker.addEventListener('click', () => {
+        if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
+        if (window.Leetree.workerEnabled) {
+          window.Leetree.workerEnabled = false;
+          useWorker.textContent = 'Worker: OFF';
+          if (window.Leetree.worker) { window.Leetree.worker.terminate(); window.Leetree.worker = null; }
+        } else {
+          try {
+            window.Leetree.worker = new Worker('/public/scripts/leetree-worker.js');
+            window.Leetree.workerEnabled = true;
+            useWorker.textContent = 'Worker: ON';
+            window.Leetree.worker.postMessage({ type: 'init' });
+          } catch (err) {
+            console.error('Worker spawn failed', err);
+            alert('Failed to start worker');
+            window.Leetree.workerEnabled = false;
+            useWorker.textContent = 'Worker: OFF';
+          }
+        }
+      });
+    }
+    if (autoLayout) {
+      autoLayout.addEventListener('click', () => {
+        window.LeetreeLayout.computeGuidedPositions();
+        window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+          nodes.forEach((n) => {
+            if (!n.el) return;
+            n.el.style.left = (n.x || 0) + 'px';
+            n.el.style.top = (n.y || 0) + 'px';
+          });
+          window.LeetreeRender.drawEdges(false);
+          fitCanvas(PADDING);
+        });
+      });
+    }
+  }
+
   (function enablePan() {
     let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
     stage.addEventListener('mousedown', (e) => {
@@ -307,58 +379,6 @@ window.LeetreeUtils = (function () {
     window.LeetreeRender.drawEdges(false);
   }
 
-  document.getElementById('zoom-in').addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
-  document.getElementById('zoom-out').addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
-  document.getElementById('reset-view').addEventListener('click', () => {
-    setScale(1);
-    stage.scrollLeft = 0;
-    stage.scrollTop = 0;
-    nodes.forEach((n) => { if (n.el) n.el.style.opacity = ''; });
-    const paths = svg.querySelectorAll('path.flow-line');
-    paths.forEach((p) => { p.style.opacity = ''; });
-    activeCluster = null;
-  });
-
-  document.getElementById('use-worker').addEventListener('click', () => {
-    if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
-    if (window.Leetree.workerEnabled) {
-      window.Leetree.workerEnabled = false;
-      this.textContent = 'Use Worker';
-      if (window.Leetree.worker) { window.Leetree.worker.terminate(); window.Leetree.worker = null; }
-    } else {
-      try {
-        window.Leetree.worker = new Worker('/scripts/leetree-worker.js');
-        window.Leetree.workerEnabled = true;
-        this.textContent = 'Worker ON';
-        window.Leetree.worker.postMessage({ type: 'init' });
-      } catch (err) {
-        console.error('Worker spawn failed', err);
-        alert('Failed to start worker');
-        window.Leetree.workerEnabled = false;
-        this.textContent = 'Use Worker';
-      }
-    }
-  });
-
-  document.getElementById('auto-layout').addEventListener('click', () => {
-    window.LeetreeLayout.computeGuidedPositions();
-    window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-      nodes.forEach((n) => {
-        if (!n.el) return;
-        n.el.style.left = (n.x || 0) + 'px';
-        n.el.style.top = (n.y || 0) + 'px';
-      });
-      window.LeetreeRender.drawEdges(false);
-      fitCanvas(PADDING);
-    });
-  });
-
-  document.getElementById('toggle-animations').addEventListener('click', () => {
-    window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
-    this.textContent = window.Leetree.animationsEnabled ? 'Animations ON' : 'Animations OFF';
-    window.LeetreeRender.drawEdges(false);
-  });
-
   function escapeHtml(s) {
     if (!s) return '';
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -381,6 +401,7 @@ window.LeetreeUtils = (function () {
     initSearch,
     enableNodeDrag,
     escapeHtml,
-    hexToRgba
+    hexToRgba,
+    setupControlListeners
   };
 })();
