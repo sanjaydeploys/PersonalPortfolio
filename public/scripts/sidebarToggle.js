@@ -1,5 +1,5 @@
 (function () {
-  console.log('[sidebarToggle.js] final nav rebuild');
+  console.log('[sidebarToggle.js] nav final v1');
 
   function waitFor(selector, cb, max = 12, interval = 80) {
     let tries = 0;
@@ -19,11 +19,11 @@
     waitFor('.nav-toggle', (toggle) => {
       waitFor('#nav-menu', (menu) => {
         if (!toggle || !menu) {
-          console.warn('nav toggle/menu missing');
+          console.warn('[sidebarToggle.js] nav toggle/menu missing');
           return;
         }
 
-        // create backdrop element only once
+        // ensure backdrop exists once
         let backdrop = document.querySelector('.nav-backdrop');
         if (!backdrop) {
           backdrop = document.createElement('div');
@@ -40,11 +40,11 @@
           clone.removeAttribute('id');
           clone.classList.add('nav-signature-clone');
           clone.setAttribute('aria-hidden', 'true');
-          // safety inline styles to ensure clone doesn't overflow
-          clone.style.height = '56px';
+          // inline safety sizes for clone
+          clone.style.height = '34px';
           clone.style.width = 'auto';
           menu.appendChild(clone);
-          // force reflow for transition
+          // reflow to trigger transitions
           // eslint-disable-next-line no-unused-expressions
           clone.offsetHeight;
         }
@@ -54,55 +54,57 @@
           if (existing) existing.remove();
         }
 
-        function openMenu() {
+        function open() {
           toggle.classList.add('active');
+          toggle.setAttribute('aria-expanded', 'true');
           menu.classList.add('open');
           backdrop.classList.add('open');
           document.body.classList.add('nav-open');
-          // append clone after slight delay so layout settled
+          // append clone slightly after open for nicer timing
           setTimeout(addSignatureClone, 60);
         }
 
-        function closeMenu() {
+        function close() {
           toggle.classList.remove('active');
+          toggle.setAttribute('aria-expanded', 'false');
           menu.classList.remove('open');
           backdrop.classList.remove('open');
           document.body.classList.remove('nav-open');
-          // remove clone after animation completes
+          // remove clone after animations finish
           setTimeout(removeSignatureClone, 420);
         }
 
-        // toggle
+        // toggle handler
         toggle.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          if (menu.classList.contains('open')) closeMenu();
-          else openMenu();
+          if (menu.classList.contains('open')) close(); else open();
         });
 
         // close on backdrop click
-        backdrop.addEventListener('click', closeMenu);
+        backdrop.addEventListener('click', close);
 
         // close on link click
         menu.querySelectorAll('.nav-link').forEach(link => {
-          link.addEventListener('click', closeMenu);
+          link.addEventListener('click', close);
         });
 
-        // close on ESC
+        // ESC key closes
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && menu.classList.contains('open')) closeMenu();
+          if (e.key === 'Escape' && menu.classList.contains('open')) close();
         });
 
-        // prevent accidental body width changes: ensure no resize sets 100vw elsewhere
-        // (we cannot change other parts of app; this is a protective guard)
+        // Defensive: prevent injected width issues
         window.addEventListener('resize', () => {
-          // no-op but reserved for metrics/debugging
-          // Could check for overflow and log if needed
+          // If the drawer is open and viewport grew beyond mobile, close it
+          if (window.innerWidth > 768 && menu.classList.contains('open')) {
+            close();
+          }
         });
       });
     });
   }
 
-  /* keep existing sidebar behavior — unchanged */
+  /* preserve sidebar logic exactly (unchanged) */
   function initSidebar() {
     const toggleBtn = document.querySelector('.sidebar-toggle-btn');
     const sidebarWrapper = document.getElementById('sidebar-wrapper');
