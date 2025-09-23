@@ -1,12 +1,9 @@
-// leetree-render.js - Rendering nodes, edges, legend, and animations
-
 window.Leetree = window.Leetree || {};
 window.LeetreeRender = (function () {
   const nodes = window.Leetree.nodes || [];
   const edges = window.Leetree.edges || [];
   const nodeMap = window.Leetree.nodeMap || {};
   const clusters = window.Leetree.clusters || [];
-  const animationsEnabled = window.Leetree.animationsEnabled;
   const svg = document.getElementById('map-svg');
   const container = document.getElementById('map-nodes');
   const legendEl = document.getElementById('map-legend');
@@ -54,7 +51,7 @@ window.LeetreeRender = (function () {
       container.appendChild(el);
       n.el = el;
 
-      if (animationsEnabled) {
+      if (window.Leetree.animationsEnabled) {
         el.style.opacity = 0;
         el.style.transform = 'scale(0.8) translateY(20px)';
         setTimeout(() => {
@@ -155,7 +152,7 @@ window.LeetreeRender = (function () {
       path.dataset.cluster = f.cluster || t.cluster;
       svg.appendChild(path);
 
-      if (animationsEnabled) {
+      if (window.Leetree.animationsEnabled) {
         if (initial) {
           const len = path.getTotalLength();
           path.style.strokeDasharray = len;
@@ -201,6 +198,11 @@ window.LeetreeRender = (function () {
       problemButtons.appendChild(btn);
     });
   }
+
+  window.addEventListener('leetree:toggleAnimations', () => {
+    drawEdges(false);
+    renderNodes();
+  });
 
   return {
     renderNodes,
