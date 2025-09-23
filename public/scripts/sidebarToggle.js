@@ -1,4 +1,4 @@
-<script>
+
 (function () {
   function whenReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -114,4 +114,4 @@
     window.addEventListener('unload', () => mo.disconnect());
   });
 })();
-</script>
+
