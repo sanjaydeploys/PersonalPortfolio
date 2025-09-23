@@ -256,67 +256,67 @@ window.LeetreeUtils = (function () {
     const useWorker = document.getElementById('use-worker');
     const autoLayout = document.getElementById('auto-layout');
 
-    if (zoomIn) {
-      zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
+    if (!zoomIn || !zoomOut || !resetView || !toggleAnimations || !useWorker || !autoLayout) {
+      console.warn('setupControlListeners: One or more control buttons not found');
+      return;
     }
-    if (zoomOut) {
-      zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
-    }
-    if (resetView) {
-      resetView.addEventListener('click', () => {
-        setScale(1);
-        stage.scrollLeft = 0;
-        stage.scrollTop = 0;
-        nodes.forEach((n) => { if (n.el) n.el.style.opacity = ''; });
-        const paths = svg.querySelectorAll('path.flow-line');
-        paths.forEach((p) => { p.style.opacity = ''; });
-        activeCluster = null;
-      });
-    }
-    if (toggleAnimations) {
-      toggleAnimations.addEventListener('click', () => {
-        window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
-        toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
-        window.LeetreeRender.drawEdges(false);
-        window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled: window.Leetree.animationsEnabled } }));
-      });
-    }
-    if (useWorker) {
-      useWorker.addEventListener('click', () => {
-        if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
-        if (window.Leetree.workerEnabled) {
+
+    zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
+    zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
+    resetView.addEventListener('click', () => {
+      setScale(1);
+      stage.scrollLeft = 0;
+      stage.scrollTop = 0;
+      nodes.forEach((n) => { if (n.el) n.el.style.opacity = ''; });
+      const paths = svg.querySelectorAll('path.flow-line');
+      paths.forEach((p) => { p.style.opacity = ''; });
+      activeCluster = null;
+    });
+    toggleAnimations.addEventListener('click', () => {
+      window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
+      toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
+      window.LeetreeRender.drawEdges(false);
+      window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled: window.Leetree.animationsEnabled } }));
+    });
+    useWorker.addEventListener('click', () => {
+      if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
+      if (window.Leetree.workerEnabled) {
+        window.Leetree.workerEnabled = false;
+        useWorker.textContent = 'Worker: OFF';
+        if (window.Leetree.worker) { window.Leetree.worker.terminate(); window.Leetree.worker = null; }
+      } else {
+        try {
+          window.Leetree.worker = new Worker('/public/scripts/leetree-worker.js');
+          window.Leetree.workerEnabled = true;
+          useWorker.textContent = 'Worker: ON';
+          window.Leetree.worker.postMessage({ type: 'init' });
+        } catch (err) {
+          console.error('Worker spawn failed', err);
+          alert('Failed to start worker');
           window.Leetree.workerEnabled = false;
           useWorker.textContent = 'Worker: OFF';
-          if (window.Leetree.worker) { window.Leetree.worker.terminate(); window.Leetree.worker = null; }
-        } else {
-          try {
-            window.Leetree.worker = new Worker('/public/scripts/leetree-worker.js');
-            window.Leetree.workerEnabled = true;
-            useWorker.textContent = 'Worker: ON';
-            window.Leetree.worker.postMessage({ type: 'init' });
-          } catch (err) {
-            console.error('Worker spawn failed', err);
-            alert('Failed to start worker');
-            window.Leetree.workerEnabled = false;
-            useWorker.textContent = 'Worker: OFF';
-          }
         }
-      });
-    }
-    if (autoLayout) {
-      autoLayout.addEventListener('click', () => {
-        window.LeetreeLayout.computeGuidedPositions();
-        window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-          nodes.forEach((n) => {
-            if (!n.el) return;
-            n.el.style.left = (n.x || 0) + 'px';
-            n.el.style.top = (n.y || 0) + 'px';
-          });
-          window.LeetreeRender.drawEdges(false);
-          fitCanvas(PADDING);
+      }
+    });
+    autoLayout.addEventListener('click', () => {
+      window.LeetreeLayout.computeGuidedPositions();
+      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        nodes.forEach((n) => {
+          if (!n.el) return;
+          n.el.style.left = (n.x || 0) + 'px';
+          n.el.style.top = (n.y || 0) + 'px';
         });
+        window.LeetreeRender.drawEdges(false);
+        fitCanvas(PADDING);
       });
-    }
+    });
+  }
+
+  function setScale(s) {
+    window.Leetree.scale = s;
+    container.style.transform = 'scale(' + s + ')';
+    svg.style.transform = 'scale(' + s + ')';
+    window.LeetreeRender.drawEdges(false);
   }
 
   (function enablePan() {
@@ -370,13 +370,6 @@ window.LeetreeUtils = (function () {
         setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
       }
     }, { passive: false });
-  }
-
-  function setScale(s) {
-    window.Leetree.scale = s;
-    container.style.transform = 'scale(' + s + ')';
-    svg.style.transform = 'scale(' + s + ')';
-    window.LeetreeRender.drawEdges(false);
   }
 
   function escapeHtml(s) {
