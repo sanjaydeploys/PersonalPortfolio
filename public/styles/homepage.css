@@ -133,7 +133,27 @@
     cursor: pointer;
     z-index: 1001;
   }
+ @media (max-width: 768px) {
+    .nav-menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: var(--bg-dark);
+      padding: 1rem;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    .nav-menu.active {
+      display: flex;
+    }
+    .nav-toggle {
+      display: block;
+    }
 
+ }
 
 .social-sticky-container {
   position: fixed;
