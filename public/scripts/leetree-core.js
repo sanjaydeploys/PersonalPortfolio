@@ -141,41 +141,9 @@
       <button id="zoom-out">-</button>
       <button id="reset-view">Reset</button>
       <button id="toggle-animations">Anim: ${animationsEnabled ? 'ON' : 'OFF'}</button>
+      <button id="use-worker">Worker: ${workerEnabled ? 'ON' : 'OFF'}</button>
+      <button id="auto-layout">Auto Layout</button>
     `;
-
-    document.getElementById('zoom-in').addEventListener('click', () => {
-      scale = Math.min(scale + 0.1, 2);
-      window.Leetree.scale = scale;
-      updateCanvasScale();
-    });
-    document.getElementById('zoom-out').addEventListener('click', () => {
-      scale = Math.max(scale - 0.1, 0.5);
-      window.Leetree.scale = scale;
-      updateCanvasScale();
-    });
-    document.getElementById('reset-view').addEventListener('click', () => {
-      scale = 1;
-      window.Leetree.scale = scale;
-      window.LeetreeLayout.computeGuidedPositions();
-      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-        window.LeetreeRender.renderNodes();
-        window.LeetreeRender.drawEdges(false);
-        window.LeetreeUtils.fitCanvas(PADDING);
-      });
-    });
-    document.getElementById('toggle-animations').addEventListener('click', () => {
-      animationsEnabled = !animationsEnabled;
-      window.Leetree.animationsEnabled = animationsEnabled;
-      document.getElementById('toggle-animations').textContent = `Anim: ${animationsEnabled ? 'ON' : 'OFF'}`;
-      window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled } }));
-    });
-  }
-
-  function updateCanvasScale() {
-    const container = document.getElementById('map-nodes');
-    container.style.transform = `scale(${scale})`;
-    window.LeetreeUtils.fitCanvas(PADDING);
-    window.LeetreeRender.drawEdges(false);
   }
 
   function boot() {
@@ -183,6 +151,7 @@
       console.error('boot: Graph not initialized');
       return;
     }
+    setupControls();
     window.LeetreeLayout.computeGuidedPositions();
     window.LeetreeRender.renderNodes();
     window.LeetreeRender.setupSvgDefs();
@@ -198,7 +167,6 @@
     window.LeetreeRender.renderLegend();
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
-    setupControls();
 
     let resizeTimer;
     window.addEventListener('resize', () => {
