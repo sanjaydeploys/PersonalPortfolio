@@ -1,4 +1,3 @@
-<script>
 (function () {
   // Ensure DOM is ready
   function onReady(fn) {
@@ -67,4 +66,3 @@
     });
   });
 })();
-</script>
