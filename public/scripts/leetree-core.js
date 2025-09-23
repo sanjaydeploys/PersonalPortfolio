@@ -1,6 +1,6 @@
 (function () {
   window.Leetree = window.Leetree || {};
-  window.Leetree.initialized = false; // Flag to signal buildGraph completion
+  window.Leetree.initialized = false;
 
   const isMobile = window.innerWidth < 768;
 
@@ -120,6 +120,64 @@
     window.Leetree.initialized = true;
   }
 
+  function setupControls() {
+    let controls = document.getElementById('leetree-controls');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.id = 'leetree-controls';
+      controls.style.position = 'fixed';
+      controls.style.top = '10px';
+      controls.style.right = '10px';
+      controls.style.zIndex = '1000';
+      controls.style.background = '#f0f0f0';
+      controls.style.padding = '10px';
+      controls.style.borderRadius = '5px';
+      controls.style.display = 'flex';
+      controls.style.gap = '5px';
+      document.body.appendChild(controls);
+    }
+    controls.innerHTML = `
+      <button id="zoom-in">+</button>
+      <button id="zoom-out">-</button>
+      <button id="reset-view">Reset</button>
+      <button id="toggle-animations">Anim: ${animationsEnabled ? 'ON' : 'OFF'}</button>
+    `;
+
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      scale = Math.min(scale + 0.1, 2);
+      window.Leetree.scale = scale;
+      updateCanvasScale();
+    });
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      scale = Math.max(scale - 0.1, 0.5);
+      window.Leetree.scale = scale;
+      updateCanvasScale();
+    });
+    document.getElementById('reset-view').addEventListener('click', () => {
+      scale = 1;
+      window.Leetree.scale = scale;
+      window.LeetreeLayout.computeGuidedPositions();
+      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        window.LeetreeRender.renderNodes();
+        window.LeetreeRender.drawEdges(false);
+        window.LeetreeUtils.fitCanvas(PADDING);
+      });
+    });
+    document.getElementById('toggle-animations').addEventListener('click', () => {
+      animationsEnabled = !animationsEnabled;
+      window.Leetree.animationsEnabled = animationsEnabled;
+      document.getElementById('toggle-animations').textContent = `Anim: ${animationsEnabled ? 'ON' : 'OFF'}`;
+      window.dispatchEvent(new CustomEvent('leetree:toggleAnimations', { detail: { animationsEnabled } }));
+    });
+  }
+
+  function updateCanvasScale() {
+    const container = document.getElementById('map-nodes');
+    container.style.transform = `scale(${scale})`;
+    window.LeetreeUtils.fitCanvas(PADDING);
+    window.LeetreeRender.drawEdges(false);
+  }
+
   function boot() {
     if (!window.Leetree.initialized) {
       console.error('boot: Graph not initialized');
@@ -140,6 +198,7 @@
     window.LeetreeRender.renderLegend();
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
+    setupControls();
 
     let resizeTimer;
     window.addEventListener('resize', () => {
@@ -177,7 +236,7 @@
     if (checkDependencies()) {
       boot();
     } else {
-      setTimeout(start, 50); // Retry every 50ms until dependencies are loaded
+      setTimeout(start, 50);
     }
   }
 
