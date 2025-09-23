@@ -98,9 +98,13 @@ window.LeetreeLayout = (function () {
   }
 
   function resolveCollisionsAndLayout(doneCb) {
-    const payload = nodes.map((n) => ({ id: n.id, x: n.x, y: n.y }));
+    const payload = {
+      nodes: nodes.map((n) => ({ id: n.id, x: n.x, y: n.y })),
+      nodeW: NODE_W + 8,
+      nodeH: NODE_H + 8
+    };
     if (workerEnabled && worker) {
-      worker.postMessage({ type: 'layout', nodes: payload });
+      worker.postMessage({ type: 'layout', ...payload });
       const onmsg = (ev) => {
         if (ev.data && ev.data.type === 'layout') {
           ev.data.nodes.forEach((p) => {
@@ -115,8 +119,9 @@ window.LeetreeLayout = (function () {
       };
       worker.addEventListener('message', onmsg);
     } else {
-      deterministicResolve(payload);
-      payload.forEach((p) => {
+      const arr = payload.nodes;
+      deterministicResolve(arr, payload.nodeW, payload.nodeH);
+      arr.forEach((p) => {
         if (nodeMap[p.id]) {
           nodeMap[p.id].x = p.x;
           nodeMap[p.id].y = p.y;
@@ -126,9 +131,7 @@ window.LeetreeLayout = (function () {
     }
   }
 
-  function deterministicResolve(arr) {
-    const NODE_W_LOCAL = NODE_W + 8;
-    const NODE_H_LOCAL = NODE_H + 8;
+  function deterministicResolve(arr, nodeW, nodeH) {
     const iters = 400;
     for (let it = 0; it < iters; it++) {
       let moved = false;
@@ -137,27 +140,18 @@ window.LeetreeLayout = (function () {
         const a = arr[i];
         for (let j = i + 1; j < arr.length; j++) {
           const b = arr[j];
-          if (a.x + NODE_W_LOCAL <= b.x || b.x + NODE_W_LOCAL <= a.x || a.y + NODE_H_LOCAL <= b.y || b.y + NODE_H_LOCAL <= a.y) continue;
-          const overlapX = Math.min(Math.abs(a.x + NODE_W_LOCAL - b.x), Math.abs(b.x + NODE_W_LOCAL - a.x));
-          const overlapY = Math.min(Math.abs(a.y + NODE_H_LOCAL - b.y), Math.abs(b.y + NODE_H_LOCAL - a.y));
-          const push = Math.min(overlapX, overlapY) / 2 + 4;
-          if (overlapX < overlapY) {
-            if (a.x < b.x) {
-              a.x -= push / 2;
-              b.x += push / 2;
-            } else {
-              a.x += push / 2;
-              b.x -= push / 2;
-            }
-          } else {
-            if (a.y < b.y) {
-              a.y -= push / 2;
-              b.y += push / 2;
-            } else {
-              a.y += push / 2;
-              b.y -= push / 2;
-            }
-          }
+          const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
+          if (overlapX <= 0 || overlapY <= 0) continue;
+          const push = Math.min(overlapX, overlapY) / 2 + 8;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const verticalBias = 1.5;
+          a.x += (dx / dist) * push * (Math.abs(dx) > Math.abs(dy) ? 1 : verticalBias);
+          a.y += (dy / dist) * push * (Math.abs(dy) > Math.abs(dx) ? 1 : verticalBias);
+          b.x -= (dx / dist) * push * (Math.abs(dx) > Math.abs(dy) ? 1 : verticalBias);
+          b.y -= (dy / dist) * push * (Math.abs(dy) > Math.abs(dx) ? 1 : verticalBias);
           moved = true;
         }
       }
