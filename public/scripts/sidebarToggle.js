@@ -89,7 +89,6 @@
     });
   }
 
-  /* Keep your sidebar logic intact */
   function initSidebar() {
     const toggleBtn = document.querySelector('.sidebar-toggle-btn');
     const sidebarWrapper = document.getElementById('sidebar-wrapper');
