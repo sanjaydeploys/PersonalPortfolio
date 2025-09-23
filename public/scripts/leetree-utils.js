@@ -37,7 +37,7 @@ window.LeetreeUtils = (function () {
         } else {
           p.classList.remove('flow-highlight-advanced', 'flow-highlight', 'path-pulse-advanced');
           if (enabled) p.style.stroke = '';
-          else p.style.stroke = hexToRgba(pathColor, 0.3);
+          else p.style.stroke = pathColor;
           p.style.opacity = '';
         }
       } else {
@@ -281,7 +281,16 @@ window.LeetreeUtils = (function () {
       const paths = svg.querySelectorAll('path.flow-line');
       paths.forEach((p) => { p.style.opacity = ''; });
       activeCluster = null;
-      fitCanvas(PADDING);
+      window.LeetreeLayout.computeGuidedPositions();
+      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        nodes.forEach((n) => {
+          if (!n.el) return;
+          n.el.style.left = (n.x || 0) + 'px';
+          n.el.style.top = (n.y || 0) + 'px';
+        });
+        window.LeetreeRender.drawEdges(false);
+        fitCanvas(PADDING);
+      });
     });
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
