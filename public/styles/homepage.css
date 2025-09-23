@@ -43,141 +43,142 @@
       box-shadow: var(--shadow);
     }
 
+/* === NAV - Replace previous nav mobile rules with this block === */
 
-/* NAVBAR */
+/* Core - keep your existing :root and base styles as-is */
+
 .navbar {
-  display: flex;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  padding: 0 1.5rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow);
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1280px;
-  margin: 0 auto;
-  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:1200;
+  padding:0.6rem 1.2rem;
+  background:var(--glass-bg);
+  backdrop-filter:blur(8px);
+  border-radius:12px;
+  /* no overflow modifications here */
 }
 
-.navbar.scrolled {
-  background: var(--bg-dark);
-  box-shadow: var(--shadow);
-}
+/* keep .navbar-brand/.logo-img etc as you currently have them */
 
-.logo-img {
-  height: 56px;
-  width: auto;
-  object-fit: contain;
-  display: block;
-  vertical-align: middle;
-}
+/* Desktop nav (unchanged) */
+.nav-menu { display:flex; gap:1rem; list-style:none; margin:0; padding:0; }
 
-/* DESKTOP MENU */
-.nav-menu {
-  display: flex;
-  gap: 1rem;
-  list-style: none;
-}
-
-.nav-link {
-  color: var(--text-color);
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-family: cursive;
-  font-weight: 600;
-  transition: var(--transition);
-  position: relative;
-}
-.nav-link:hover,
-.nav-link:focus,
-.nav-link.active {
-  color: var(--secondary-color);
-  background: var(--glass-bg);
-  transform: translateY(-2px);
-  box-shadow: var(--glow);
-}
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--secondary-color);
-  transition: width 0.3s ease;
-}
-.nav-link:hover::after {
-  width: 100%;
-}
-
-/* TOGGLE BUTTON */
-.nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  z-index: 1100;
-  color: white;
-}
-.nav-toggle span {
-  display: block;
-  width: 26px;
-  height: 3px;
-  margin: 5px auto;
-  background: white;
-  border-radius: 2px;
-  transition: all 0.3s ease;
-}
-.nav-toggle.active span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 6px);
-}
-.nav-toggle.active span:nth-child(2) {
-  opacity: 0;
-}
-.nav-toggle.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(6px, -6px);
-}
-
-/* MOBILE MENU */
+/* Mobile: use transform to keep off-screen and not affect layout */
 @media (max-width: 768px) {
-  .nav-toggle {
-    display: block;
-  }
 
+  /* Hamburger toggle (keeps same class) */
+  .nav-toggle {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    background:none;
+    border:none;
+    z-index:1400; /* above navbar but below backdrop when open */
+    cursor:pointer;
+  }
+  .nav-toggle span {
+    display:block;
+    width:24px;
+    height:2.6px;
+    background:var(--text-color);
+    border-radius:2px;
+    transition: transform 0.32s cubic-bezier(.2,.9,.2,1), opacity 0.2s;
+  }
+  .nav-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle.active span:nth-child(2) { opacity:0; transform: scaleX(0); }
+  .nav-toggle.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Backdrop - sits behind the drawer; does not affect layout when hidden */
+  .nav-backdrop {
+    position:fixed;
+    inset:0;                          /* top:0; right:0; bottom:0; left:0 */
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+    z-index:1450;                     /* above page content but below drawer (drawer z-index higher) */
+    will-change: opacity;
+  }
+  .nav-backdrop.open { opacity:1; pointer-events:auto; }
+
+  /* Drawer: fixed, transform-based (will not create extra width) */
   .nav-menu {
     position: fixed;
     top: 0;
-    right: -100%;         
-    height: 100vh;
-    width: 80%;
-    max-width: 300px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg-dark);
-    box-shadow: -2px 0 10px rgba(0,0,0,0.4);
-    transition: right 0.4s ease;
-    overflow-y: auto;
-    visibility: hidden;   
-  }
-
-  .nav-menu.active {
     right: 0;
-    visibility: visible;  
+    bottom: 0;
+    width: 84%;                       /* responsive width; does not use vw */
+    max-width: 360px;
+    background: var(--bg-light);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.6);
+    transform: translateX(100%);      /* physically off-screen — no layout effect */
+    transition: transform 0.36s cubic-bezier(.2,.9,.2,1);
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    padding: 2.25rem 1.5rem;
+    gap:1.1rem;
+    z-index:1500;                     /* above backdrop */
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    will-change: transform;
   }
 
-  .nav-link {
-    font-size: 1.3rem;
-    margin: 1rem 0;
+  /* open state */
+  .nav-menu.open {
+    transform: translateX(0);
   }
 
-  body.menu-open {
-    overflow: hidden;     
+  /* links */
+  .nav-menu .nav-link {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    font-weight:600;
+    font-size:1.06rem;
+    color: var(--text-color);
+    padding: 0.6rem 0.8rem;
+    border-radius:8px;
+    text-decoration:none;
+    display:block;
+    transition: background var(--transition), transform var(--transition);
+    transform: translateY(12px);
+    opacity: 0;
   }
+  .nav-menu.open .nav-link {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  /* stagger a little without JS (nth-child delays) */
+  .nav-menu.open li:nth-child(1) .nav-link { transition-delay: 0.08s; }
+  .nav-menu.open li:nth-child(2) .nav-link { transition-delay: 0.16s; }
+  .nav-menu.open li:nth-child(3) .nav-link { transition-delay: 0.24s; }
+  .nav-menu.open li:nth-child(4) .nav-link { transition-delay: 0.32s; }
+  .nav-menu.open li:nth-child(5) .nav-link { transition-delay: 0.40s; }
+  .nav-menu.open li:nth-child(6) .nav-link { transition-delay: 0.48s; }
+
+  /* signature clone inside the drawer (appended by JS) */
+  .nav-signature-clone {
+    display:block;
+    margin: 2.4rem auto 0;
+    height:56px;
+    width:auto;
+    filter: brightness(1) drop-shadow(0 0 14px rgba(255,255,255,0.22));
+    opacity: 0;
+    transform: translateY(14px) scale(.98);
+    transition: opacity 0.46s ease, transform 0.46s ease;
+  }
+  .nav-menu.open .nav-signature-clone {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-delay: 0.5s;
+  }
+
+  /* lock body scroll when open (class added by JS) */
+  body.nav-open { overflow: hidden; }
 }
 
 
