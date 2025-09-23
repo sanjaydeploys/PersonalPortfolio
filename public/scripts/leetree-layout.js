@@ -21,14 +21,14 @@ window.LeetreeLayout = (function () {
 
     const clusters = window.Leetree.clusters;
     const hubIds = clusters.map((c) => 'hub-' + c.id);
-    const hubSpacing = isMobile ? 60 : 100;
+    const hubSpacing = isMobile ? 80 : 120;
     let currentY = rootY + hubSpacing;
     hubIds.forEach((hid) => {
       if (!nodeMap[hid]) {
         console.warn(`Hub node ${hid} not found in nodeMap`);
         return;
       }
-      nodeMap[hid].x = rootX + (isMobile ? 140 : 280);
+      nodeMap[hid].x = rootX + (isMobile ? 160 : 300);
       nodeMap[hid].y = currentY;
       currentY += hubSpacing;
     });
@@ -49,8 +49,8 @@ window.LeetreeLayout = (function () {
       const list = subhubGroups[clusterId];
       const cols = Math.max(1, Math.ceil(Math.sqrt(list.length)));
       const rows = Math.ceil(list.length / cols);
-      const spacingX = isMobile ? 110 : 170;
-      const spacingY = isMobile ? 45 : 75;
+      const spacingX = isMobile ? 130 : 190;
+      const spacingY = isMobile ? 55 : 85;
       let startY = hub.y - (rows - 1) * spacingY / 2;
       list.forEach((id, idx) => {
         if (!nodeMap[id]) {
@@ -59,7 +59,7 @@ window.LeetreeLayout = (function () {
         }
         const c = idx % cols;
         const r = Math.floor(idx / cols);
-        nodeMap[id].x = hub.x + 110 + c * spacingX;
+        nodeMap[id].x = hub.x + 130 + c * spacingX;
         nodeMap[id].y = startY + r * spacingY;
       });
     });
@@ -81,8 +81,8 @@ window.LeetreeLayout = (function () {
       const list = group[key];
       const cols = Math.max(1, Math.ceil(Math.sqrt(list.length)));
       const rows = Math.ceil(list.length / cols);
-      const leafSpacingX = isMobile ? 130 : 190;
-      const leafSpacingY = isMobile ? 35 : 65;
+      const leafSpacingX = isMobile ? 150 : 210;
+      const leafSpacingY = isMobile ? 45 : 75;
       let startY = parent.y - (rows - 1) * leafSpacingY / 2;
       list.forEach((id, idx) => {
         if (!nodeMap[id]) {
@@ -91,7 +91,7 @@ window.LeetreeLayout = (function () {
         }
         const c = idx % cols;
         const r = Math.floor(idx / cols);
-        nodeMap[id].x = parent.x + 130 + c * leafSpacingX;
+        nodeMap[id].x = parent.x + 150 + c * leafSpacingX;
         nodeMap[id].y = startY + r * leafSpacingY;
       });
     });
