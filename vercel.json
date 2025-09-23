@@ -185,6 +185,16 @@
       "source": "/two-sum-ii-sorted",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/two-sum-ii-sorted"
     },
+
+     {
+      "source": "/lc239-sliding-window-max",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lc239-sliding-window-max"
+    },
+
+     {
+      "source": "/lc560-subarray-sum-k-solution",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/lc560-subarray-sum-k-solution"
+    },
     {
       "source": "/((?!.*\\.(?:ico|png|jpg|jpeg|webp|gif|svg|js|css|woff2?|ttf|eot|otf|mp4|mp3|txt|xml|json)).*)",
       "destination": "/index.html"
