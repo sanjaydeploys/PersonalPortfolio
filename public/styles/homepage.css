@@ -43,10 +43,7 @@
       box-shadow: var(--shadow);
     }
 
-/* ---------- NAV (fresh, hidden slider until clicked) ---------- */
-/* assumes :root variables like --text-color, --glass-bg, --bg-light, --secondary-color, --transition, --glow exist */
 
-/* base navbar */
 .navbar {
   display: flex;
   align-items: center;
@@ -152,7 +149,7 @@
     width: 100%;
     height: 100vh;
     background: var(--bg-light);
-    z-index: 1060;
+    z-index: 1060; /* Above backdrop */
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -161,7 +158,7 @@
     overflow-y: auto;
   }
   .nav-menu.open {
-    display: flex; /* Show when open */
+    display: flex;
     animation: slideIn 0.4s ease forwards;
   }
 
@@ -181,6 +178,9 @@
     opacity: 0;
     transform: translateY(20px);
     transition: all 0.4s ease;
+    z-index: 1070; /* Ensure clickable */
+    position: relative;
+    pointer-events: auto;
   }
   .nav-menu.open .nav-link {
     opacity: 1;
@@ -205,6 +205,7 @@
     opacity: 0;
     transform: translateY(20px);
     transition: all 0.4s ease 0.7s;
+    z-index: 1070;
   }
   .nav-menu.open .nav-signature-clone {
     opacity: 1;
@@ -220,7 +221,6 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
 }
-
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
     .map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
     .map-title { font-size:16px; margin:0; font-weight:700; color:#fff; }
