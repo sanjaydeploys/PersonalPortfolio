@@ -1,7 +1,7 @@
 
     :root {
-      --primary: #00B7EB; /* Darker neon cyan */
-      --secondary: #FF8C00; /* Darker AWS orange */
+      --primary: #00B7EB; 
+      --secondary: #FF8C00; 
       --accent: #FFC107; /* Darker gold */
       --bg-dark: #0A0A0A; /* Pure black */
       --bg-light: #161627; /* Darker graphite */
@@ -43,9 +43,10 @@
       box-shadow: var(--shadow);
     }
 
-/* ---------- NAV (fresh, full-screen mobile slider) ---------- */
+/* ---------- NAV (fresh, hidden slider until clicked) ---------- */
 /* assumes :root variables like --text-color, --glass-bg, --bg-light, --secondary-color, --transition, --glow exist */
 
+/* base navbar */
 .navbar {
   display: flex;
   align-items: center;
@@ -90,6 +91,7 @@
   box-shadow: var(--glow);
 }
 
+/* hide hamburger on desktop */
 .nav-toggle {
   display: none;
 }
@@ -143,30 +145,34 @@
   }
 
   .nav-menu {
+    display: none; /* Hidden by default */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
     background: var(--bg-light);
-    transform: translateY(100%);
-    transition: transform 0.4s ease;
-    display: flex;
+    z-index: 1060;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 2rem;
     gap: 1.5rem;
-    z-index: 1060;
     overflow-y: auto;
   }
   .nav-menu.open {
-    transform: translateY(0);
+    display: flex; /* Show when open */
+    animation: slideIn 0.4s ease forwards;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 
   .nav-menu .nav-link {
     font-size: 1.3rem;
-    font-family: sans-serif; 
+    font-family: sans-serif;
     color: var(--text-color);
     padding: 1rem;
     width: 90%;
@@ -214,7 +220,6 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
 }
-
 
 .leetcode-3d-map { color:#fff; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,monospace; padding:10px 4px; margin:0; }
     .map-header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
