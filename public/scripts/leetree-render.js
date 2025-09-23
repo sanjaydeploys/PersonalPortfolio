@@ -91,15 +91,15 @@ window.LeetreeRender = (function () {
     const marker = document.createElementNS(ns, 'marker');
     marker.setAttribute('id', 'map-arrow');
     marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '9');
+    marker.setAttribute('refX', '10');
     marker.setAttribute('refY', '5');
     marker.setAttribute('markerUnits', 'strokeWidth');
-    marker.setAttribute('markerWidth', '4');
-    marker.setAttribute('markerHeight', '4');
+    marker.setAttribute('markerWidth', '6');
+    marker.setAttribute('markerHeight', '6');
     marker.setAttribute('orient', 'auto');
     const mpath = document.createElementNS(ns, 'path');
     mpath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    mpath.setAttribute('fill', 'rgba(255,255,255,0.28)');
+    mpath.setAttribute('fill', 'rgba(255,255,255,0.4)');
     marker.appendChild(mpath);
     defs.appendChild(marker);
 
@@ -123,18 +123,20 @@ window.LeetreeRender = (function () {
       let x2 = t.x + w2 / 2;
       let y2 = t.y + h2 / 2;
 
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        x1 += dx > 0 ? w1 / 2 : -w1 / 2;
-        x2 += dx > 0 ? -w2 / 2 : w2 / 2;
+      const temp_dx = x2 - x1;
+      const temp_dy = y2 - y1;
+      if (Math.abs(temp_dx) > Math.abs(temp_dy)) {
+        x1 += temp_dx > 0 ? w1 / 2 : -w1 / 2;
+        x2 += temp_dx > 0 ? -w2 / 2 : w2 / 2;
       } else {
-        y1 += dy > 0 ? h1 / 2 : -h1 / 2;
-        y2 += dy > 0 ? -h2 / 2 : h2 / 2;
+        y1 += temp_dy > 0 ? h1 / 2 : -h1 / 2;
+        y2 += temp_dy > 0 ? -h2 / 2 : h2 / 2;
       }
 
+      const dx = x2 - x1;
+      const dy = y2 - y1;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const lift = Math.max(20, dist * 0.25);
+      const lift = Math.min(60, Math.max(10, dist * 0.12));
       const perpX = -dy / dist * lift;
       const perpY = dx / dist * lift;
       const cx1 = x1 + dx * 0.35 + perpX * 0.55;
