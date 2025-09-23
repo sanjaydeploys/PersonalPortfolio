@@ -1,115 +1,85 @@
 (function () {
-  console.log('[sidebarToggle.js] nav updated v2');
-
-  function waitFor(selector, cb, max = 12, interval = 80) {
-    let tries = 0;
-    const t = setInterval(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        clearInterval(t);
-        cb(el);
-      } else if (++tries >= max) {
-        clearInterval(t);
-        cb(null);
-      }
-    }, interval);
-  }
+  console.log('[sidebarToggle.js] nav fresh v1');
 
   function initNav() {
-    waitFor('.nav-toggle', (toggle) => {
-      waitFor('#nav-menu', (menu) => {
-        if (!toggle || !menu) {
-          console.warn('[sidebarToggle.js] nav toggle/menu missing');
-          return;
-        }
+    const toggle = document.querySelector('.nav-toggle');
+    const menu = document.querySelector('#nav-menu');
+    if (!toggle || !menu) {
+      console.warn('[sidebarToggle.js] nav toggle/menu missing');
+      return;
+    }
 
-        // ensure backdrop exists once
-        let backdrop = document.querySelector('.nav-backdrop');
-        if (!backdrop) {
-          backdrop = document.createElement('div');
-          backdrop.className = 'nav-backdrop';
-          document.body.appendChild(backdrop);
-        }
+    let backdrop = document.querySelector('.nav-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'nav-backdrop';
+      document.body.appendChild(backdrop);
+    }
 
-        const ORIG_IMG = document.querySelector('#nav-image');
+    const origImg = document.querySelector('#nav-image');
 
-        function addSignatureClone() {
-          if (!ORIG_IMG) return;
-          if (menu.querySelector('.nav-signature-clone')) return;
-          const clone = ORIG_IMG.cloneNode(true);
-          clone.removeAttribute('id');
-          clone.classList.add('nav-signature-clone');
-          clone.setAttribute('aria-hidden', 'true');
-          // inline safety sizes for clone
-          clone.style.height = '40px';
-          clone.style.width = 'auto';
+    function addSignatureClone() {
+      if (!origImg) return;
+      if (menu.querySelector('.nav-signature-clone')) return;
+      const clone = origImg.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.classList.add('nav-signature-clone');
+      clone.setAttribute('aria-hidden', 'true');
+      clone.style.height = '40px';
+      clone.style.width = 'auto';
 
-          const cloneLi = document.createElement('li');  // Wrapper
-          cloneLi.classList.add('nav-signature-li');
-          cloneLi.setAttribute('role', 'presentation');
-          cloneLi.appendChild(clone);
-          menu.appendChild(cloneLi);
+      const cloneLi = document.createElement('li');
+      cloneLi.classList.add('nav-signature-li');
+      cloneLi.setAttribute('role', 'presentation');
+      cloneLi.appendChild(clone);
+      menu.appendChild(cloneLi);
+    }
 
-          // reflow to trigger transitions
-          // eslint-disable-next-line no-unused-expressions
-          clone.offsetHeight;
-        }
+    function removeSignatureClone() {
+      const existing = menu.querySelector('.nav-signature-li');
+      if (existing) existing.remove();
+    }
 
-        function removeSignatureClone() {
-          const existing = menu.querySelector('.nav-signature-li');
-          if (existing) existing.remove();
-        }
+    function open() {
+      toggle.classList.add('active');
+      toggle.setAttribute('aria-expanded', 'true');
+      menu.classList.add('open');
+      backdrop.classList.add('open');
+      document.body.classList.add('nav-open');
+      setTimeout(addSignatureClone, 100);
+    }
 
-        function open() {
-          toggle.classList.add('active');
-          toggle.setAttribute('aria-expanded', 'true');
-          menu.classList.add('open');
-          backdrop.classList.add('open');
-          document.body.classList.add('nav-open');
-          // append clone slightly after open
-          setTimeout(addSignatureClone, 60);
-        }
+    function close() {
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.classList.remove('nav-open');
+      setTimeout(removeSignatureClone, 400);
+    }
 
-        function close() {
-          toggle.classList.remove('active');
-          toggle.setAttribute('aria-expanded', 'false');
-          menu.classList.remove('open');
-          backdrop.classList.remove('open');
-          document.body.classList.remove('nav-open');
-          // remove clone after animations
-          setTimeout(removeSignatureClone, 420);
-        }
+    toggle.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (menu.classList.contains('open')) close(); else open();
+    });
 
-        // toggle handler
-        toggle.addEventListener('click', (ev) => {
-          ev.stopPropagation();
-          if (menu.classList.contains('open')) close(); else open();
-        });
+    backdrop.addEventListener('click', close);
 
-        // close on backdrop click
-        backdrop.addEventListener('click', close);
+    menu.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', close);
+    });
 
-        // close on link click
-        menu.querySelectorAll('.nav-link').forEach(link => {
-          link.addEventListener('click', close);
-        });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.classList.contains('open')) close();
+    });
 
-        // ESC key closes
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && menu.classList.contains('open')) close();
-        });
-
-        // Defensive: close on resize beyond mobile
-        window.addEventListener('resize', () => {
-          if (window.innerWidth > 768 && menu.classList.contains('open')) {
-            close();
-          }
-        });
-      });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768 && menu.classList.contains('open')) {
+        close();
+      }
     });
   }
 
-  /* preserve sidebar logic exactly (unchanged) */
   function initSidebar() {
     const toggleBtn = document.querySelector('.sidebar-toggle-btn');
     const sidebarWrapper = document.getElementById('sidebar-wrapper');
@@ -133,10 +103,10 @@
     });
   }
 
-  // init
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => { initNav(); initSidebar(); });
   } else {
-    initNav(); initSidebar();
+    initNav();
+    initSidebar();
   }
 })();
