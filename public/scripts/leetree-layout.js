@@ -10,7 +10,6 @@ window.LeetreeLayout = (function () {
   let workerEnabled = window.Leetree.workerEnabled;
 
   function computeGuidedPositions() {
-    // Guard clause to ensure required data is available
     if (!nodeMap['root'] || !window.Leetree.clusters || nodes.length === 0) {
       console.error('computeGuidedPositions: nodeMap, clusters, or nodes not initialized');
       return;
