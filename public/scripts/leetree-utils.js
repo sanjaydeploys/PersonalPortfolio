@@ -262,36 +262,16 @@ window.LeetreeUtils = (function () {
   function setupControlListeners() {
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
-    const resetView = document.getElementById('reset-view');
     const toggleAnimations = document.getElementById('toggle-animations');
     const useWorker = document.getElementById('use-worker');
 
-    if (!zoomIn || !zoomOut || !resetView || !toggleAnimations || !useWorker) {
+    if (!zoomIn || !zoomOut || !toggleAnimations || !useWorker) {
       console.warn('setupControlListeners: One or more control buttons not found');
       return;
     }
 
     zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
     zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
-    resetView.addEventListener('click', () => {
-      setScale(1);
-      stage.scrollLeft = 0;
-      stage.scrollTop = 0;
-      nodes.forEach((n) => { if (n.el) n.el.style.opacity = ''; });
-      const paths = svg.querySelectorAll('path.flow-line');
-      paths.forEach((p) => { p.style.opacity = ''; });
-      activeCluster = null;
-      window.LeetreeLayout.computeGuidedPositions();
-      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-        nodes.forEach((n) => {
-          if (!n.el) return;
-          n.el.style.left = (n.x || 0) + 'px';
-          n.el.style.top = (n.y || 0) + 'px';
-        });
-        window.LeetreeRender.drawEdges(false);
-        fitCanvas(PADDING);
-      });
-    });
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
@@ -406,4 +386,4 @@ window.LeetreeUtils = (function () {
     hexToRgba,
     setupControlListeners
   };
-})();
+})(); 
