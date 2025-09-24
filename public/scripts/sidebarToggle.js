@@ -14,25 +14,26 @@
     document.body.appendChild(overlay);
   }
 
-  // Animate links on mobile with bounce effect
+  // Open menu with animation
   function openMenu(){
     navMenu.classList.add('active');
     overlay.classList.add('visible');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', true);
-    navToggle.style.display = 'none'; // Hide toggle when menu is open
-    links.forEach((lnk,i)=>{
+    navToggle.style.display = 'none'; // Hide toggle when open
+    links.forEach((lnk,i) => {
       lnk.classList.remove('anim-in');
-      setTimeout(() => lnk.classList.add('anim-in'), i*150); // Slower for bounce
+      setTimeout(() => lnk.classList.add('anim-in'), i*150);
     });
   }
 
+  // Close menu
   function closeMenu(){
     navMenu.classList.remove('active');
     overlay.classList.remove('visible');
     document.documentElement.classList.remove('nav-open');
     navToggle.setAttribute('aria-expanded', false);
-    navToggle.style.display = 'flex'; // Show toggle when menu is closed
+    navToggle.style.display = 'flex'; // Show toggle when closed
     links.forEach(lnk => lnk.classList.remove('anim-in'));
   }
 
@@ -49,15 +50,17 @@
   overlay.addEventListener('click', closeMenu);
 
   // ESC key
-  window.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
+  window.addEventListener('keydown', e => {
+    if(e.key === 'Escape') closeMenu();
+  });
 
-  // Close menu on link click
+  // Navlink click with direct navigation
   links.forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent default to ensure close animation
+      const href = link.getAttribute('href');
       closeMenu();
       setTimeout(() => {
-        window.location.href = link.href; // Navigate after close
+        window.location.href = href; // Direct navigation
       }, 400); // Match transition duration
     });
   });
