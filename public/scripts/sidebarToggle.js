@@ -4,15 +4,15 @@
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
   const closeBtn = navMenu?.querySelector('.nav-menu-close');
-  const links = navMenu.querySelectorAll('.nav-menu-link');
+  const links = navMenu?.querySelectorAll('.nav-menu-link');
 
   // Open menu
   function openMenu() {
+    if (!navMenu) return;
     navMenu.classList.add('active');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', 'true');
     navToggle.classList.add('active'); // For hamburger animation
-    navToggle.style.display = 'flex'; // Keep visible for animation
     links.forEach((lnk, i) => {
       setTimeout(() => lnk.classList.add('anim-in'), i * 100);
     });
@@ -21,22 +21,30 @@
 
   // Close menu
   function closeMenu() {
+    if (!navMenu) return;
     navMenu.classList.remove('active');
     document.documentElement.classList.remove('nav-open');
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.classList.remove('active');
     links.forEach(lnk => lnk.classList.remove('anim-in'));
-    removeFocusTrap(); // Advanced
+    removeFocusTrap();
   }
 
   // Toggle click
-  navToggle?.addEventListener('click', () => {
-    if (navMenu.classList.contains('active')) closeMenu();
-    else openMenu();
+  navToggle?.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent bubbling
+    if (navMenu.classList.contains('active')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
   });
 
   // Close button click
-  closeBtn?.addEventListener('click', closeMenu);
+  closeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeMenu();
+  });
 
   // ESC key
   window.addEventListener('keydown', e => {
@@ -46,25 +54,30 @@
   // Advanced: Swipe to close on mobile
   let touchStartX = 0;
   let touchEndX = 0;
-  navMenu.addEventListener('touchstart', e => {
+  navMenu?.addEventListener('touchstart', e => {
     touchStartX = e.changedTouches[0].screenX;
   });
-  navMenu.addEventListener('touchend', e => {
+  navMenu?.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
     if (touchStartX - touchEndX > 50) closeMenu(); // Swipe left to close
   });
 
   // Ensure nav links are clickable with natural navigation
-  links.forEach(link => {
+  links?.forEach(link => {
     link.addEventListener('click', (e) => {
-      // No preventDefault - allow natural <a> navigation
+      e.stopPropagation(); // Prevent menu closing issues
       closeMenu(); // Close menu after click
+      // Natural <a> navigation handles href
+    });
+    link.addEventListener('touchstart', (e) => {
+      e.stopPropagation(); // Ensure touch works
+      closeMenu();
     });
   });
 
   // Advanced: Focus trapping in menu
   function trapFocus(element) {
-    const focusableEls = element.querySelectorAll('a[href], button');
+    const focusableEls = element.querySelectorAll('a[href], button:not([disabled])');
     const first = focusableEls[0];
     const last = focusableEls[focusableEls.length - 1];
     const handleKey = (e) => {
@@ -79,8 +92,8 @@
       }
     };
     element.addEventListener('keydown', handleKey);
+    element._focusTrap = handleKey;
     first.focus();
-    element._focusTrap = handleKey; // Store for removal
   }
   function removeFocusTrap() {
     if (navMenu._focusTrap) {
@@ -89,7 +102,7 @@
     }
   }
 
-  // === Original Sidebar Script Reintroduced ===
+  // === Original Sidebar Script ===
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
@@ -108,35 +121,26 @@
       check();
     }
 
-    function toggleMenuLogic(toggle, menu) {
-      if (!toggle || !menu) return;
-      toggle.addEventListener('click', () => {
-        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', !isExpanded);
-        menu.classList.toggle('active', !isExpanded);
-      });
-    }
-
-    function initNavMenu() {
-      waitForElement('.nav-menu-toggle', navToggle => {
-        waitForElement('#nav-menu-list', navMenu => { toggleMenuLogic(navToggle, navMenu); });
-      });
-    }
-
     function initSidebar() {
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
       const sidebarWrapper = document.getElementById('sidebar-wrapper');
       if (!toggleBtn || !sidebarWrapper) return;
 
-      toggleBtn.addEventListener('click', () => {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const isOpen = sidebarWrapper.classList.toggle('open');
         toggleBtn.classList.toggle('active', isOpen);
         toggleBtn.setAttribute('aria-expanded', isOpen);
-        trapFocus(sidebarWrapper); // Advanced: add focus trap to sidebar too
+        if (isOpen) {
+          trapFocus(sidebarWrapper);
+        } else {
+          removeFocusTrap(sidebarWrapper);
+        }
       });
 
       sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
           if (sidebarWrapper.classList.contains('open')) {
             sidebarWrapper.classList.remove('open');
             toggleBtn.classList.remove('active');
@@ -148,10 +152,12 @@
     }
 
     function initializeAll() {
-      initNavMenu(); // Reintroduced, but since main logic is above, it won't conflict
-      initSidebar();
+      initSidebar(); // Only sidebar, no nav conflict
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeAll);
-    else initializeAll();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeAll);
+    } else {
+      initializeAll();
+    }
   })();
 })();
