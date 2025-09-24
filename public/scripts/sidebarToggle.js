@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v6');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v7');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -19,7 +19,8 @@
       // Recalibrate parent height if in mobile to ensure scroll
       if (window.innerWidth <= 768 && navMenu) {
         setTimeout(() => {
-          navMenu.scrollTop = navMenu.scrollHeight; // Scroll to bottom if needed
+          navMenu.style.maxHeight = 'none'; // Allow auto expand
+          navMenu.scrollTop = navMenu.scrollHeight; // Scroll to bottom
         }, 500);
       }
     } else {
@@ -27,6 +28,11 @@
       setTimeout(() => {
         element.classList.remove('active');
       }, 500);
+      if (window.innerWidth <= 768 && navMenu) {
+        setTimeout(() => {
+          navMenu.style.maxHeight = 'none';
+        }, 500);
+      }
     }
   }
 
@@ -100,7 +106,7 @@
     });
   }
 
-  // Submenu toggles - with smooth height, allow multiple open
+  // Submenu toggles - with smooth height, close others when opening new one
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -108,6 +114,14 @@
       const subItem = submenuToggleItems[index];
       const subMenu = subItem.nextElementSibling;
       const isExpanded = subItem.getAttribute('aria-expanded') === 'true';
+      // Close other submenus
+      submenuToggleItems.forEach((otherItem, otherIndex) => {
+        if (index !== otherIndex) {
+          otherItem.setAttribute('aria-expanded', 'false');
+          toggleHeight(otherItem.nextElementSibling, false);
+          otherItem.nextElementSibling.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
+        }
+      });
       subItem.setAttribute('aria-expanded', !isExpanded);
       toggleHeight(subMenu, !isExpanded);
       if (!isExpanded) {
@@ -115,7 +129,7 @@
         subLinksInThis.forEach((slnk, j) => {
           setTimeout(() => slnk.classList.add('anim-in'), j * 50 + 50);
         });
-        // Recalibrate DSA links height if open
+        // Recalibrate DSA links height
         if (dsaLinks.classList.contains('active')) {
           setTimeout(() => {
             dsaLinks.style.maxHeight = `${dsaLinks.scrollHeight}px`;
@@ -175,7 +189,7 @@
     if (e.key === 'Escape') closeMenu();
   });
 
-  // Advanced focus trapping with loop
+  // Advanced focus trapping with loop, targeting only nav
   function trapFocus(element) {
     const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"]'));
     const first = focusableEls[0];
@@ -202,7 +216,7 @@
     }
   }
 
-  // Sidebar Script - Kept intact as per instructions
+  // Sidebar Script - Kept intact, no changes to avoid triggering
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
