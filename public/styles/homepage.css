@@ -580,7 +580,6 @@
     flex-direction: column;
     position: sticky;
     bottom: 0;
-    background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
     backdrop-filter: blur(12px);
     padding: 1rem 0;
     z-index: 1001;
