@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v22');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v23');
 
   // Shared utility functions
   function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
@@ -36,7 +36,7 @@
     };
     element.addEventListener('keydown', handleKey);
     element._focusTrap = handleKey;
-    if (first) first.focus();
+    // Do not focus first element automatically to prevent keyboard popup
   }
 
   function removeFocusTrap(element) {
