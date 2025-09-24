@@ -136,7 +136,7 @@
 /* Search Bar */
 .nav-search-container {
   display: none;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
 }
 .nav-search-wrapper {
   position: relative;
@@ -540,7 +540,7 @@
   }
   .nav-search-container {
     display: block;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
   .nav-search-wrapper {
     max-width: 80%;
