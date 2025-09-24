@@ -1,8 +1,9 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v11');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v12');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
+  const navBackdrop = document.querySelector('.nav-backdrop') || document.createElement('div');
   const links = navMenu?.querySelectorAll('.nav-menu-link');
   const dsaToggleItem = navMenu?.querySelector('.nav-dsa-toggle');
   const dsaToggle = dsaToggleItem?.querySelector('.nav-toggle-link');
@@ -10,6 +11,13 @@
   const submenuToggleItems = navMenu?.querySelectorAll('.nav-submenu-toggle');
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
+  const themeToggle = navMenu?.querySelector('.nav-theme-toggle');
+
+  // Initialize backdrop
+  if (!document.querySelector('.nav-backdrop')) {
+    navBackdrop.className = 'nav-backdrop';
+    document.body.appendChild(navBackdrop);
+  }
 
   // Smooth expand/collapse with dynamic height
   function toggleHeight(element, expand) {
@@ -41,6 +49,7 @@
   function openMenu() {
     if (!navMenu) return;
     navMenu.classList.add('active');
+    navBackdrop.classList.add('active');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', 'true');
     navToggle.classList.add('active');
@@ -54,6 +63,7 @@
   function closeMenu() {
     if (!navMenu) return;
     navMenu.classList.remove('active');
+    navBackdrop.classList.remove('active');
     document.documentElement.classList.remove('nav-open');
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.classList.remove('active');
@@ -85,6 +95,9 @@
       openMenu();
     }
   });
+
+  // Backdrop click
+  navBackdrop.addEventListener('click', closeMenu);
 
   // DSA main toggle
   dsaToggle?.addEventListener('click', (e) => {
@@ -210,9 +223,22 @@
     }, { passive: false });
   });
 
-  // ESC key close
+  // Keyboard navigation
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeMenu();
+    if (navMenu.classList.contains('active')) {
+      const focusableEls = Array.from(navMenu.querySelectorAll('a[href], button:not([disabled]), [role="button"]'));
+      const currentIndex = focusableEls.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextIndex = currentIndex < focusableEls.length - 1 ? currentIndex + 1 : 0;
+        focusableEls[nextIndex].focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : focusableEls.length - 1;
+        focusableEls[prevIndex].focus();
+      }
+    }
   });
 
   // Focus trapping
@@ -240,6 +266,19 @@
       element.removeEventListener('keydown', element._focusTrap);
       delete element._focusTrap;
     }
+  }
+
+  // Theme toggle
+  themeToggle?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('light-theme');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    themeToggle.querySelector('img').src = isDark ? '/icons/moon.svg' : '/icons/sun.svg';
+  });
+
+  // Initialize theme
+  if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.add('light-theme');
+    themeToggle.querySelector('img').src = '/icons/moon.svg';
   }
 
   // Sidebar Script - Preserved exactly
