@@ -13,6 +13,7 @@
     overlay.className = 'nav-overlay';
     document.body.appendChild(overlay);
   }
+
   // Open menu
   function openMenu() {
     navMenu.classList.add('active');
@@ -55,7 +56,7 @@
   // Navlink click
   links.forEach(link => {
     link.addEventListener('click', () => {
-      window.location.href = link.getAttribute('href'); // Direct navigation
+      window.location.href = link.getAttribute('href');
     });
   });
 
