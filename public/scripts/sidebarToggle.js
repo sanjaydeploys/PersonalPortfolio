@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v18');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v19');
 
   function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
     let attempts = 0;
@@ -29,11 +29,24 @@
     return j === query.length;
   }
 
+  // Debounce function for search
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
   function initializeNav() {
     const navMenu = document.getElementById('nav-menu-list');
     const navToggle = document.querySelector('.nav-menu-toggle');
     const links = navMenu?.querySelectorAll('.nav-menu-link');
-    const searchBar = navMenu?.querySelector('.nav-search-bar');
+    const searchBar = navMenu?.querySelector('.nav-search-input');
     const searchClear = navMenu?.querySelector('.nav-search-clear');
     const searchResults = navMenu?.querySelector('.nav-search-results');
     const searchResultCount = navMenu?.querySelector('.nav-search-result-count');
@@ -61,7 +74,7 @@
     }
 
     // Perform search with highlighting
-    function performSearch(query) {
+    const performSearch = debounce((query) => {
       if (!searchResults || !searchResultCount) return;
       searchResults.innerHTML = '';
       searchResultCount.textContent = '';
@@ -118,8 +131,8 @@
         }
         searchResults.classList.add('active');
         if (spinner.parentElement) spinner.parentElement.removeChild(spinner);
-      }, 200); // Simulate async for spinner effect
-    }
+      }, 100); // Reduced delay for snappier feel
+    }, 200);
 
     // Reset all submenus on load
     function resetSubmenus(parent = navMenu) {
@@ -192,6 +205,7 @@
         searchResults.classList.remove('active');
         searchResults.innerHTML = '';
         if (searchClear) searchClear.classList.remove('active');
+        if (searchResultCount) searchResultCount.textContent = '';
       }
       removeFocusTrap();
     }
@@ -429,7 +443,6 @@
       };
       element.addEventListener('keydown', handleKey);
       element._focusTrap = handleKey;
-      first.focus();
     }
     function removeFocusTrap(element = navMenu) {
       if (element._focusTrap) {
