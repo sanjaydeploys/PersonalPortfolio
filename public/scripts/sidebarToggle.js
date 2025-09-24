@@ -1,50 +1,59 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v19');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v20');
 
-  function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
-    let attempts = 0;
-    const check = () => {
-      const element = document.querySelector(selector);
-      if (element) callback(element);
-      else if (attempts < maxAttempts) {
-        attempts++;
-        setTimeout(check, interval);
-      } else {
-        console.warn(`[AdvancedNavbar] Element ${selector} not found after ${maxAttempts} attempts`);
-        callback(null);
+  // Shared focus trapping functions
+  function trapFocus(element) {
+    if (!element) return;
+    const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"], input, .nav-search-result-item[role="option"]'));
+    const first = focusableEls[0];
+    const last = focusableEls[focusableEls.length - 1];
+    const handleKey = (e) => {
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
-    check();
+    element.addEventListener('keydown', handleKey);
+    element._focusTrap = handleKey;
+    if (first) first.focus();
   }
 
-  // Simple fuzzy search function
-  function fuzzyMatch(str, query) {
-    str = str.toLowerCase();
-    query = query.toLowerCase();
-    let i = 0, j = 0;
-    while (i < str.length && j < query.length) {
-      if (str[i] === query[j]) j++;
-      i++;
-    }
-    return j === query.length;
+  function removeFocusTrap(element) {
+    if (!element || !element._focusTrap) return;
+    element.removeEventListener('keydown', element._focusTrap);
+    delete element._focusTrap;
   }
 
-  // Debounce function for search
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
+  // Throttle function for scroll handling
+  function throttle(func, limit) {
+    let lastFunc;
+    let lastRan;
+    return function(...args) {
+      const context = this;
+      if (!lastRan) {
+        func.apply(context, args);
+        lastRan = Date.now();
+      } else {
+        clearTimeout(lastFunc);
+        lastFunc = setTimeout(() => {
+          if ((Date.now() - lastRan) >= limit) {
+            func.apply(context, args);
+            lastRan = Date.now();
+          }
+        }, limit - (Date.now() - lastRan));
+      }
     };
   }
 
   function initializeNav() {
     const navMenu = document.getElementById('nav-menu-list');
     const navToggle = document.querySelector('.nav-menu-toggle');
+    const mainNav = document.querySelector('.main-nav');
     const links = navMenu?.querySelectorAll('.nav-menu-link');
     const searchBar = navMenu?.querySelector('.nav-search-input');
     const searchClear = navMenu?.querySelector('.nav-search-clear');
@@ -52,6 +61,47 @@
     const searchResultCount = navMenu?.querySelector('.nav-search-result-count');
     let linkIndex = [];
     let lastSearchQuery = '';
+
+    // LinkedIn-style scroll behavior
+    let lastScrollTop = 0;
+    const handleScroll = throttle(() => {
+      if (!mainNav) return;
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (currentScrollTop > lastScrollTop && currentScrollTop > 80) {
+        // Scrolling down, hide nav
+        mainNav.classList.add('nav-hidden');
+      } else {
+        // Scrolling up or at top, show nav
+        mainNav.classList.remove('nav-hidden');
+      }
+      lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
+    }, 100);
+    window.addEventListener('scroll', handleScroll);
+
+    // Simple fuzzy search function
+    function fuzzyMatch(str, query) {
+      str = str.toLowerCase();
+      query = query.toLowerCase();
+      let i = 0, j = 0;
+      while (i < str.length && j < query.length) {
+        if (str[i] === query[j]) j++;
+        i++;
+      }
+      return j === query.length;
+    }
+
+    // Debounce function for search
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
 
     // Build search index
     function buildSearchIndex() {
@@ -131,7 +181,7 @@
         }
         searchResults.classList.add('active');
         if (spinner.parentElement) spinner.parentElement.removeChild(spinner);
-      }, 100); // Reduced delay for snappier feel
+      }, 100);
     }, 200);
 
     // Reset all submenus on load
@@ -158,7 +208,15 @@
       if (expand) {
         element.style.display = 'block';
         element.classList.add('active');
-        element.style.maxHeight = `${element.scrollHeight}px`;
+        // Calculate total height including nested subtrees
+        let totalHeight = element.scrollHeight;
+        const nestedSubtrees = element.querySelectorAll('.subtree');
+        nestedSubtrees.forEach(subtree => {
+          if (subtree.classList.contains('active')) {
+            totalHeight += subtree.scrollHeight;
+          }
+        });
+        element.style.maxHeight = `${totalHeight}px`;
         if (window.innerWidth <= 1024 && navMenu) {
           setTimeout(() => {
             navMenu.querySelector('.nav-menu-items').scrollTop = navMenu.scrollHeight;
@@ -207,7 +265,7 @@
         if (searchClear) searchClear.classList.remove('active');
         if (searchResultCount) searchResultCount.textContent = '';
       }
-      removeFocusTrap();
+      removeFocusTrap(navMenu);
     }
 
     // Toggle submenu (generic for any depth)
@@ -425,38 +483,12 @@
       if (e.key === 'Escape') closeMenu();
     });
 
-    // Focus trapping
-    function trapFocus(element) {
-      const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"], input, .nav-search-result-item[role="option"]'));
-      const first = focusableEls[0];
-      const last = focusableEls[focusableEls.length - 1];
-      const handleKey = (e) => {
-        if (e.key === 'Tab') {
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      };
-      element.addEventListener('keydown', handleKey);
-      element._focusTrap = handleKey;
-    }
-    function removeFocusTrap(element = navMenu) {
-      if (element._focusTrap) {
-        element.removeEventListener('keydown', element._focusTrap);
-        delete element._focusTrap;
-      }
-    }
-
     // Initialize by building search index and resetting submenus
     buildSearchIndex();
     resetSubmenus();
   }
 
-  // Sidebar Script - Preserved exactly
+  // Sidebar Script
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
@@ -469,6 +501,7 @@
           attempts++;
           setTimeout(check, interval);
         } else {
+          console.warn(`[Sidebar] Element ${selector} not found after ${maxAttempts} attempts`);
           callback(null);
         }
       };
