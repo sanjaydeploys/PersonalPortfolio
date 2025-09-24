@@ -3,6 +3,7 @@
 
   const navMenu = document.getElementById('nav-menu');
   const navToggle = document.querySelector('.nav-toggle');
+  const closeBtn = navMenu?.querySelector('.nav-close');
   const links = Array.from(navMenu.querySelectorAll('.nav-link'));
 
   // Overlay
@@ -18,11 +19,11 @@
     navMenu.classList.add('active');
     overlay.classList.add('visible');
     document.documentElement.classList.add('nav-open');
-    navToggle.classList.add('active');
     navToggle.setAttribute('aria-expanded', true);
+    navToggle.style.display = 'none'; // Hide toggle when open
     links.forEach((lnk,i)=>{
       lnk.classList.remove('anim-in');
-      setTimeout(()=>lnk.classList.add('anim-in'), i*120); // Increased delay for dramatic drop
+      setTimeout(()=>lnk.classList.add('anim-in'), i*120);
     });
   }
 
@@ -30,8 +31,8 @@
     navMenu.classList.remove('active');
     overlay.classList.remove('visible');
     document.documentElement.classList.remove('nav-open');
-    navToggle.classList.remove('active');
     navToggle.setAttribute('aria-expanded', false);
+    navToggle.style.display = 'flex'; // Show toggle when closed
     links.forEach(lnk=>lnk.classList.remove('anim-in'));
   }
 
@@ -40,6 +41,9 @@
     if(navMenu.classList.contains('active')) closeMenu();
     else openMenu();
   });
+
+  // Close button click
+  if(closeBtn) closeBtn.addEventListener('click', closeMenu);
 
   // Overlay click
   overlay.addEventListener('click', closeMenu);
