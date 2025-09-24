@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v17');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v18');
 
   function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
     let attempts = 0;
@@ -17,13 +17,28 @@
     check();
   }
 
+  // Simple fuzzy search function
+  function fuzzyMatch(str, query) {
+    str = str.toLowerCase();
+    query = query.toLowerCase();
+    let i = 0, j = 0;
+    while (i < str.length && j < query.length) {
+      if (str[i] === query[j]) j++;
+      i++;
+    }
+    return j === query.length;
+  }
+
   function initializeNav() {
     const navMenu = document.getElementById('nav-menu-list');
     const navToggle = document.querySelector('.nav-menu-toggle');
     const links = navMenu?.querySelectorAll('.nav-menu-link');
     const searchBar = navMenu?.querySelector('.nav-search-bar');
+    const searchClear = navMenu?.querySelector('.nav-search-clear');
     const searchResults = navMenu?.querySelector('.nav-search-results');
+    const searchResultCount = navMenu?.querySelector('.nav-search-result-count');
     let linkIndex = [];
+    let lastSearchQuery = '';
 
     // Build search index
     function buildSearchIndex() {
@@ -45,50 +60,65 @@
       });
     }
 
-    // Perform search
+    // Perform search with highlighting
     function performSearch(query) {
-      if (!searchResults) return;
+      if (!searchResults || !searchResultCount) return;
       searchResults.innerHTML = '';
+      searchResultCount.textContent = '';
+      if (searchClear) searchClear.classList.toggle('active', !!query.trim());
+
       if (!query.trim()) {
         searchResults.classList.remove('active');
         return;
       }
-      const results = linkIndex.filter(item =>
-        item.text.toLowerCase().includes(query.toLowerCase())
-      );
-      if (results.length === 0) {
-        const li = document.createElement('li');
-        li.className = 'nav-search-result-item';
-        li.textContent = 'No results found';
-        searchResults.appendChild(li);
-      } else {
-        results.forEach((result, index) => {
+
+      const spinner = document.createElement('div');
+      spinner.className = 'nav-search-spinner active';
+      searchResults.parentElement.appendChild(spinner);
+
+      setTimeout(() => {
+        const results = linkIndex.filter(item =>
+          fuzzyMatch(item.text, query) || item.text.toLowerCase().includes(query.toLowerCase())
+        );
+        searchResultCount.textContent = results.length ? `${results.length} result${results.length > 1 ? 's' : ''} found` : 'No results found';
+        
+        if (results.length === 0) {
           const li = document.createElement('li');
           li.className = 'nav-search-result-item';
-          li.setAttribute('role', 'option');
-          li.setAttribute('tabindex', '0');
-          li.innerHTML = `
-            <span class="result-title">${result.text}</span>
-            ${result.path ? `<span class="result-path">${result.path}</span>` : ''}
-          `;
-          li.addEventListener('click', () => {
-            if (result.href && result.href !== '#') {
-              window.location.href = result.href;
-            }
-            closeMenu();
-          });
-          li.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
+          li.textContent = 'No results found';
+          searchResults.appendChild(li);
+        } else {
+          results.forEach((result, index) => {
+            const li = document.createElement('li');
+            li.className = 'nav-search-result-item';
+            li.setAttribute('role', 'option');
+            li.setAttribute('tabindex', '0');
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            const highlightedText = result.text.replace(regex, '<span class="highlight">$1</span>');
+            li.innerHTML = `
+              <span class="result-title">${highlightedText}</span>
+              ${result.path ? `<span class="result-path">${result.path}</span>` : ''}
+            `;
+            li.addEventListener('click', () => {
               if (result.href && result.href !== '#') {
                 window.location.href = result.href;
               }
               closeMenu();
-            }
+            });
+            li.addEventListener('keydown', e => {
+              if (e.key === 'Enter') {
+                if (result.href && result.href !== '#') {
+                  window.location.href = result.href;
+                }
+                closeMenu();
+              }
+            });
+            searchResults.appendChild(li);
           });
-          searchResults.appendChild(li);
-        });
-      }
-      searchResults.classList.add('active');
+        }
+        searchResults.classList.add('active');
+        if (spinner.parentElement) spinner.parentElement.removeChild(spinner);
+      }, 200); // Simulate async for spinner effect
     }
 
     // Reset all submenus on load
@@ -141,8 +171,9 @@
         setTimeout(() => lnk.classList.add('anim-in'), i * 80 + 100);
       });
       trapFocus(navMenu);
-      if (window.innerWidth <= 1024 && searchBar) {
-        searchBar.focus();
+      if (searchBar && lastSearchQuery) {
+        searchBar.value = lastSearchQuery;
+        performSearch(lastSearchQuery);
       }
     }
 
@@ -156,9 +187,11 @@
       links.forEach(lnk => lnk.classList.remove('anim-in'));
       resetSubmenus();
       if (searchBar && searchResults) {
+        lastSearchQuery = searchBar.value;
         searchBar.value = '';
         searchResults.classList.remove('active');
         searchResults.innerHTML = '';
+        if (searchClear) searchClear.classList.remove('active');
       }
       removeFocusTrap();
     }
@@ -174,9 +207,17 @@
         subLinks.forEach((slnk, j) => {
           setTimeout(() => slnk.classList.add('anim-in'), j * 50 + 50);
         });
+        if (window.innerWidth <= 1024) {
+          const backBtn = submenu.querySelector('.nav-back-btn');
+          if (backBtn) backBtn.style.display = 'block';
+        }
       } else {
         submenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
         resetSubmenus(submenu);
+        if (window.innerWidth <= 1024) {
+          const backBtn = submenu.querySelector('.nav-back-btn');
+          if (backBtn) backBtn.style.display = 'none';
+        }
       }
     }
 
@@ -194,29 +235,44 @@
     // Generic toggle handler for all submenus
     navMenu?.addEventListener('click', (e) => {
       const toggleLink = e.target.closest('.nav-toggle-link');
-      if (!toggleLink) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const toggleItem = toggleLink.closest('.nav-toggle');
-      const submenu = toggleItem?.querySelector(':scope > .subtree');
-      if (!submenu) return;
+      const backBtn = e.target.closest('.nav-back-btn button');
+      if (toggleLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        const toggleItem = toggleLink.closest('.nav-toggle');
+        const submenu = toggleItem?.querySelector(':scope > .subtree');
+        if (!submenu) return;
 
-      // Close sibling submenus at the same level
-      const parentSubmenu = toggleItem.closest('.subtree') || navMenu;
-      const siblingToggles = parentSubmenu.querySelectorAll(':scope > .nav-menu-item.nav-toggle');
-      siblingToggles.forEach(sibling => {
-        if (sibling !== toggleItem && sibling.getAttribute('aria-expanded') === 'true') {
-          sibling.setAttribute('aria-expanded', 'false');
-          const siblingSubmenu = sibling.querySelector(':scope > .subtree');
-          if (siblingSubmenu) {
-            toggleHeight(siblingSubmenu, false);
-            siblingSubmenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
-            resetSubmenus(siblingSubmenu);
+        // Close sibling submenus at the same level
+        const parentSubmenu = toggleItem.closest('.subtree') || navMenu;
+        const siblingToggles = parentSubmenu.querySelectorAll(':scope > .nav-menu-item.nav-toggle');
+        siblingToggles.forEach(sibling => {
+          if (sibling !== toggleItem && sibling.getAttribute('aria-expanded') === 'true') {
+            sibling.setAttribute('aria-expanded', 'false');
+            const siblingSubmenu = sibling.querySelector(':scope > .subtree');
+            if (siblingSubmenu) {
+              toggleHeight(siblingSubmenu, false);
+              siblingSubmenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
+              resetSubmenus(siblingSubmenu);
+              if (window.innerWidth <= 1024) {
+                const siblingBackBtn = siblingSubmenu.querySelector('.nav-back-btn');
+                if (siblingBackBtn) siblingBackBtn.style.display = 'none';
+              }
+            }
           }
-        }
-      });
+        });
 
-      toggleSubmenu(toggleItem, submenu);
+        toggleSubmenu(toggleItem, submenu);
+      } else if (backBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const subtree = backBtn.closest('.subtree');
+        const parentToggle = subtree?.closest('.nav-toggle');
+        if (parentToggle) {
+          toggleSubmenu(parentToggle, subtree);
+          parentToggle.querySelector('.nav-toggle-link')?.focus();
+        }
+      }
     });
 
     // Sub-link navigation
@@ -260,7 +316,7 @@
     });
 
     // Search handling
-    if (searchBar && searchResults) {
+    if (searchBar && searchResults && searchClear && searchResultCount) {
       searchBar.addEventListener('input', () => {
         performSearch(searchBar.value);
       });
@@ -269,7 +325,22 @@
           searchBar.value = '';
           searchResults.classList.remove('active');
           searchResults.innerHTML = '';
+          searchClear.classList.remove('active');
+          searchResultCount.textContent = '';
+        } else if (e.key === 'Enter') {
+          const firstResult = searchResults.querySelector('.nav-search-result-item[role="option"]');
+          if (firstResult) {
+            firstResult.click();
+          }
         }
+      });
+      searchClear.addEventListener('click', () => {
+        searchBar.value = '';
+        searchResults.classList.remove('active');
+        searchResults.innerHTML = '';
+        searchClear.classList.remove('active');
+        searchResultCount.textContent = '';
+        searchBar.focus();
       });
       // Keyboard navigation for results
       searchResults.addEventListener('keydown', e => {
@@ -296,6 +367,8 @@
         if (searchResults) {
           searchResults.classList.remove('active');
           searchResults.innerHTML = '';
+          if (searchClear) searchClear.classList.remove('active');
+          if (searchResultCount) searchResultCount.textContent = '';
         }
       }
     });
