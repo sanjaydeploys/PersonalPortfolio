@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v5');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v6');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -14,7 +14,6 @@
   // Function for smooth expand/collapse with dynamic height calculation
   function toggleHeight(element, expand) {
     if (expand) {
-      element.style.maxHeight = '0px';
       element.classList.add('active');
       requestAnimationFrame(() => {
         element.style.maxHeight = `${element.scrollHeight}px`;
@@ -79,7 +78,7 @@
     }
   });
 
-  // DSA main toggle - with smooth height, independent
+  // DSA main toggle - click only, no hover
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -100,7 +99,7 @@
     });
   }
 
-  // Submenu toggles - with smooth height, allow multiple open, no closing others
+  // Submenu toggles - click only, allow multiple open
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -140,14 +139,13 @@
     if (touchEndX - touchStartX > 75 && !navMenu.classList.contains('active')) openMenu(); // Swipe right to open
   }, { passive: true });
 
-  // Link click handling with close - ensure sublinks close menu on click
+  // Link click handling with close
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
-        e.stopPropagation(); // Prevent bubbling
+        e.stopPropagation();
         return; // Don't close on toggles
       }
-      // For actual links, close menu
       closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
@@ -191,9 +189,9 @@
     }
   }
 
-  // Sidebar Script - Kept intact as per instructions
+  // Sidebar Script - Enhanced to ensure visibility
   (function(){
-    console.log('[sidebarToggle.js] Script loaded');
+    console.log('[sidebarToggle.js] Script loaded - Enhanced');
 
     function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
       let attempts = 0;
@@ -214,6 +212,18 @@
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
       const sidebarWrapper = document.getElementById('sidebar-wrapper');
       if (!toggleBtn || !sidebarWrapper) return;
+
+      // Ensure sidebar toggle button is always visible
+      toggleBtn.style.position = 'fixed';
+      toggleBtn.style.top = '15px';
+      toggleBtn.style.right = '60px'; /* Adjusted to avoid overlap with nav toggle */
+      toggleBtn.style.zIndex = '10002'; /* High z-index for visibility */
+      toggleBtn.style.display = 'flex'; /* Force visibility */
+      toggleBtn.style.background = 'linear-gradient(145deg, #ff6f61, #ff8a65)';
+      toggleBtn.style.borderRadius = '8px';
+      toggleBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+      toggleBtn.style.padding = '0.5rem';
+      toggleBtn.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
 
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
