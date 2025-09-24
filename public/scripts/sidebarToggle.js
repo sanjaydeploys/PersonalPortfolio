@@ -14,16 +14,16 @@
     document.body.appendChild(overlay);
   }
 
-  // Animate links on mobile with delay for drop effect
+  // Animate links on mobile with bounce effect
   function openMenu(){
     navMenu.classList.add('active');
     overlay.classList.add('visible');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', true);
-    navToggle.style.display = 'none'; // Hide toggle when open
+    navToggle.style.display = 'none'; // Hide toggle when menu is open
     links.forEach((lnk,i)=>{
       lnk.classList.remove('anim-in');
-      setTimeout(()=>lnk.classList.add('anim-in'), i*120);
+      setTimeout(() => lnk.classList.add('anim-in'), i*150); // Slower for bounce
     });
   }
 
@@ -32,25 +32,35 @@
     overlay.classList.remove('visible');
     document.documentElement.classList.remove('nav-open');
     navToggle.setAttribute('aria-expanded', false);
-    navToggle.style.display = 'flex'; // Show toggle when closed
-    links.forEach(lnk=>lnk.classList.remove('anim-in'));
+    navToggle.style.display = 'flex'; // Show toggle when menu is closed
+    links.forEach(lnk => lnk.classList.remove('anim-in'));
   }
 
   // Toggle click
-  navToggle?.addEventListener('click', ()=>{
+  navToggle?.addEventListener('click', () => {
     if(navMenu.classList.contains('active')) closeMenu();
     else openMenu();
   });
 
   // Close button click
-  if(closeBtn) closeBtn.addEventListener('click', closeMenu);
+  closeBtn?.addEventListener('click', closeMenu);
 
   // Overlay click
   overlay.addEventListener('click', closeMenu);
+
   // ESC key
-  window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeMenu(); });
+  window.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
+
   // Close menu on link click
-  links.forEach(link=>link.addEventListener('click', ()=>closeMenu()));
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent default to ensure close animation
+      closeMenu();
+      setTimeout(() => {
+        window.location.href = link.href; // Navigate after close
+      }, 400); // Match transition duration
+    });
+  });
 
   // === ORIGINAL SIDEBAR SCRIPT INTACT ===
   (function(){
