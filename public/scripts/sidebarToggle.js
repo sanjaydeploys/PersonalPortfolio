@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v21');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v22');
 
   // Shared utility functions
   function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
@@ -81,13 +81,11 @@
     // LinkedIn-style scroll behavior
     let lastScrollTop = 0;
     const handleScroll = throttle(() => {
-      if (!mainNav) return;
+      if (!mainNav || navMenu?.classList.contains('active')) return;
       const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
       if (currentScrollTop > lastScrollTop && currentScrollTop > 80) {
-        // Scrolling down, hide nav
         mainNav.classList.add('nav-hidden');
       } else {
-        // Scrolling up or at top, show nav
         mainNav.classList.remove('nav-hidden');
       }
       lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
@@ -224,7 +222,6 @@
       if (expand) {
         element.style.display = 'block';
         element.classList.add('active');
-        // Calculate total height including nested subtrees
         let totalHeight = element.scrollHeight;
         const nestedSubtrees = element.querySelectorAll('.subtree');
         nestedSubtrees.forEach(subtree => {
@@ -274,7 +271,6 @@
       links.forEach(lnk => lnk.classList.remove('anim-in'));
       resetSubmenus();
       if (searchBar && searchResults) {
- мобильный
         lastSearchQuery = searchBar.value;
         searchBar.value = '';
         searchResults.classList.remove('active');
