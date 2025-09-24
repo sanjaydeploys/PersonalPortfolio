@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded');
+  console.log('[AdvancedNavbar] Loaded');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -53,71 +53,11 @@
     if (e.key === 'Escape') closeMenu();
   });
 
-  // Navlink click
+  // Ensure nav links are clickable
   links.forEach(link => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent default to ensure no interference
       window.location.href = link.getAttribute('href');
     });
   });
-
-  // === SIDEBAR SCRIPT FIXED ===
-  (function(){
-    console.log('[sidebarToggle.js] Script loaded');
-
-    function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
-      let attempts = 0;
-      const check = () => {
-        const element = document.querySelector(selector);
-        if (element) callback(element);
-        else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(check, interval);
-        } else {
-          callback(null);
-        }
-      };
-      check();
-    }
-
-    function toggleMenuLogic(toggle, menu) {
-      if (!toggle || !menu) return;
-      toggle.addEventListener('click', () => {
-        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', !isExpanded);
-        menu.classList.toggle('active', !isExpanded);
-      });
-    }
-
-    function initNavMenu() {
-      waitForElement('.nav-menu-toggle', navToggle => {
-        waitForElement('#nav-menu-list', navMenu => { toggleMenuLogic(navToggle, navMenu); });
-      });
-    }
-
-    function initSidebar() {
-      const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-      const sidebarWrapper = document.getElementById('sidebar-wrapper');
-      if (!toggleBtn || !sidebarWrapper) return;
-
-      toggleBtn.addEventListener('click', () => {
-        const isOpen = sidebarWrapper.classList.toggle('open');
-        toggleBtn.classList.toggle('active', isOpen);
-        toggleBtn.setAttribute('aria-expanded', isOpen);
-      });
-
-      sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', () => {
-          if (sidebarWrapper.classList.contains('open')) {
-            sidebarWrapper.classList.remove('open');
-            toggleBtn.classList.remove('active');
-            toggleBtn.setAttribute('aria-expanded', false);
-          }
-        });
-      });
-    }
-
-    function initializeAll() { /* initNavMenu(); */ initSidebar(); }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeAll);
-    else initializeAll();
-  })();
 })();
