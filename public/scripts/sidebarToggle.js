@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v12');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v13');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -7,6 +7,9 @@
   const dsaToggleItem = navMenu?.querySelector('.nav-dsa-toggle');
   const dsaToggle = dsaToggleItem?.querySelector('.nav-toggle-link');
   const dsaLinks = navMenu?.querySelector('.nav-dsa-links');
+  const caseStudiesToggleItem = navMenu?.querySelector('.nav-case-studies-toggle');
+  const caseStudiesToggle = caseStudiesToggleItem?.querySelector('.nav-toggle-link');
+  const caseStudiesLinks = navMenu?.querySelector('.nav-case-studies-links');
   const submenuToggleItems = navMenu?.querySelectorAll('.nav-submenu-toggle');
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
@@ -68,6 +71,10 @@
       dsaToggleItem.setAttribute('aria-expanded', 'false');
       toggleHeight(dsaLinks, false);
     }
+    if (caseStudiesToggleItem && caseStudiesLinks) {
+      caseStudiesToggleItem.setAttribute('aria-expanded', 'false');
+      toggleHeight(caseStudiesLinks, false);
+    }
     submenuToggleItems.forEach((subItem) => {
       subItem.setAttribute('aria-expanded', 'false');
       toggleHeight(subItem.nextElementSibling, false);
@@ -95,6 +102,24 @@
     toggleHeight(dsaLinks, !isExpanded);
     if (isExpanded) {
       closeAllSubmenus();
+    } else if (caseStudiesLinks) {
+      caseStudiesToggleItem.setAttribute('aria-expanded', 'false');
+      toggleHeight(caseStudiesLinks, false);
+    }
+  });
+
+  // Case Studies main toggle
+  caseStudiesToggle?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isExpanded = caseStudiesToggleItem.getAttribute('aria-expanded') === 'true';
+    caseStudiesToggleItem.setAttribute('aria-expanded', !isExpanded);
+    toggleHeight(caseStudiesLinks, !isExpanded);
+    if (isExpanded) {
+      closeAllSubmenus();
+    } else if (dsaLinks) {
+      dsaToggleItem.setAttribute('aria-expanded', 'false');
+      toggleHeight(dsaLinks, false);
     }
   });
 
@@ -162,6 +187,25 @@
         window.location.href = href;
       }
       closeMenu();
+    }, { passive: false });
+  });
+
+  // Social link navigation
+  const socialLinks = navMenu?.querySelectorAll('.social-link');
+  socialLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href;
+      }
+    });
+    link.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href;
+      }
     }, { passive: false });
   });
 
