@@ -1,4 +1,3 @@
-
 (function(){
   console.log('[AdvancedNavbar+Sidebar] Loaded');
 
@@ -19,6 +18,8 @@
     navMenu.classList.add('active');
     overlay.classList.add('visible');
     document.documentElement.classList.add('nav-open');
+    navToggle.classList.add('active');
+    navToggle.setAttribute('aria-expanded', true);
     links.forEach((lnk,i)=>{
       lnk.classList.remove('anim-in');
       setTimeout(()=>lnk.classList.add('anim-in'), i*60);
@@ -29,6 +30,8 @@
     navMenu.classList.remove('active');
     overlay.classList.remove('visible');
     document.documentElement.classList.remove('nav-open');
+    navToggle.classList.remove('active');
+    navToggle.setAttribute('aria-expanded', false);
     links.forEach(lnk=>lnk.classList.remove('anim-in'));
   }
 
@@ -97,9 +100,8 @@
       });
     }
 
-    function initializeAll() { initNavMenu(); initSidebar(); }
+    function initializeAll() { /* initNavMenu(); */ initSidebar(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeAll);
     else initializeAll();
   })();
 })();
-
