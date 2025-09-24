@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v8');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v9');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -11,15 +11,16 @@
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
 
-  // Function for smooth expand/collapse with dynamic height calculation and parent recalibration
+  // Function for smooth expand/collapse with dynamic height calculation
   function toggleHeight(element, expand) {
     if (expand) {
+      element.style.display = 'block'; // Show element
       element.classList.add('active');
       element.style.maxHeight = `${element.scrollHeight}px`;
-      // Recalibrate parent height if in mobile to ensure scroll
+      // Recalibrate parent height for mobile scroll
       if (window.innerWidth <= 768 && navMenu) {
         setTimeout(() => {
-          navMenu.style.maxHeight = 'none'; // Allow auto expand
+          navMenu.style.maxHeight = 'none';
           navMenu.scrollTop = navMenu.scrollHeight; // Scroll to bottom
         }, 500);
       }
@@ -27,6 +28,7 @@
       element.style.maxHeight = '0px';
       setTimeout(() => {
         element.classList.remove('active');
+        element.style.display = 'none'; // Hide element
       }, 500);
       if (window.innerWidth <= 768 && navMenu) {
         setTimeout(() => {
@@ -85,7 +87,7 @@
     }
   });
 
-  // DSA main toggle - with smooth height, independent
+  // DSA main toggle - with smooth height
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -106,7 +108,7 @@
     });
   }
 
-  // Submenu toggles - with smooth height, close others when opening new one
+  // Submenu toggles - close others when opening new one
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -146,6 +148,27 @@
     });
   });
 
+  // Ensure sub-links are navigable
+  subLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent parent events
+      // Allow navigation via href
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href; // Navigate to DSA problem page
+      }
+      closeMenu(); // Close menu after navigation
+    });
+    link.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href;
+      }
+      closeMenu();
+    }, { passive: false });
+  });
+
   // Close dropdowns on outside click for desktop
   document.addEventListener('click', (e) => {
     if (!navMenu.contains(e.target) && window.innerWidth >= 769) {
@@ -165,20 +188,27 @@
     if (touchEndX - touchStartX > 75 && !navMenu.classList.contains('active')) openMenu(); // Swipe right to open
   }, { passive: true });
 
-  // Link click handling with close - ensure sublinks close menu on click
+  // Link click handling with close
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
         e.stopPropagation(); // Prevent bubbling
         return; // Don't close on toggles
       }
-      // For actual links, close menu
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href; // Navigate
+      }
       closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
         e.stopPropagation();
         return;
+      }
+      const href = link.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href;
       }
       closeMenu();
     }, { passive: false });
@@ -216,7 +246,7 @@
     }
   }
 
-  // Sidebar Script - Restored to the provided version, intact
+  // Sidebar Script - Preserved exactly as provided
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
