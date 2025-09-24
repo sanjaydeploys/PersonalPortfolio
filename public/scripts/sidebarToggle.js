@@ -1,7 +1,23 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v20');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v21');
 
-  // Shared focus trapping functions
+  // Shared utility functions
+  function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
+    let attempts = 0;
+    const check = () => {
+      const element = document.querySelector(selector);
+      if (element) callback(element);
+      else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(check, interval);
+      } else {
+        console.warn(`[AdvancedNavbar/Sidebar] Element ${selector} not found after ${maxAttempts} attempts`);
+        callback(null);
+      }
+    };
+    check();
+  }
+
   function trapFocus(element) {
     if (!element) return;
     const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"], input, .nav-search-result-item[role="option"]'));
@@ -258,6 +274,7 @@
       links.forEach(lnk => lnk.classList.remove('anim-in'));
       resetSubmenus();
       if (searchBar && searchResults) {
+ мобильный
         lastSearchQuery = searchBar.value;
         searchBar.value = '';
         searchResults.classList.remove('active');
@@ -492,25 +509,8 @@
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
-    function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
-      let attempts = 0;
-      const check = () => {
-        const element = document.querySelector(selector);
-        if (element) callback(element);
-        else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(check, interval);
-        } else {
-          console.warn(`[Sidebar] Element ${selector} not found after ${maxAttempts} attempts`);
-          callback(null);
-        }
-      };
-      check();
-    }
-
-    function initSidebar() {
+    function initSidebar(sidebarWrapper) {
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-      const sidebarWrapper = document.getElementById('sidebar-wrapper');
       if (!toggleBtn || !sidebarWrapper) return;
 
       toggleBtn.addEventListener('click', (e) => {
@@ -539,7 +539,7 @@
     }
 
     function initializeAll() {
-      initSidebar();
+      waitForElement('#sidebar-wrapper', initSidebar);
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeAll);
@@ -549,7 +549,5 @@
   })();
 
   // Initialize nav after DOM is ready
-  waitForElement('#nav-menu-list', () => {
-    initializeNav();
-  });
+  waitForElement('#nav-menu-list', initializeNav);
 })();
