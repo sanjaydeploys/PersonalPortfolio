@@ -13,7 +13,7 @@
     document.body.appendChild(overlay);
   }
 
-  // Animate links on mobile
+  // Animate links on mobile with delay for drop effect
   function openMenu(){
     navMenu.classList.add('active');
     overlay.classList.add('visible');
@@ -22,7 +22,7 @@
     navToggle.setAttribute('aria-expanded', true);
     links.forEach((lnk,i)=>{
       lnk.classList.remove('anim-in');
-      setTimeout(()=>lnk.classList.add('anim-in'), i*60);
+      setTimeout(()=>lnk.classList.add('anim-in'), i*120); // Increased delay for dramatic drop
     });
   }
 
