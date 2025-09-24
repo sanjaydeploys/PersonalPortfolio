@@ -4,42 +4,41 @@
   const navMenu = document.getElementById('nav-menu');
   const navToggle = document.querySelector('.nav-toggle');
   const closeBtn = navMenu?.querySelector('.nav-close');
-  const links = Array.from(navMenu.querySelectorAll('.nav-link'));
+  const links = navMenu.querySelectorAll('.nav-link');
 
   // Overlay
   let overlay = document.querySelector('.nav-overlay');
-  if(!overlay){
+  if (!overlay) {
     overlay = document.createElement('div');
-    overlay.className='nav-overlay';
+    overlay.className = 'nav-overlay';
     document.body.appendChild(overlay);
   }
 
-  // Open menu with animation
-  function openMenu(){
+  // Open menu
+  function openMenu() {
     navMenu.classList.add('active');
     overlay.classList.add('visible');
     document.documentElement.classList.add('nav-open');
-    navToggle.setAttribute('aria-expanded', true);
-    navToggle.style.display = 'none'; // Hide toggle when open
-    links.forEach((lnk,i) => {
-      lnk.classList.remove('anim-in');
-      setTimeout(() => lnk.classList.add('anim-in'), i*150);
+    navToggle.setAttribute('aria-expanded', 'true');
+    navToggle.style.display = 'none';
+    links.forEach((lnk, i) => {
+      setTimeout(() => lnk.classList.add('anim-in'), i * 100);
     });
   }
 
   // Close menu
-  function closeMenu(){
+  function closeMenu() {
     navMenu.classList.remove('active');
     overlay.classList.remove('visible');
     document.documentElement.classList.remove('nav-open');
-    navToggle.setAttribute('aria-expanded', false);
-    navToggle.style.display = 'flex'; // Show toggle when closed
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.style.display = 'flex';
     links.forEach(lnk => lnk.classList.remove('anim-in'));
   }
 
   // Toggle click
   navToggle?.addEventListener('click', () => {
-    if(navMenu.classList.contains('active')) closeMenu();
+    if (navMenu.classList.contains('active')) closeMenu();
     else openMenu();
   });
 
@@ -51,17 +50,13 @@
 
   // ESC key
   window.addEventListener('keydown', e => {
-    if(e.key === 'Escape') closeMenu();
+    if (e.key === 'Escape') closeMenu();
   });
 
-  // Navlink click with direct navigation
+  // Navlink click
   links.forEach(link => {
-    link.addEventListener('click', (e) => {
-      const href = link.getAttribute('href');
-      closeMenu();
-      setTimeout(() => {
-        window.location.href = href; // Direct navigation
-      }, 400); // Match transition duration
+    link.addEventListener('click', () => {
+      window.location.href = link.getAttribute('href'); // Direct navigation
     });
   });
 
