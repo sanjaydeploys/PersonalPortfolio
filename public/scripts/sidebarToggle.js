@@ -5,6 +5,8 @@
   const navToggle = document.querySelector('.nav-menu-toggle');
   const closeBtn = navMenu?.querySelector('.nav-menu-close');
   const links = navMenu?.querySelectorAll('.nav-menu-link');
+  const dsaToggle = navMenu?.querySelector('.nav-dsa-toggle');
+  const dsaLinks = navMenu?.querySelector('.nav-dsa-links');
 
   // Open menu
   function openMenu() {
@@ -12,11 +14,11 @@
     navMenu.classList.add('active');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', 'true');
-    navToggle.classList.add('active'); // For hamburger animation
+    navToggle.classList.add('active');
     links.forEach((lnk, i) => {
       setTimeout(() => lnk.classList.add('anim-in'), i * 100);
     });
-    trapFocus(navMenu); // Advanced: focus trapping
+    trapFocus(navMenu);
   }
 
   // Close menu
@@ -27,12 +29,17 @@
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.classList.remove('active');
     links.forEach(lnk => lnk.classList.remove('anim-in'));
+    if (dsaToggle && dsaLinks) {
+      dsaToggle.classList.remove('active');
+      dsaLinks.classList.remove('active');
+      dsaToggle.setAttribute('aria-expanded', 'false');
+    }
     removeFocusTrap();
   }
 
   // Toggle click
   navToggle?.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent bubbling
+    e.stopPropagation();
     if (navMenu.classList.contains('active')) {
       closeMenu();
     } else {
@@ -46,12 +53,16 @@
     closeMenu();
   });
 
-  // ESC key
-  window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeMenu();
+  // DSA submenu toggle
+  dsaToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isExpanded = dsaToggle.getAttribute('aria-expanded') === 'true';
+    dsaToggle.setAttribute('aria-expanded', !isExpanded);
+    dsaLinks.classList.toggle('active');
+    dsaToggle.classList.toggle('active');
   });
 
-  // Advanced: Swipe to close on mobile
+  // Swipe gestures
   let touchStartX = 0;
   let touchEndX = 0;
   navMenu?.addEventListener('touchstart', e => {
@@ -59,23 +70,41 @@
   });
   navMenu?.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
-    if (touchStartX - touchEndX > 50) closeMenu(); // Swipe left to close
+    if (touchStartX - touchEndX > 50) closeMenu(); // Swipe left
+    if (touchEndX - touchStartX > 50 && !navMenu.classList.contains('active')) openMenu(); // Swipe right
   });
 
-  // Ensure nav links are clickable with natural navigation
+  // Link click handling
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent menu closing issues
-      closeMenu(); // Close menu after click
-      // Natural <a> navigation handles href
+      e.stopPropagation();
+      closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
-      e.stopPropagation(); // Ensure touch works
+      e.stopPropagation();
       closeMenu();
     });
   });
 
-  // Advanced: Focus trapping in menu
+  // DSA link click handling
+  const dsaLinkItems = navMenu?.querySelectorAll('.nav-dsa-link');
+  dsaLinkItems?.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+    });
+    link.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      closeMenu();
+    });
+  });
+
+  // ESC key
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // Focus trapping
   function trapFocus(element) {
     const focusableEls = element.querySelectorAll('a[href], button:not([disabled])');
     const first = focusableEls[0];
@@ -102,7 +131,7 @@
     }
   }
 
-  // === Original Sidebar Script ===
+  // Sidebar Script
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
@@ -152,7 +181,7 @@
     }
 
     function initializeAll() {
-      initSidebar(); // Only sidebar, no nav conflict
+      initSidebar();
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeAll);
