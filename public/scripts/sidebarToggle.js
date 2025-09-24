@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v16');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v17');
 
   function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
     let attempts = 0;
@@ -21,6 +21,75 @@
     const navMenu = document.getElementById('nav-menu-list');
     const navToggle = document.querySelector('.nav-menu-toggle');
     const links = navMenu?.querySelectorAll('.nav-menu-link');
+    const searchBar = navMenu?.querySelector('.nav-search-bar');
+    const searchResults = navMenu?.querySelector('.nav-search-results');
+    let linkIndex = [];
+
+    // Build search index
+    function buildSearchIndex() {
+      linkIndex = [];
+      const allLinks = navMenu.querySelectorAll('a.nav-menu-link');
+      allLinks.forEach(link => {
+        const text = link.textContent.trim();
+        const href = link.getAttribute('href');
+        let path = [];
+        let current = link.parentElement;
+        while (current && current !== navMenu) {
+          const toggleLink = current.querySelector('.nav-toggle-link');
+          if (toggleLink) {
+            path.unshift(toggleLink.childNodes[0].textContent.trim());
+          }
+          current = current.parentElement.closest('.nav-menu-item, .nav-menu-list');
+        }
+        linkIndex.push({ text, href, path: path.join(' > ') });
+      });
+    }
+
+    // Perform search
+    function performSearch(query) {
+      if (!searchResults) return;
+      searchResults.innerHTML = '';
+      if (!query.trim()) {
+        searchResults.classList.remove('active');
+        return;
+      }
+      const results = linkIndex.filter(item =>
+        item.text.toLowerCase().includes(query.toLowerCase())
+      );
+      if (results.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'nav-search-result-item';
+        li.textContent = 'No results found';
+        searchResults.appendChild(li);
+      } else {
+        results.forEach((result, index) => {
+          const li = document.createElement('li');
+          li.className = 'nav-search-result-item';
+          li.setAttribute('role', 'option');
+          li.setAttribute('tabindex', '0');
+          li.innerHTML = `
+            <span class="result-title">${result.text}</span>
+            ${result.path ? `<span class="result-path">${result.path}</span>` : ''}
+          `;
+          li.addEventListener('click', () => {
+            if (result.href && result.href !== '#') {
+              window.location.href = result.href;
+            }
+            closeMenu();
+          });
+          li.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              if (result.href && result.href !== '#') {
+                window.location.href = result.href;
+              }
+              closeMenu();
+            }
+          });
+          searchResults.appendChild(li);
+        });
+      }
+      searchResults.classList.add('active');
+    }
 
     // Reset all submenus on load
     function resetSubmenus(parent = navMenu) {
@@ -32,7 +101,7 @@
           submenu.classList.remove('active');
           submenu.style.display = 'none';
           submenu.style.maxHeight = '0px';
-          resetSubmenus(submenu); // Recursively reset nested submenus
+          resetSubmenus(submenu);
         }
       });
     }
@@ -72,6 +141,9 @@
         setTimeout(() => lnk.classList.add('anim-in'), i * 80 + 100);
       });
       trapFocus(navMenu);
+      if (window.innerWidth <= 1024 && searchBar) {
+        searchBar.focus();
+      }
     }
 
     // Close main menu
@@ -83,6 +155,11 @@
       navToggle.classList.remove('active');
       links.forEach(lnk => lnk.classList.remove('anim-in'));
       resetSubmenus();
+      if (searchBar && searchResults) {
+        searchBar.value = '';
+        searchResults.classList.remove('active');
+        searchResults.innerHTML = '';
+      }
       removeFocusTrap();
     }
 
@@ -99,7 +176,7 @@
         });
       } else {
         submenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
-        resetSubmenus(submenu); // Close nested submenus
+        resetSubmenus(submenu);
       }
     }
 
@@ -182,10 +259,44 @@
       }, { passive: false });
     });
 
+    // Search handling
+    if (searchBar && searchResults) {
+      searchBar.addEventListener('input', () => {
+        performSearch(searchBar.value);
+      });
+      searchBar.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          searchBar.value = '';
+          searchResults.classList.remove('active');
+          searchResults.innerHTML = '';
+        }
+      });
+      // Keyboard navigation for results
+      searchResults.addEventListener('keydown', e => {
+        const items = searchResults.querySelectorAll('.nav-search-result-item[role="option"]');
+        if (!items.length) return;
+        const current = document.activeElement;
+        let index = Array.from(items).indexOf(current);
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          index = (index + 1) % items.length;
+          items[index].focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          index = (index - 1 + items.length) % items.length;
+          items[index].focus();
+        }
+      });
+    }
+
     // Close dropdowns on outside click (desktop)
     document.addEventListener('click', (e) => {
       if (!navMenu.contains(e.target) && window.innerWidth >= 1025) {
         resetSubmenus();
+        if (searchResults) {
+          searchResults.classList.remove('active');
+          searchResults.innerHTML = '';
+        }
       }
     });
 
@@ -229,7 +340,7 @@
 
     // Focus trapping
     function trapFocus(element) {
-      const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"]'));
+      const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"], input, .nav-search-result-item[role="option"]'));
       const first = focusableEls[0];
       const last = focusableEls[focusableEls.length - 1];
       const handleKey = (e) => {
@@ -254,7 +365,8 @@
       }
     }
 
-    // Initialize by resetting submenus
+    // Initialize by building search index and resetting submenus
+    buildSearchIndex();
     resetSubmenus();
   }
 
