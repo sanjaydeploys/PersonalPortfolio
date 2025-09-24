@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v4');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v5');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -11,7 +11,7 @@
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
 
-  // Function for smooth expand/collapse
+  // Function for smooth expand/collapse with dynamic height calculation
   function toggleHeight(element, expand) {
     if (expand) {
       element.style.maxHeight = '0px';
@@ -64,6 +64,7 @@
     submenuToggleItems.forEach((subItem) => {
       subItem.setAttribute('aria-expanded', 'false');
       toggleHeight(subItem.nextElementSibling, false);
+      subItem.nextElementSibling.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
     });
   }
 
@@ -78,19 +79,28 @@
     }
   });
 
-  // DSA main toggle - with smooth height
+  // DSA main toggle - with smooth height, independent
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     const isExpanded = dsaToggleItem.getAttribute('aria-expanded') === 'true';
-    closeAllDropdowns();
-    if (!isExpanded) {
-      dsaToggleItem.setAttribute('aria-expanded', 'true');
-      toggleHeight(dsaLinks, true);
+    dsaToggleItem.setAttribute('aria-expanded', !isExpanded);
+    toggleHeight(dsaLinks, !isExpanded);
+    if (isExpanded) {
+      closeAllSubmenus(); // Close submenus when closing main
     }
   });
 
-  // Submenu toggles - with smooth height, close others
+  // Function to close all submenus
+  function closeAllSubmenus() {
+    submenuToggleItems.forEach((subItem) => {
+      subItem.setAttribute('aria-expanded', 'false');
+      toggleHeight(subItem.nextElementSibling, false);
+      subItem.nextElementSibling.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
+    });
+  }
+
+  // Submenu toggles - with smooth height, allow multiple open, no closing others
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -98,12 +108,6 @@
       const subItem = submenuToggleItems[index];
       const subMenu = subItem.nextElementSibling;
       const isExpanded = subItem.getAttribute('aria-expanded') === 'true';
-      submenuToggleItems.forEach((otherItem, otherIndex) => {
-        if (index !== otherIndex) {
-          otherItem.setAttribute('aria-expanded', 'false');
-          toggleHeight(otherItem.nextElementSibling, false);
-        }
-      });
       subItem.setAttribute('aria-expanded', !isExpanded);
       toggleHeight(subMenu, !isExpanded);
       if (!isExpanded) {
@@ -117,7 +121,7 @@
     });
   });
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click for desktop
   document.addEventListener('click', (e) => {
     if (!navMenu.contains(e.target) && window.innerWidth >= 769) {
       closeAllDropdowns();
@@ -136,14 +140,14 @@
     if (touchEndX - touchStartX > 75 && !navMenu.classList.contains('active')) openMenu(); // Swipe right to open
   }, { passive: true });
 
-  // Link click handling with close - ensure sublinks close menu
+  // Link click handling with close - ensure sublinks close menu on click
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
-        e.stopPropagation(); // Prevent bubbling to parent listeners
+        e.stopPropagation(); // Prevent bubbling
         return; // Don't close on toggles
       }
-      // For actual links, allow navigation but close menu
+      // For actual links, close menu
       closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
@@ -152,7 +156,7 @@
         return;
       }
       closeMenu();
-    }, { passive: false }); // Allow preventDefault if needed
+    }, { passive: false });
   });
 
   // ESC key close
