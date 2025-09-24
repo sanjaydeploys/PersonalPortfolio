@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v7');
+  console.log('[AdvancedNavbar] Loaded - Awe Level Edition v8');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -16,7 +16,7 @@
     if (expand) {
       element.classList.add('active');
       element.style.maxHeight = `${element.scrollHeight}px`;
-      // Recalibrate parent height if in mobile to ensure scroll
+      // Recalibrate parent height for mobile scroll
       if (window.innerWidth <= 768 && navMenu) {
         setTimeout(() => {
           navMenu.style.maxHeight = 'none'; // Allow auto expand
@@ -106,7 +106,7 @@
     });
   }
 
-  // Submenu toggles - with smooth height, close others when opening new one
+  // Submenu toggles - close others when opening new one
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -129,7 +129,6 @@
         subLinksInThis.forEach((slnk, j) => {
           setTimeout(() => slnk.classList.add('anim-in'), j * 50 + 50);
         });
-        // Recalibrate DSA links height
         if (dsaLinks.classList.contains('active')) {
           setTimeout(() => {
             dsaLinks.style.maxHeight = `${dsaLinks.scrollHeight}px`;
@@ -216,7 +215,7 @@
     }
   }
 
-  // Sidebar Script - Kept intact, no changes to avoid triggering
+  // Sidebar Script - Kept intact, no interference with nav
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
