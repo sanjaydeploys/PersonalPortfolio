@@ -1,13 +1,14 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v2');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
-  const closeBtn = navMenu?.querySelector('.nav-menu-close');
   const links = navMenu?.querySelectorAll('.nav-menu-link');
-  const dsaToggle = navMenu?.querySelector('.nav-dsa-toggle');
+  const dsaToggleItem = navMenu?.querySelector('.nav-dsa-toggle');
+  const dsaToggle = dsaToggleItem?.querySelector('.nav-toggle-link');
   const dsaLinks = navMenu?.querySelector('.nav-dsa-links');
-  const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-toggle');
+  const submenuToggleItems = navMenu?.querySelectorAll('.nav-submenu-toggle');
+  const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
 
   // Open menu with enhanced animation
   function openMenu() {
@@ -30,13 +31,13 @@
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.classList.remove('active');
     links.forEach(lnk => lnk.classList.remove('anim-in'));
-    if (dsaToggle && dsaLinks) {
-      dsaToggle.setAttribute('aria-expanded', 'false');
+    if (dsaToggleItem && dsaLinks) {
+      dsaToggleItem.setAttribute('aria-expanded', 'false');
       dsaLinks.classList.remove('active');
     }
-    submenuToggles.forEach(subToggle => {
-      subToggle.setAttribute('aria-expanded', 'false');
-      subToggle.nextElementSibling.classList.remove('active');
+    submenuToggleItems.forEach((subItem, index) => {
+      subItem.setAttribute('aria-expanded', 'false');
+      subItem.nextElementSibling.classList.remove('active');
     });
     removeFocusTrap();
   }
@@ -52,30 +53,24 @@
     }
   });
 
-  // Close button click
-  closeBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-  });
-
-  // DSA main toggle
+  // DSA main toggle - listener on the clickable element
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const isExpanded = dsaToggle.getAttribute('aria-expanded') === 'true';
-    dsaToggle.setAttribute('aria-expanded', !isExpanded);
+    const isExpanded = dsaToggleItem.getAttribute('aria-expanded') === 'true';
+    dsaToggleItem.setAttribute('aria-expanded', !isExpanded);
     dsaLinks.classList.toggle('active');
   });
 
-  // Submenu toggles
-  submenuToggles.forEach(subToggle => {
+  // Submenu toggles - listeners on clickable elements
+  submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const isExpanded = subToggle.getAttribute('aria-expanded') === 'true';
-      subToggle.setAttribute('aria-expanded', !isExpanded);
-      subToggle.nextElementSibling.classList.toggle('active');
+      const subItem = submenuToggleItems[index];
+      const isExpanded = subItem.getAttribute('aria-expanded') === 'true';
+      subItem.setAttribute('aria-expanded', !isExpanded);
+      subItem.nextElementSibling.classList.toggle('active');
     });
   });
 
@@ -91,22 +86,23 @@
     if (touchEndX - touchStartX > 75 && !navMenu.classList.contains('active')) openMenu(); // Swipe right to open
   }, { passive: true });
 
-  // Link click handling with close
+  // Link click handling with close - ensure sublinks close menu
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
+        e.stopPropagation(); // Prevent bubbling to parent listeners
         return; // Don't close on toggles
       }
-      e.stopPropagation();
+      // For actual links, allow navigation but close menu
       closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
+        e.stopPropagation();
         return;
       }
-      e.stopPropagation();
       closeMenu();
-    }, { passive: true });
+    }, { passive: false }); // Allow preventDefault if needed
   });
 
   // ESC key close
@@ -116,7 +112,7 @@
 
   // Advanced focus trapping with loop
   function trapFocus(element) {
-    const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled])'));
+    const focusableEls = Array.from(element.querySelectorAll('a[href], button:not([disabled]), [role="button"]'));
     const first = focusableEls[0];
     const last = focusableEls[focusableEls.length - 1];
     const handleKey = (e) => {
