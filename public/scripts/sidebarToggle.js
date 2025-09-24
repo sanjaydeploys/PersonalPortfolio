@@ -13,7 +13,6 @@
     overlay.className = 'nav-overlay';
     document.body.appendChild(overlay);
   }
-
   // Open menu
   function openMenu() {
     navMenu.classList.add('active');
