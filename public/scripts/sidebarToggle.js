@@ -1,23 +1,23 @@
 (function(){
   console.log('[AdvancedNavbar+Sidebar] Loaded');
 
-  const navMenu = document.getElementById('nav-menu');
-  const navToggle = document.querySelector('.nav-toggle');
-  const closeBtn = navMenu?.querySelector('.nav-close');
-  const links = navMenu.querySelectorAll('.nav-link');
+  const navMenu = document.getElementById('nav-menu-list');
+  const navToggle = document.querySelector('.nav-menu-toggle');
+  const closeBtn = navMenu?.querySelector('.nav-menu-close');
+  const links = navMenu.querySelectorAll('.nav-menu-link');
 
   // Overlay
-  let overlay = document.querySelector('.nav-overlay');
+  let overlay = document.querySelector('.nav-menu-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
-    overlay.className = 'nav-overlay';
+    overlay.className = 'nav-menu-overlay';
     document.body.appendChild(overlay);
   }
 
   // Open menu
   function openMenu() {
     navMenu.classList.add('active');
-    overlay.classList.add('visible');
+    overlay.classList.add('active');
     document.documentElement.classList.add('nav-open');
     navToggle.setAttribute('aria-expanded', 'true');
     navToggle.style.display = 'none';
@@ -29,7 +29,7 @@
   // Close menu
   function closeMenu() {
     navMenu.classList.remove('active');
-    overlay.classList.remove('visible');
+    overlay.classList.remove('active');
     document.documentElement.classList.remove('nav-open');
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.style.display = 'flex';
@@ -70,7 +70,7 @@
         const element = document.querySelector(selector);
         if (element) callback(element);
         else if (attempts < maxAttempts) { attempts++; setTimeout(check, interval); }
-        else callback(null);
+        else_snippet: else callback(null);
       };
       check();
     }
