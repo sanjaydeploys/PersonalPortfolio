@@ -1,5 +1,5 @@
 (function(){
-  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v3');
+  console.log('[AdvancedNavbar+Sidebar] Loaded - Awe Level Edition v4');
 
   const navMenu = document.getElementById('nav-menu-list');
   const navToggle = document.querySelector('.nav-menu-toggle');
@@ -10,6 +10,25 @@
   const submenuToggleItems = navMenu?.querySelectorAll('.nav-submenu-toggle');
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
+
+  // Function for smooth expand/collapse
+  function toggleHeight(element, expand) {
+    if (expand) {
+      element.style.maxHeight = '0px';
+      element.classList.add('active');
+      requestAnimationFrame(() => {
+        element.style.maxHeight = `${element.scrollHeight}px`;
+      });
+    } else {
+      element.style.maxHeight = `${element.scrollHeight}px`;
+      requestAnimationFrame(() => {
+        element.style.maxHeight = '0px';
+      });
+      setTimeout(() => {
+        element.classList.remove('active');
+      }, 500); // Match transition duration
+    }
+  }
 
   // Open menu with enhanced animation
   function openMenu() {
@@ -36,15 +55,15 @@
     removeFocusTrap();
   }
 
-  // Close all dropdowns
+  // Close all dropdowns with smooth collapse
   function closeAllDropdowns() {
     if (dsaToggleItem && dsaLinks) {
       dsaToggleItem.setAttribute('aria-expanded', 'false');
-      dsaLinks.classList.remove('active');
+      toggleHeight(dsaLinks, false);
     }
-    submenuToggleItems.forEach((subItem, index) => {
+    submenuToggleItems.forEach((subItem) => {
       subItem.setAttribute('aria-expanded', 'false');
-      subItem.nextElementSibling.classList.remove('active');
+      toggleHeight(subItem.nextElementSibling, false);
     });
   }
 
@@ -59,47 +78,48 @@
     }
   });
 
-  // DSA main toggle - listener on the clickable element
+  // DSA main toggle - with smooth height
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     const isExpanded = dsaToggleItem.getAttribute('aria-expanded') === 'true';
-    closeAllDropdowns(); // Close others first
+    closeAllDropdowns();
     if (!isExpanded) {
-      dsaToggleItem.setAttribute('aria-expanded', true);
-      dsaLinks.classList.add('active');
+      dsaToggleItem.setAttribute('aria-expanded', 'true');
+      toggleHeight(dsaLinks, true);
     }
   });
 
-  // Submenu toggles - listeners on clickable elements
+  // Submenu toggles - with smooth height, close others
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const subItem = submenuToggleItems[index];
+      const subMenu = subItem.nextElementSibling;
       const isExpanded = subItem.getAttribute('aria-expanded') === 'true';
       submenuToggleItems.forEach((otherItem, otherIndex) => {
         if (index !== otherIndex) {
           otherItem.setAttribute('aria-expanded', 'false');
-          otherItem.nextElementSibling.classList.remove('active');
+          toggleHeight(otherItem.nextElementSibling, false);
         }
       });
       subItem.setAttribute('aria-expanded', !isExpanded);
-      subItem.nextElementSibling.classList.toggle('active');
+      toggleHeight(subMenu, !isExpanded);
       if (!isExpanded) {
-        const subLinksInThis = subItem.nextElementSibling.querySelectorAll('.nav-sub-link');
+        const subLinksInThis = subMenu.querySelectorAll('.nav-sub-link');
         subLinksInThis.forEach((slnk, j) => {
           setTimeout(() => slnk.classList.add('anim-in'), j * 50 + 50);
         });
       } else {
-        subItem.nextElementSibling.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
+        subMenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
       }
     });
   });
 
   // Close dropdowns on outside click
   document.addEventListener('click', (e) => {
-    if (!navMenu.contains(e.target)) {
+    if (!navMenu.contains(e.target) && window.innerWidth >= 769) {
       closeAllDropdowns();
     }
   });
