@@ -11,21 +11,22 @@
   const submenuToggles = navMenu?.querySelectorAll('.nav-submenu-link');
   const subLinks = navMenu?.querySelectorAll('.nav-sub-link');
 
-  // Function for smooth expand/collapse with dynamic height calculation
+  // Function for smooth expand/collapse with dynamic height calculation and parent recalibration
   function toggleHeight(element, expand) {
     if (expand) {
       element.classList.add('active');
-      requestAnimationFrame(() => {
-        element.style.maxHeight = `${element.scrollHeight}px`;
-      });
-    } else {
       element.style.maxHeight = `${element.scrollHeight}px`;
-      requestAnimationFrame(() => {
-        element.style.maxHeight = '0px';
-      });
+      // Recalibrate parent height if in mobile to ensure scroll
+      if (window.innerWidth <= 768 && navMenu) {
+        setTimeout(() => {
+          navMenu.scrollTop = navMenu.scrollHeight; // Scroll to bottom if needed
+        }, 500);
+      }
+    } else {
+      element.style.maxHeight = '0px';
       setTimeout(() => {
         element.classList.remove('active');
-      }, 500); // Match transition duration
+      }, 500);
     }
   }
 
@@ -78,7 +79,7 @@
     }
   });
 
-  // DSA main toggle - click only, no hover
+  // DSA main toggle - with smooth height, independent
   dsaToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -99,7 +100,7 @@
     });
   }
 
-  // Submenu toggles - click only, allow multiple open
+  // Submenu toggles - with smooth height, allow multiple open
   submenuToggles.forEach((subToggle, index) => {
     subToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -114,8 +115,19 @@
         subLinksInThis.forEach((slnk, j) => {
           setTimeout(() => slnk.classList.add('anim-in'), j * 50 + 50);
         });
+        // Recalibrate DSA links height if open
+        if (dsaLinks.classList.contains('active')) {
+          setTimeout(() => {
+            dsaLinks.style.maxHeight = `${dsaLinks.scrollHeight}px`;
+          }, 100);
+        }
       } else {
         subMenu.querySelectorAll('.nav-sub-link').forEach(slnk => slnk.classList.remove('anim-in'));
+        if (dsaLinks.classList.contains('active')) {
+          setTimeout(() => {
+            dsaLinks.style.maxHeight = `${dsaLinks.scrollHeight}px`;
+          }, 500);
+        }
       }
     });
   });
@@ -139,13 +151,14 @@
     if (touchEndX - touchStartX > 75 && !navMenu.classList.contains('active')) openMenu(); // Swipe right to open
   }, { passive: true });
 
-  // Link click handling with close
+  // Link click handling with close - ensure sublinks close menu on click
   links?.forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.classList.contains('nav-toggle-link') || link.classList.contains('nav-submenu-link')) {
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent bubbling
         return; // Don't close on toggles
       }
+      // For actual links, close menu
       closeMenu();
     });
     link.addEventListener('touchstart', (e) => {
@@ -189,9 +202,9 @@
     }
   }
 
-  // Sidebar Script - Enhanced to ensure visibility
+  // Sidebar Script - Kept intact as per instructions
   (function(){
-    console.log('[sidebarToggle.js] Script loaded - Enhanced');
+    console.log('[sidebarToggle.js] Script loaded');
 
     function waitForElement(selector, callback, maxAttempts = 10, interval = 100) {
       let attempts = 0;
@@ -212,18 +225,6 @@
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
       const sidebarWrapper = document.getElementById('sidebar-wrapper');
       if (!toggleBtn || !sidebarWrapper) return;
-
-      // Ensure sidebar toggle button is always visible
-      toggleBtn.style.position = 'fixed';
-      toggleBtn.style.top = '15px';
-      toggleBtn.style.right = '60px'; /* Adjusted to avoid overlap with nav toggle */
-      toggleBtn.style.zIndex = '10002'; /* High z-index for visibility */
-      toggleBtn.style.display = 'flex'; /* Force visibility */
-      toggleBtn.style.background = 'linear-gradient(145deg, #ff6f61, #ff8a65)';
-      toggleBtn.style.borderRadius = '8px';
-      toggleBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-      toggleBtn.style.padding = '0.5rem';
-      toggleBtn.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
 
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
