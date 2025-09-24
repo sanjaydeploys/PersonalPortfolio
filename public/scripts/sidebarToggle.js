@@ -60,7 +60,7 @@
     });
   });
 
-  // === ORIGINAL SIDEBAR SCRIPT INTACT ===
+  // === SIDEBAR SCRIPT FIXED ===
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
@@ -69,8 +69,12 @@
       const check = () => {
         const element = document.querySelector(selector);
         if (element) callback(element);
-        else if (attempts < maxAttempts) { attempts++; setTimeout(check, interval); }
-        else_snippet: else callback(null);
+        else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(check, interval);
+        } else {
+          callback(null);
+        }
       };
       check();
     }
@@ -85,8 +89,8 @@
     }
 
     function initNavMenu() {
-      waitForElement('.nav-toggle', navToggle => {
-        waitForElement('#nav-menu', navMenu => { toggleMenuLogic(navToggle, navMenu); });
+      waitForElement('.nav-menu-toggle', navToggle => {
+        waitForElement('#nav-menu-list', navMenu => { toggleMenuLogic(navToggle, navMenu); });
       });
     }
 
