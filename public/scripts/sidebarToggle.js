@@ -34,7 +34,7 @@
       dsaLinks.classList.remove('active');
       dsaToggle.setAttribute('aria-expanded', 'false');
     }
-    removeFocusTrap();
+    removeFocusTrap(navMenu);
   }
 
   // Toggle click
@@ -84,6 +84,9 @@
       e.stopPropagation();
       closeMenu();
     });
+    link.addEventListener('hover', (e) => {
+      e.stopPropagation(); // Prevent hover from bubbling
+    });
   });
 
   // DSA link click handling
@@ -96,6 +99,9 @@
     link.addEventListener('touchstart', (e) => {
       e.stopPropagation();
       closeMenu();
+    });
+    link.addEventListener('hover', (e) => {
+      e.stopPropagation(); // Prevent hover from bubbling
     });
   });
 
@@ -124,10 +130,10 @@
     element._focusTrap = handleKey;
     first.focus();
   }
-  function removeFocusTrap() {
-    if (navMenu._focusTrap) {
-      navMenu.removeEventListener('keydown', navMenu._focusTrap);
-      delete navMenu._focusTrap;
+  function removeFocusTrap(element) {
+    if (element._focusTrap) {
+      element.removeEventListener('keydown', element._focusTrap);
+      delete element._focusTrap;
     }
   }
 
