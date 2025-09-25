@@ -5,6 +5,7 @@
 
   const isMobile = window.innerWidth < 768;
 
+  // === CLUSTERS (expanded set) ===
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
     { id: 'window', label: 'Sliding Window', color: '#7bd1ff' },
@@ -17,54 +18,105 @@
     { id: 'greedy', label: 'Greedy', color: '#ffab7b' },
     { id: 'heap', label: 'Heap / PQ', color: '#7bffab' },
     { id: 'trie', label: 'Trie', color: '#ab7bff' },
-    { id: 'unionfind', label: 'Union-Find', color: '#ff7bd9' }
+    { id: 'unionfind', label: 'Union-Find', color: '#ff7bd9' },
+    { id: 'tree', label: 'Binary Trees', color: '#ffa67b' },
+    { id: 'string', label: 'String Patterns', color: '#7bfffa' },
+    { id: 'matrix', label: 'Matrix Problems', color: '#ff7baf' },
+    { id: 'math', label: 'Math / Number Theory', color: '#aaff7b' }
   ];
 
+  // === PROBLEMS (expanded set with variety) ===
   const problems = [
+    // sum & pairs
     { id: 'two-sum', title: 'Two Sum', sub: 'LC1 — Hash map', url: 'https://sanjay-patidar.vercel.app/two-sum-pattern', cluster: 'sum' },
     { id: 'two-sum-ii', title: 'Two Sum II', sub: 'LC167 — Sorted two-pointer', url: 'https://sanjay-patidar.vercel.app/two-sum-ii-sorted', cluster: 'sum' },
     { id: '4sum-ii', title: '4Sum II', sub: 'LC454 — Hash map extension', url: '#', cluster: 'sum' },
+
+    // two pointers
     { id: '3sum', title: '3Sum', sub: 'LC15 — k-sum', url: 'https://sanjay-patidar.vercel.app/three-sum', cluster: 'twoPointers' },
     { id: '3closest', title: '3Sum Closest', sub: 'LC16 — closest target', url: 'https://sanjay-patidar.vercel.app/three-sum-closest', cluster: 'twoPointers' },
     { id: '4sum', title: '4Sum', sub: 'LC18 — k-sum extension', url: '#', cluster: 'twoPointers' },
     { id: 'container-water', title: 'Container With Most Water', sub: 'LC11 — Two pointers', url: '#', cluster: 'twoPointers' },
     { id: 'trapping-rain', title: 'Trapping Rain Water', sub: 'LC42 — Monotonic stack / two pointers', url: '#', cluster: 'twoPointers' },
+
+    // sliding window
     { id: 'anagram', title: 'Find All Anagrams', sub: 'LC438 — Fixed window', url: 'https://sanjay-patidar.vercel.app/find-all-anagrams', cluster: 'window' },
     { id: 'min-window', title: 'Minimum Window', sub: 'LC76 — Variable window', url: 'https://sanjay-patidar.vercel.app/minimum-variable-window-substring', cluster: 'window' },
     { id: 'sliding-max', title: 'Sliding Window Max', sub: 'LC239 — Monotonic', url: '#', cluster: 'window' },
     { id: 'longest-no-repeat', title: 'Longest Substring Without Repeating', sub: 'LC3 — Variable window', url: '#', cluster: 'window' },
     { id: 'max-consecutive', title: 'Max Consecutive Ones', sub: 'LC1004 — Sliding window', url: '#', cluster: 'window' },
+
+    // prefix / subarray
     { id: 'subarray-sum-k', title: 'Subarray Sum K', sub: 'LC560', url: '#', cluster: 'prefix' },
     { id: 'prefix-sum', title: 'Prefix Sum Techniques', sub: 'prefix-sum', url: '#', cluster: 'prefix' },
     { id: 'continuous-subarray', title: 'Continuous Subarray Sum', sub: 'LC523 — Prefix mod', url: '#', cluster: 'prefix' },
     { id: 'product-except-self', title: 'Product of Array Except Self', sub: 'LC238 — Prefix product', url: '#', cluster: 'prefix' },
+
+    // backtracking
     { id: 'perm', title: 'Permutations', sub: 'LC46', url: '#', cluster: 'backtracking' },
     { id: 'comb-phone', title: 'Letter Combinations', sub: 'LC17', url: '#', cluster: 'backtracking' },
     { id: 'subsets', title: 'Subsets', sub: 'LC78 — Backtracking', url: '#', cluster: 'backtracking' },
     { id: 'word-search', title: 'Word Search', sub: 'LC79 — Backtracking DFS', url: '#', cluster: 'backtracking' },
+
+    // binary search
     { id: 'binary-search', title: 'Binary Search', sub: 'LC33', url: '#', cluster: 'binary' },
     { id: 'search-answer', title: 'Search on Answer', sub: 'LC875', url: '#', cluster: 'binary' },
     { id: 'min-rotated', title: 'Find Minimum in Rotated Sorted Array', sub: 'LC153 — Binary search', url: '#', cluster: 'binary' },
+
+    // dynamic programming
     { id: 'climb', title: 'Climbing Stairs', sub: 'LC70', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
     { id: 'house-robber', title: 'House Robber', sub: 'LC198', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
     { id: 'lis', title: 'Longest Increasing Subsequence', sub: 'LC300 — DP', url: '#', cluster: 'dp', subcluster: 'dp-1d' },
     { id: 'coin-change', title: 'Coin Change', sub: 'LC322 — Unbounded knapsack', url: '#', cluster: 'dp', subcluster: 'dp-2d' },
+    { id: 'edit-distance', title: 'Edit Distance', sub: 'LC72 — DP on strings', url: '#', cluster: 'dp', subcluster: 'dp-2d' },
+    { id: 'maximal-square', title: 'Maximal Square', sub: 'LC221 — 2D DP', url: '#', cluster: 'dp', subcluster: 'dp-2d' },
+
+    // graph
     { id: 'islands', title: 'Number of Islands', sub: 'LC200', url: '#', cluster: 'graph' },
     { id: 'wordladder', title: 'Word Ladder', sub: 'LC127', url: '#', cluster: 'graph' },
     { id: 'course-schedule', title: 'Course Schedule', sub: 'LC207 — Topo sort', url: '#', cluster: 'graph' },
     { id: 'rotten-oranges', title: 'Rotten Oranges', sub: 'LC994 — BFS', url: '#', cluster: 'graph' },
+
+    // greedy
     { id: 'jump-game', title: 'Jump Game', sub: 'LC55 — Greedy', url: '#', cluster: 'greedy' },
     { id: 'gas-station', title: 'Gas Station', sub: 'LC134 — Greedy', url: '#', cluster: 'greedy' },
+
+    // heap
     { id: 'kth-largest', title: 'Kth Largest Element', sub: 'LC215 — Heap', url: '#', cluster: 'heap' },
     { id: 'merge-k-lists', title: 'Merge K Sorted Lists', sub: 'LC23 — Priority queue', url: '#', cluster: 'heap' },
+
+    // trie
     { id: 'word-dictionary', title: 'Implement Trie', sub: 'LC208 — Trie', url: '#', cluster: 'trie' },
     { id: 'longest-word', title: 'Longest Word in Dictionary', sub: 'LC720 — Trie', url: '#', cluster: 'trie' },
+
+    // union-find
     { id: 'provinces', title: 'Number of Provinces', sub: 'LC547 — Union-Find', url: '#', cluster: 'unionfind' },
-    { id: 'redundant-connection', title: 'Redundant Connection', sub: 'LC684 — Union-Find cycle', url: '#', cluster: 'unionfind' }
+    { id: 'redundant-connection', title: 'Redundant Connection', sub: 'LC684 — Union-Find cycle', url: '#', cluster: 'unionfind' },
+
+    // tree
+    { id: 'max-depth', title: 'Maximum Depth of Binary Tree', sub: 'LC104', url: '#', cluster: 'tree' },
+    { id: 'path-sum', title: 'Path Sum', sub: 'LC112', url: '#', cluster: 'tree' },
+    { id: 'lowest-common-ancestor', title: 'Lowest Common Ancestor', sub: 'LC236', url: '#', cluster: 'tree' },
+
+    // string
+    { id: 'palindrome-partition', title: 'Palindrome Partitioning', sub: 'LC131', url: '#', cluster: 'string' },
+    { id: 'longest-palindrome', title: 'Longest Palindromic Substring', sub: 'LC5', url: '#', cluster: 'string' },
+    { id: 'regex-match', title: 'Regular Expression Matching', sub: 'LC10', url: '#', cluster: 'string' },
+
+    // matrix
+    { id: 'spiral-matrix', title: 'Spiral Matrix', sub: 'LC54', url: '#', cluster: 'matrix' },
+    { id: 'rotate-image', title: 'Rotate Image', sub: 'LC48', url: '#', cluster: 'matrix' },
+    { id: 'set-matrix-zeroes', title: 'Set Matrix Zeroes', sub: 'LC73', url: '#', cluster: 'matrix' },
+
+    // math
+    { id: 'happy-number', title: 'Happy Number', sub: 'LC202', url: '#', cluster: 'math' },
+    { id: 'powx-n', title: 'Pow(x, n)', sub: 'LC50', url: '#', cluster: 'math' },
+    { id: 'gcd', title: 'Greatest Common Divisor', sub: 'Euclid algo', url: '#', cluster: 'math' }
   ];
 
   problems.sort((a, b) => a.title.localeCompare(b.title));
 
+  // === GRAPH BUILDING ===
   const nodes = [];
   const edges = [];
   const nodeMap = {};
@@ -80,32 +132,40 @@
   function buildGraph() {
     nodes.length = 0;
     edges.length = 0;
+
+    // root node
     nodes.push({ id: 'root', title: 'DSA / Patterns', sub: 'Start here', url: '#', type: 'root', cluster: null });
 
+    // hubs
     clusters.forEach((c) => {
       nodes.push({ id: 'hub-' + c.id, title: c.label, sub: 'pattern hub', url: '#', type: 'hub', cluster: c.id });
       edges.push(['root', 'hub-' + c.id]);
     });
 
+    // subhubs
     const subhubs = [
       { id: 'dp-1d', title: '1D DP', sub: 'Linear sequences', url: '#', type: 'subhub', cluster: 'dp' },
       { id: 'dp-2d', title: '2D DP', sub: 'Matrices / Multi-var', url: '#', type: 'subhub', cluster: 'dp' },
       { id: 'graph-bfs', title: 'BFS Patterns', sub: 'Level order', url: '#', type: 'subhub', cluster: 'graph' },
       { id: 'graph-dfs', title: 'DFS Patterns', sub: 'Recursion', url: '#', type: 'subhub', cluster: 'graph' },
       { id: 'backtrack-comb', title: 'Combinations', sub: 'Choices', url: '#', type: 'subhub', cluster: 'backtracking' },
-      { id: 'backtrack-perm', title: 'Permutations', sub: 'Swaps', url: '#', type: 'subhub', cluster: 'backtracking' }
+      { id: 'backtrack-perm', title: 'Permutations', sub: 'Swaps', url: '#', type: 'subhub', cluster: 'backtracking' },
+      { id: 'tree-traversals', title: 'Tree Traversals', sub: 'DFS / BFS', url: '#', type: 'subhub', cluster: 'tree' },
+      { id: 'string-search', title: 'String Search', sub: 'KMP, Rabin-Karp', url: '#', type: 'subhub', cluster: 'string' }
     ];
     subhubs.forEach((sh) => {
       nodes.push(sh);
       edges.push(['hub-' + sh.cluster, sh.id]);
     });
 
+    // problems
     problems.forEach((p) => {
       nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster, subcluster: p.subcluster });
       const target = p.subcluster ? p.subcluster : 'hub-' + p.cluster;
       edges.push([target, p.id]);
     });
 
+    // creative cross connections
     edges.push(['sliding-max', 'prefix-sum']);
     edges.push(['trapping-rain', 'sliding-max']);
     edges.push(['word-search', 'graph-dfs']);
@@ -113,14 +173,20 @@
     edges.push(['merge-k-lists', 'kth-largest']);
     edges.push(['3sum', 'two-sum']);
     edges.push(['coin-change', 'climb']);
+    edges.push(['edit-distance', 'longest-palindrome']);
+    edges.push(['regex-match', 'string-search']);
+    edges.push(['rotate-image', 'spiral-matrix']);
+    edges.push(['set-matrix-zeroes', 'maximal-square']);
+    edges.push(['path-sum', 'lowest-common-ancestor']);
+    edges.push(['powx-n', 'binary-search']);
+    edges.push(['happy-number', 'gcd']);
 
-    nodes.forEach((n) => {
-      nodeMap[n.id] = n;
-    });
+    nodes.forEach((n) => { nodeMap[n.id] = n; });
 
     window.Leetree.initialized = true;
   }
 
+  // === BOOTSTRAP ===
   function boot() {
     if (!window.Leetree.initialized) {
       console.error('boot: Graph not initialized');
@@ -178,6 +244,7 @@
     }
   }
 
+  // add problem dynamically
   window.Leetree.addProblem = function(p) {
     problems.push(p);
     nodes.push({ id: p.id, title: p.title, sub: p.sub, url: p.url || '#', type: 'leaf', cluster: p.cluster, subcluster: p.subcluster });
