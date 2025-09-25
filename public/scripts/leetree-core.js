@@ -273,9 +273,9 @@ window.LeetreeLayout = (function () {
   const isMobile = window.Leetree.isMobile;
 
   function computeGuidedPositions() {
-    const viewWidth = window.innerWidth * (isMobile ? 1.1 : 0.8);
-    const columnWidths = [viewWidth * 0.2, viewWidth * 0.3, viewWidth * 0.5];
-    const hubRowSpacing = isMobile ? 60 : 90;
+    const viewWidth = window.innerWidth;
+    const viewHeight = window.innerHeight;
+    const columnWidths = [viewWidth * 0.15, viewWidth * 0.4, viewWidth * 0.45];
     const subhubSpacing = isMobile ? 40 : 60;
     const leafSpacing = isMobile ? 30 : 50;
     const margin = isMobile ? 10 : 20;
@@ -283,22 +283,32 @@ window.LeetreeLayout = (function () {
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
 
-    // Column 1: Root centered horizontally in column 1, near top margin
+    // Column 1: Root centered left vertically in viewport
     const root = nodeMap['root'];
     if (!root) return;
     root.x = columnWidths[0] / 2;
-    root.y = margin;
+    root.y = viewHeight / 2;
 
-    // Column 2: Hubs - CENTERED vertically around a small offset from root
-    // This is the main change: spread hubs above and below the root rather than only downward.
+    // Column 2: Hubs - arranged in a grid centered around root
     const hubs = nodes.filter(n => n.type === 'hub');
-    const hubOffset = isMobile ? 30 : 60; // baseline offset below root (small)
-    const hubCenterY = root.y + hubOffset;
-    const hubCount = Math.max(1, hubs.length);
+    const hubCols = isMobile ? 2 : 4;
+    const hubRows = Math.ceil(hubs.length / hubCols);
+    const hubSpacingX = isMobile ? window.Leetree.NODE_W + 20 : window.Leetree.NODE_W + 40;
+    const hubSpacingY = isMobile ? window.Leetree.NODE_H + 60 : window.Leetree.NODE_H + 80;
+    const hubBlockWidth = hubCols * hubSpacingX;
+    const hubBlockHeight = hubRows * hubSpacingY;
+
+    // Adjust column width if needed
+    columnWidths[1] = Math.max(columnWidths[1], hubBlockWidth + margin * 2);
+
+    const startHubX = columnWidths[0] + (columnWidths[1] - hubBlockWidth) / 2;
+    const startHubY = root.y - hubBlockHeight / 2;
+
     hubs.forEach((h, i) => {
-      h.x = columnWidths[0] + columnWidths[1] / 2;
-      // center distribution around hubCenterY
-      h.y = hubCenterY + (i - (hubCount - 1) / 2) * hubRowSpacing;
+      const row = Math.floor(i / hubCols);
+      const col = i % hubCols;
+      h.x = startHubX + col * hubSpacingX;
+      h.y = startHubY + row * hubSpacingY;
     });
 
     // Build children map (from edges)
@@ -308,14 +318,14 @@ window.LeetreeLayout = (function () {
       childrenMap[from].push(to);
     });
 
-    // Place subhubs to the right of hubs but allow slight vertical variation around parent
+    // Place subhubs to the right of hubs with slight vertical variation
     const subhubs = nodes.filter(n => n.type === 'subhub');
     subhubs.forEach(sh => {
       const parent = nodeMap['hub-' + sh.cluster];
       if (!parent) {
         // fallback: place near center column 2
         sh.x = columnWidths[0] + columnWidths[1] / 2 + subhubSpacing;
-        sh.y = hubCenterY;
+        sh.y = root.y;
         return;
       }
       const siblings = subhubs.filter(s => s.cluster === sh.cluster);
@@ -327,13 +337,14 @@ window.LeetreeLayout = (function () {
       sh.y = parent.y + idxNorm * Math.max(12, subhubSpacing * 0.45);
     });
 
-    // Place leaves in column 3, 2-3 per row, centered vertically around the parent hub/subhub
+    // Place leaves in column 3, more horizontally for parallel adjustment
     function placeChildren(parentId) {
       const parent = nodeMap[parentId];
       if (!parent) return;
       const children = (childrenMap[parentId] || []).filter(c => nodeMap[c] && nodeMap[c].type === 'leaf');
       if (!children.length) return;
-      const cols = Math.min(3, children.length);
+      const leafCols = isMobile ? 2 : 5;
+      const cols = Math.min(leafCols, Math.max(1, Math.ceil(Math.sqrt(children.length))));
       const rowSpacing = leafSpacing;
       const colSpacing = columnWidths[2] / (cols + 1);
       const startX = columnWidths[0] + columnWidths[1] + margin;
@@ -373,19 +384,9 @@ window.LeetreeLayout = (function () {
     nodes.forEach(n => {
       if (n.x === undefined || n.y === undefined) {
         n.x = columnWidths[0] + columnWidths[1] / 2;
-        n.y = hubCenterY;
+        n.y = root.y;
       }
     });
-
-    // --- Optional normalization:
-    // Ensure nodes are not too close to the very top (small margin) by shifting the whole layout down
-    // only if the top-most node is above the margin (rare), otherwise keep as-is.
-    let minY = Infinity;
-    nodes.forEach(n => { if (typeof n.y === 'number') minY = Math.min(minY, n.y); });
-    if (minY < margin) {
-      const shiftDown = margin - minY;
-      nodes.forEach(n => { if (typeof n.y === 'number') n.y += shiftDown; });
-    }
   }
 
   function resolveCollisionsAndLayout(callback) {
@@ -823,8 +824,16 @@ window.LeetreeUtils = (function () {
     const fitScaleH = stageH / height;
     const fitScale = Math.min(fitScaleW, fitScaleH);
     setScale(fitScale);
-    stage.scrollLeft = 0;
-    stage.scrollTop = 0;
+
+    // Center the root node vertically and place it on the left
+    const root = nodeMap['root'];
+    if (root && root.el) {
+      stage.scrollLeft = Math.max(0, root.x * fitScale - stage.clientWidth * 0.1);
+      stage.scrollTop = Math.max(0, root.y * fitScale + (root.el.offsetHeight * fitScale / 2) - stage.clientHeight / 2);
+    } else {
+      stage.scrollLeft = 0;
+      stage.scrollTop = 0;
+    }
   }
 
   function focusNode(nodeId) {
