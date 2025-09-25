@@ -1,4 +1,3 @@
-// /leetree-utils.js
 window.Leetree = window.Leetree || {};
 window.LeetreeUtils = (function () {
   const nodes = window.Leetree.nodes || [];
@@ -21,7 +20,7 @@ window.LeetreeUtils = (function () {
     if (path.length < 2) return;
     const clusterColor = nodeMap[path[path.length - 1]].cluster ? clusters.find((c) => c.id === nodeMap[path[path.length - 1]].cluster).color : '#fff';
     const pairs = [];
-    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]);
+    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]]);
     const svgpaths = svg.querySelectorAll('path.flow-line');
     const enabled = animationsEnabled();
     svgpaths.forEach((p) => {
