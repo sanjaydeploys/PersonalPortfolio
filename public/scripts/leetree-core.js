@@ -128,16 +128,16 @@
     }
     window.LeetreeLayout.computeGuidedPositions();
     window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+      window.LeetreeRender.renderNodes(true);
       nodes.forEach((n) => {
         if (!n.el) return;
         n.el.style.left = (n.x || 0) + 'px';
         n.el.style.top = (n.y || 0) + 'px';
       });
+      window.LeetreeRender.setupSvgDefs();
       window.LeetreeRender.drawEdges(true);
       window.LeetreeUtils.fitCanvas(PADDING);
     });
-    window.LeetreeRender.renderNodes(true);
-    window.LeetreeRender.setupSvgDefs();
     window.LeetreeRender.renderLegend();
     window.LeetreeUtils.initSearch();
     window.LeetreeRender.renderProblemButtons();
@@ -149,6 +149,11 @@
       resizeTimer = setTimeout(() => {
         window.LeetreeLayout.computeGuidedPositions();
         window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+          nodes.forEach((n) => {
+            if (!n.el) return;
+            n.el.style.left = (n.x || 0) + 'px';
+            n.el.style.top = (n.y || 0) + 'px';
+          });
           window.LeetreeUtils.fitCanvas(PADDING);
           window.LeetreeRender.drawEdges(false);
         });
@@ -212,28 +217,26 @@ window.LeetreeLayout = (function () {
 
   function computeGuidedPositions() {
     const viewWidth = window.innerWidth * (isMobile ? 1.2 : 0.9);
-    const viewHeight = window.innerHeight * (isMobile ? 1.5 : 0.8);
-    const hubColWidth = isMobile ? 200 : 400;
-    const hubRowSpacing = isMobile ? 80 : 120;
-    const subhubSpacing = isMobile ? 60 : 100;
-    const leafRadius = isMobile ? 80 : 140;
-    const leafAngleSpread = Math.PI * 1.0;
+    const columnWidths = [viewWidth * 0.2, viewWidth * 0.3, viewWidth * 0.5]; // Columns for root, hubs, problems
+    const hubRowSpacing = isMobile ? 100 : 160;
+    const subhubSpacing = isMobile ? 80 : 120;
+    const leafSpacing = isMobile ? 60 : 100;
+    const margin = isMobile ? 40 : 80;
 
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
 
-    // Place root at top center
+    // Column 1: Root centered
     const root = nodeMap['root'];
-    root.x = viewWidth / 2;
-    root.y = isMobile ? 50 : 100;
+    root.x = columnWidths[0] / 2;
+    root.y = margin;
 
-    // Place hubs in two columns below root
+    // Column 2: Hubs vertically aligned
     const hubs = nodes.filter(n => n.type === 'hub');
+    const hubStartY = root.y + 200;
     hubs.forEach((h, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      h.x = root.x + (col === 0 ? -hubColWidth / 2 : hubColWidth / 2);
-      h.y = root.y + 150 + row * hubRowSpacing;
+      h.x = columnWidths[0] + columnWidths[1] / 2;
+      h.y = hubStartY + i * hubRowSpacing;
     });
 
     // Build children map
@@ -243,48 +246,51 @@ window.LeetreeLayout = (function () {
       childrenMap[from].push(to);
     });
 
-    // Place subhubs horizontally from hub
+    // Place subhubs to the right of hubs, horizontally if multiple
     const subhubs = nodes.filter(n => n.type === 'subhub');
     subhubs.forEach(sh => {
       const parent = nodeMap['hub-' + sh.cluster];
       const siblings = subhubs.filter(s => s.cluster === sh.cluster);
       const idx = siblings.findIndex(s => s.id === sh.id);
-      const dir = idx % 2 === 0 ? -1 : 1;
-      sh.x = parent.x + dir * (100 + idx * 50);
-      sh.y = parent.y + subhubSpacing;
+      sh.x = parent.x + columnWidths[1] / 2 + (idx - (siblings.length - 1) / 2) * subhubSpacing;
+      sh.y = parent.y;
     });
 
-    // Place leaves in a fan below parent
-    function placeChildren(parentId, radius, angleSpread = leafAngleSpread, angleOffset = Math.PI / 2 - angleSpread / 2) {
+    // Place leaves in column 3, organized in 2-3 per row below parent
+    function placeChildren(parentId) {
       const parent = nodeMap[parentId];
       const children = (childrenMap[parentId] || []).filter(c => nodeMap[c].type === 'leaf');
-      const angleStep = angleSpread / (children.length || 1);
+      const cols = Math.min(3, children.length);
+      const rowSpacing = leafSpacing;
+      const colSpacing = columnWidths[2] / (cols + 1);
+      const startX = columnWidths[0] + columnWidths[1] + margin;
+      const startY = parent.y;
       children.forEach((childId, i) => {
         const child = nodeMap[childId];
         if (child.x !== undefined) return;
-        const angle = angleOffset + angleStep * i;
-        child.x = parent.x + Math.cos(angle) * radius;
-        child.y = parent.y + Math.sin(angle) * radius;
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        child.x = startX + (col + 1) * colSpacing;
+        child.y = startY + row * rowSpacing;
       });
     }
 
-    // Place leaves from hubs and subhubs
-    nodes.filter(n => n.type === 'hub' || n.type === 'subhub').forEach(p => placeChildren(p.id, leafRadius));
+    nodes.filter(n => n.type === 'hub' || n.type === 'subhub').forEach(p => placeChildren(p.id));
 
-    // Handle cross-edges by placing near the from node if not placed
+    // Handle cross-edges by averaging positions or slight adjustments
     edges.forEach(([from, to]) => {
       const child = nodeMap[to];
       if (child.x === undefined && child.type === 'leaf') {
         const parent = nodeMap[from];
-        child.x = parent.x + (Math.random() - 0.5) * 40;
-        child.y = parent.y + leafRadius + (Math.random() - 0.5) * 40;
+        child.x = parent.x + margin + (Math.random() - 0.5) * 50;
+        child.y = parent.y + leafSpacing + (Math.random() - 0.5) * 50;
       }
     });
   }
 
   function resolveCollisionsAndLayout(callback) {
-    const nodeW = window.Leetree.NODE_W * 1.1;
-    const nodeH = window.Leetree.NODE_H * 1.1;
+    const nodeW = window.Leetree.NODE_W * 1.2;
+    const nodeH = window.Leetree.NODE_H * 1.2;
     const arr = nodes.map(n => ({ id: n.id, x: n.x || 0, y: n.y || 0 }));
 
     if (window.Leetree.workerEnabled && window.Leetree.worker) {
@@ -300,7 +306,7 @@ window.LeetreeLayout = (function () {
         }
       };
     } else {
-      const iters = 300; // Reduced iterations for less spreading
+      const iters = 400;
       for (let it = 0; it < iters; it++) {
         let moved = false;
         arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -312,11 +318,11 @@ window.LeetreeLayout = (function () {
             const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
             if (overlapX > 0 && overlapY > 0) {
-              const push = Math.min(overlapX, overlapY) / 2 + 2; // Reduced push for closer nodes
+              const push = Math.min(overlapX, overlapY) / 2 + 10;
               const dx = b.x - a.x;
               const dy = b.y - a.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              const bias = Math.abs(dy) > Math.abs(dx) ? 1.2 : 1; // Mild bias
+              const bias = Math.abs(dy) > Math.abs(dx) ? 1.3 : 1;
               a.x -= (dx / dist) * push * bias;
               a.y -= (dy / dist) * push * bias;
               b.x += (dx / dist) * push * bias;
@@ -471,7 +477,7 @@ window.LeetreeRender = (function () {
       let x2 = t.x + w2 / 2;
       let y2 = t.y + h2 / 2;
 
-      // Side attachment
+      // Improved side attachment
       const dx = x2 - x1;
       const dy = y2 - y1;
       const angle = Math.atan2(dy, dx);
@@ -483,13 +489,13 @@ window.LeetreeRender = (function () {
       y2 += side2.y;
 
       const dist = Math.hypot(dx, dy) || 1;
-      const curveFactor = dist * 0.08; // Reduced curve for less distant look
+      const curveFactor = dist * 0.12;
       const perpX = -dy / dist * curveFactor;
       const perpY = dx / dist * curveFactor;
-      const cx1 = x1 + dx * 0.3 + perpX * 0.6;
-      const cy1 = y1 + dy * 0.3 + perpY * 0.6;
-      const cx2 = x1 + dx * 0.7 + perpX * 0.4;
-      const cy2 = y1 + dy * 0.7 + perpY * 0.4;
+      const cx1 = x1 + dx * 0.35 + perpX * 0.55;
+      const cy1 = y1 + dy * 0.35 + perpY * 0.55;
+      const cx2 = x1 + dx * 0.65 + perpX * 0.45;
+      const cy2 = y1 + dy * 0.65 + perpY * 0.45;
       const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -612,22 +618,18 @@ window.LeetreeUtils = (function () {
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
 
-  function highlightPath(path, duration = 0, on = true) {
-    if (path.length < 2) return;
-    const clusterColor = nodeMap[path[path.length - 1]].cluster ? clusters.find((c) => c.id === nodeMap[path[path.length - 1]].cluster).color : '#fff';
-    const pairs = [];
-    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]]);
+  function highlightPath(pairs, duration = 0, on = true) {
     const svgpaths = svg.querySelectorAll('path.flow-line');
     const enabled = window.Leetree.animationsEnabled;
     svgpaths.forEach((p) => {
       const from = p.dataset.from, to = p.dataset.to;
-      const match = pairs.some((pair) => (pair[0] === from && pair[1] === to) || (pair[0] === to && pair[1] === from));
+      const match = pairs.some(pair => (pair[0] === from && pair[1] === to) || (pair[0] === to && pair[1] === from));
       const pathCluster = p.dataset.cluster;
       const pathColor = pathCluster ? clusters.find((c) => c.id === pathCluster).color : '#ffffff';
       if (match) {
         if (on) {
           p.classList.add(enabled ? 'flow-highlight-advanced' : 'flow-highlight');
-          p.style.stroke = enabled ? clusterColor : pathColor;
+          p.style.stroke = enabled ? pathColor : pathColor;
           p.style.opacity = '1';
           if (enabled) p.classList.add('path-pulse-advanced');
         } else {
@@ -709,7 +711,7 @@ window.LeetreeUtils = (function () {
     const stageH = stage.clientHeight;
     const fitScaleW = (stageW - 20) / width;
     const fitScaleH = (stageH - 20) / height;
-    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH) * 0.9); // Slight zoom out for better view
+    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH) * 0.8);
     setScale(fitScale);
     const centroidX = (minX + maxX) / 2 * fitScale;
     const centroidY = (minY + maxY) / 2 * fitScale;
@@ -724,7 +726,16 @@ window.LeetreeUtils = (function () {
     const cy = n.y + (n.el.offsetHeight || window.Leetree.NODE_H) / 2;
     setScale(Math.min(1.2, Math.max(0.6, 0.9)));
     stage.scrollTo({ left: Math.max(0, cx * window.Leetree.scale - stage.clientWidth / 2), top: Math.max(0, cy * window.Leetree.scale - stage.clientHeight / 2), behavior: window.Leetree.animationsEnabled ? 'smooth' : 'auto' });
-    highlightPath(findPathTo(nodeId), 1400);
+    let pairs = [];
+    if (n.type === 'hub' || n.type === 'subhub') {
+      pairs = getSubtreeEdges(nodeId);
+    } else {
+      const path = findPathTo(nodeId);
+      for (let i = 0; i < path.length - 1; i++) {
+        pairs.push([path[i], path[i+1]]);
+      }
+    }
+    highlightPath(pairs, 1400, true);
     if (window.Leetree.animationsEnabled) n.el.classList.add('node-focus-pulse');
     setTimeout(() => n.el.classList.remove('node-focus-pulse'), 1400);
   }
@@ -743,6 +754,32 @@ window.LeetreeUtils = (function () {
       });
     }
     return [];
+  }
+
+  function getSubtreeEdges(nodeId) {
+    const subtreeEdges = [];
+    const stack = [nodeId];
+    const visited = new Set();
+    while (stack.length) {
+      const current = stack.pop();
+      if (visited.has(current)) continue;
+      visited.add(current);
+      edges.forEach(([from, to]) => {
+        if (from === current) {
+          subtreeEdges.push([from, to]);
+          stack.push(to);
+        } else if (to === current) {
+          subtreeEdges.push([to, from]);
+          stack.push(from);
+        }
+      });
+    }
+    // Include path from root to nodeId
+    const rootPath = findPathTo(nodeId);
+    for (let i = 0; i < rootPath.length - 1; i++) {
+      subtreeEdges.push([rootPath[i], rootPath[i+1]]);
+    }
+    return subtreeEdges;
   }
 
   function toggleCluster(clusterId) {
@@ -875,6 +912,11 @@ window.LeetreeUtils = (function () {
     resetView.addEventListener('click', () => {
       window.LeetreeLayout.computeGuidedPositions();
       window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        nodes.forEach((n) => {
+          if (!n.el) return;
+          n.el.style.left = n.x + 'px';
+          n.el.style.top = n.y + 'px';
+        });
         window.LeetreeUtils.fitCanvas(PADDING);
         window.LeetreeRender.drawEdges(false);
       });
@@ -883,7 +925,7 @@ window.LeetreeUtils = (function () {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
       window.dispatchEvent(new Event('leetree:toggleAnimations'));
-      window.LeetreeRender.renderNodes(false); // Re-render to apply no-transition if off
+      window.LeetreeRender.renderNodes(false);
     });
     useWorker.addEventListener('click', () => {
       if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
@@ -998,7 +1040,7 @@ self.addEventListener('message', (ev) => {
     const arr = data.nodes;
     const nodeW = data.nodeW;
     const nodeH = data.nodeH;
-    const iters = 300;
+    const iters = 400;
     for (let it = 0; it < iters; it++) {
       let moved = false;
       arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -1010,11 +1052,11 @@ self.addEventListener('message', (ev) => {
           const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
           if (overlapX > 0 && overlapY > 0) {
-            const push = Math.min(overlapX, overlapY) / 2 + 2;
+            const push = Math.min(overlapX, overlapY) / 2 + 10;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            const bias = Math.abs(dy) > Math.abs(dx) ? 1.2 : 1;
+            const bias = Math.abs(dy) > Math.abs(dx) ? 1.3 : 1;
             a.x -= (dx / dist) * push * bias;
             a.y -= (dy / dist) * push * bias;
             b.x += (dx / dist) * push * bias;
