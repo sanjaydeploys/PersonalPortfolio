@@ -264,7 +264,6 @@
   start();
 })();
 
-// leetree-layout.js
 window.Leetree = window.Leetree || {};
 window.LeetreeLayout = (function () {
   const nodes = window.Leetree.nodes || [];
@@ -275,40 +274,29 @@ window.LeetreeLayout = (function () {
   function computeGuidedPositions() {
     const viewWidth = window.innerWidth;
     const viewHeight = window.innerHeight;
-    const columnWidths = [viewWidth * 0.15, viewWidth * 0.4, viewWidth * 0.45];
-    const subhubSpacing = isMobile ? 40 : 60;
-    const leafSpacing = isMobile ? 30 : 50;
+    const columnWidths = [viewWidth * 0.2, viewWidth * 0.3, viewWidth * 0.5];
+    const hubRowSpacing = isMobile ? 50 : 80;
+    const subhubSpacing = isMobile ? 30 : 50;
+    const leafSpacing = isMobile ? 25 : 40;
     const margin = isMobile ? 10 : 20;
 
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
 
-    // Column 1: Root centered left vertically in viewport
+    // Column 1: Root centered vertically in column 1, near left edge
     const root = nodeMap['root'];
     if (!root) return;
-    root.x = columnWidths[0] / 2;
-    root.y = viewHeight / 2;
+    root.x = margin + columnWidths[0] / 4; // Slightly offset from left edge
+    root.y = viewHeight / 2; // Center vertically in viewport
 
-    // Column 2: Hubs - arranged in a grid centered around root
+    // Column 2: Hubs - Spread evenly around vertical center
     const hubs = nodes.filter(n => n.type === 'hub');
-    const hubCols = isMobile ? 2 : 4;
-    const hubRows = Math.ceil(hubs.length / hubCols);
-    const hubSpacingX = isMobile ? window.Leetree.NODE_W + 20 : window.Leetree.NODE_W + 40;
-    const hubSpacingY = isMobile ? window.Leetree.NODE_H + 60 : window.Leetree.NODE_H + 80;
-    const hubBlockWidth = hubCols * hubSpacingX;
-    const hubBlockHeight = hubRows * hubSpacingY;
-
-    // Adjust column width if needed
-    columnWidths[1] = Math.max(columnWidths[1], hubBlockWidth + margin * 2);
-
-    const startHubX = columnWidths[0] + (columnWidths[1] - hubBlockWidth) / 2;
-    const startHubY = root.y - hubBlockHeight / 2;
-
+    const hubCount = Math.max(1, hubs.length);
+    const maxHubHeight = viewHeight - 2 * margin; // Constrain within viewport
+    const hubSpacing = Math.min(hubRowSpacing, maxHubHeight / hubCount);
     hubs.forEach((h, i) => {
-      const row = Math.floor(i / hubCols);
-      const col = i % hubCols;
-      h.x = startHubX + col * hubSpacingX;
-      h.y = startHubY + row * hubSpacingY;
+      h.x = columnWidths[0] + columnWidths[1] / 2;
+      h.y = root.y + (i - (hubCount - 1) / 2) * hubSpacing;
     });
 
     // Build children map (from edges)
@@ -318,12 +306,11 @@ window.LeetreeLayout = (function () {
       childrenMap[from].push(to);
     });
 
-    // Place subhubs to the right of hubs with slight vertical variation
+    // Column 2+: Subhubs - Position to the right of hubs, centered vertically around parent
     const subhubs = nodes.filter(n => n.type === 'subhub');
     subhubs.forEach(sh => {
       const parent = nodeMap['hub-' + sh.cluster];
       if (!parent) {
-        // fallback: place near center column 2
         sh.x = columnWidths[0] + columnWidths[1] / 2 + subhubSpacing;
         sh.y = root.y;
         return;
@@ -332,26 +319,23 @@ window.LeetreeLayout = (function () {
       const idx = siblings.findIndex(s => s.id === sh.id);
       const siblingCount = siblings.length || 1;
       const idxNorm = idx - (siblingCount - 1) / 2;
-      // move horizontally to the right of parent, and slightly vertically offset by index
       sh.x = parent.x + subhubSpacing;
-      sh.y = parent.y + idxNorm * Math.max(12, subhubSpacing * 0.45);
+      sh.y = parent.y + idxNorm * Math.max(10, subhubSpacing * 0.4);
     });
 
-    // Place leaves in column 3, more horizontally for parallel adjustment
+    // Column 3: Leaves - Grid-like placement centered around parent, constrained to viewport
     function placeChildren(parentId) {
       const parent = nodeMap[parentId];
       if (!parent) return;
       const children = (childrenMap[parentId] || []).filter(c => nodeMap[c] && nodeMap[c].type === 'leaf');
       if (!children.length) return;
-      const leafCols = isMobile ? 2 : 5;
-      const cols = Math.min(leafCols, Math.max(1, Math.ceil(Math.sqrt(children.length))));
-      const rowSpacing = leafSpacing;
-      const colSpacing = columnWidths[2] / (cols + 1);
-      const startX = columnWidths[0] + columnWidths[1] + margin;
-      // center block vertically around parent.y
+      const cols = Math.min(3, Math.ceil(Math.sqrt(children.length))); // Dynamic columns
       const rows = Math.ceil(children.length / cols);
+      const colSpacing = columnWidths[2] / (cols + 1);
+      const rowSpacing = Math.min(leafSpacing, (viewHeight - 2 * margin) / (rows + 1));
+      const startX = columnWidths[0] + columnWidths[1] + margin;
       const blockHeight = rows * rowSpacing;
-      const startY = parent.y - (blockHeight / 2) + rowSpacing / 2;
+      const startY = parent.y - blockHeight / 2 + rowSpacing / 2;
       children.forEach((childId, i) => {
         const child = nodeMap[childId];
         if (!child) return;
@@ -360,64 +344,85 @@ window.LeetreeLayout = (function () {
         const row = Math.floor(i / cols);
         child.x = startX + (col + 0.5) * colSpacing;
         child.y = startY + row * rowSpacing;
+        // Constrain within viewport bounds
+        child.y = Math.max(margin, Math.min(child.y, viewHeight - margin - window.Leetree.NODE_H));
       });
     }
 
-    // Run placeChildren for hubs and subhubs so leaves get sensible positions
+    // Place leaves for hubs and subhubs
     nodes.filter(n => n.type === 'hub' || n.type === 'subhub').forEach(p => placeChildren(p.id));
 
-    // Handle cross-edges and any leftover leaves not positioned (give them a balanced fallback)
+    // Handle cross-edges and unpositioned leaves
     edges.forEach(([from, to]) => {
       const child = nodeMap[to];
-      if (!child) return;
-      if (child.x === undefined && child.type === 'leaf') {
-        const parent = nodeMap[from] || nodeMap['hub-' + (child.cluster || '')] || root;
-        // Place fallback roughly to the right of parent, allow +/- vertical randomness
-        const randXRange = Math.max(80, columnWidths[2] * 0.18);
-        child.x = parent.x + margin + (Math.random() - 0.5) * randXRange + columnWidths[1] * 0.2;
-        // allow fallback both above and below instead of only below
-        child.y = parent.y + (Math.random() - 0.5) * leafSpacing * 2;
-      }
+      if (!child || child.x !== undefined || child.type !== 'leaf') return;
+      const parent = nodeMap[from] || nodeMap['hub-' + (child.cluster || '')] || root;
+      const randXRange = columnWidths[2] * 0.15;
+      child.x = parent.x + margin + columnWidths[1] * 0.2 + (Math.random() - 0.5) * randXRange;
+      child.y = parent.y + (Math.random() - 0.5) * leafSpacing;
+      // Constrain within viewport
+      child.y = Math.max(margin, Math.min(child.y, viewHeight - margin - window.Leetree.NODE_H));
     });
 
-    // Final safety pass: if any node is still undefined, place it in column 2 centered
+    // Ensure all nodes have positions
     nodes.forEach(n => {
       if (n.x === undefined || n.y === undefined) {
         n.x = columnWidths[0] + columnWidths[1] / 2;
         n.y = root.y;
       }
     });
+
+    // Adjust layout to fit within viewport
+    let minY = Infinity, maxY = -Infinity;
+    nodes.forEach(n => {
+      if (typeof n.y === 'number') {
+        minY = Math.min(minY, n.y);
+        maxY = Math.max(maxY, n.y + window.Leetree.NODE_H);
+      }
+    });
+    if (maxY - minY > viewHeight - 2 * margin) {
+      const scaleFactor = (viewHeight - 2 * margin) / (maxY - minY);
+      nodes.forEach(n => {
+        if (typeof n.y === 'number') {
+          n.y = margin + (n.y - minY) * scaleFactor;
+        }
+      });
+    } else if (minY < margin) {
+      const shift = margin - minY;
+      nodes.forEach(n => { if (typeof n.y === 'number') n.y += shift; });
+    }
   }
 
   function resolveCollisionsAndLayout(callback) {
     const nodeW = window.Leetree.NODE_W * 1.1;
     const nodeH = window.Leetree.NODE_H * 1.1;
+    const viewHeight = window.innerHeight;
+    const margin = isMobile ? 10 : 20;
     const arr = nodes.map(n => ({ id: n.id, x: n.x || 0, y: n.y || 0 }));
 
     if (window.Leetree.workerEnabled && window.Leetree.worker) {
-      // Use worker if enabled (keeps main thread responsive on big graphs)
       window.Leetree.worker.postMessage({ type: 'layout', nodes: arr, nodeW, nodeH });
       window.Leetree.worker.onmessage = (ev) => {
         if (ev.data.type === 'layout') {
           ev.data.nodes.forEach(pos => {
             const n = nodeMap[pos.id];
-            if (n) { n.x = pos.x; n.y = pos.y; }
+            if (n) {
+              n.x = pos.x;
+              n.y = Math.max(margin, Math.min(pos.y, viewHeight - margin - nodeH));
+            }
           });
           callback();
         }
       };
     } else {
-      // Local iterative collision resolver (keeps relative guided positions but resolves overlaps)
       const iters = 250;
       for (let it = 0; it < iters; it++) {
         let moved = false;
-        // sort to limit pair checks
         arr.sort((a, b) => a.x - b.x || a.y - b.y);
         for (let i = 0; i < arr.length; i++) {
           const a = arr[i];
           for (let j = i + 1; j < arr.length; j++) {
             const b = arr[j];
-            // early break if far horizontally
             if (b.x - a.x > nodeW * 2) break;
             const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
@@ -427,21 +432,25 @@ window.LeetreeLayout = (function () {
               const dy = b.y - a.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
               const bias = Math.abs(dy) > Math.abs(dx) ? 1.2 : 1;
-              // apply small push with bias to avoid vertical stacking issues
               a.x -= (dx / dist) * push * bias;
               a.y -= (dy / dist) * push * bias;
               b.x += (dx / dist) * push * bias;
               b.y += (dy / dist) * push * bias;
+              // Constrain y within viewport
+              a.y = Math.max(margin, Math.min(a.y, viewHeight - margin - nodeH));
+              b.y = Math.max(margin, Math.min(b.y, viewHeight - margin - nodeH));
               moved = true;
             }
           }
         }
         if (!moved) break;
       }
-      // Write back positions
       arr.forEach(pos => {
         const n = nodeMap[pos.id];
-        if (n) { n.x = pos.x; n.y = pos.y; }
+        if (n) {
+          n.x = pos.x;
+          n.y = Math.max(margin, Math.min(pos.y, viewHeight - margin - nodeH));
+        }
       });
       callback();
     }
@@ -452,6 +461,8 @@ window.LeetreeLayout = (function () {
     resolveCollisionsAndLayout
   };
 })();
+
+
 // leetree-render.js
 window.Leetree = window.Leetree || {};
 window.LeetreeRender = (function () {
@@ -824,16 +835,8 @@ window.LeetreeUtils = (function () {
     const fitScaleH = stageH / height;
     const fitScale = Math.min(fitScaleW, fitScaleH);
     setScale(fitScale);
-
-    // Center the root node vertically and place it on the left
-    const root = nodeMap['root'];
-    if (root && root.el) {
-      stage.scrollLeft = Math.max(0, root.x * fitScale - stage.clientWidth * 0.1);
-      stage.scrollTop = Math.max(0, root.y * fitScale + (root.el.offsetHeight * fitScale / 2) - stage.clientHeight / 2);
-    } else {
-      stage.scrollLeft = 0;
-      stage.scrollTop = 0;
-    }
+    stage.scrollLeft = 0;
+    stage.scrollTop = 0;
   }
 
   function focusNode(nodeId) {
