@@ -213,69 +213,77 @@ window.LeetreeLayout = (function () {
   function computeGuidedPositions() {
     const viewWidth = window.innerWidth * (isMobile ? 1.2 : 0.9);
     const viewHeight = window.innerHeight * (isMobile ? 1.5 : 0.8);
-    const rootRadius = isMobile ? 120 : 250;
-    const hubRadius = Math.min(viewWidth / 5, isMobile ? 180 : 350);
-    const subhubRadius = Math.min(viewWidth / 8, isMobile ? 120 : 220);
-    const leafRadius = Math.min(viewWidth / 10, isMobile ? 100 : 180);
+    const hubColWidth = isMobile ? 200 : 400;
+    const hubRowSpacing = isMobile ? 80 : 120;
+    const subhubSpacing = isMobile ? 60 : 100;
+    const leafRadius = isMobile ? 80 : 140;
+    const leafAngleSpread = Math.PI * 1.0;
 
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
 
-    // Place root at center-top
+    // Place root at top center
     const root = nodeMap['root'];
     root.x = viewWidth / 2;
-    root.y = rootRadius;
+    root.y = isMobile ? 50 : 100;
 
-    // Place hubs in a semi-circle below root
+    // Place hubs in two columns below root
     const hubs = nodes.filter(n => n.type === 'hub');
-    const hubAngleStart = -Math.PI / 1.5;
-    const hubAngleEnd = Math.PI / 1.5;
     hubs.forEach((h, i) => {
-      const angle = hubAngleStart + (hubAngleEnd - hubAngleStart) * (i / (hubs.length - 1 || 1));
-      h.x = root.x + Math.cos(angle) * hubRadius;
-      h.y = root.y + Math.sin(angle) * hubRadius + 100; // Slight downward offset
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      h.x = root.x + (col === 0 ? -hubColWidth / 2 : hubColWidth / 2);
+      h.y = root.y + 150 + row * hubRowSpacing;
     });
 
-    // Build children map for hierarchical placement
+    // Build children map
     const childrenMap = {};
     edges.forEach(([from, to]) => {
       if (!childrenMap[from]) childrenMap[from] = [];
       childrenMap[from].push(to);
     });
 
-    // Place subhubs and leaves hierarchically
-    function placeChildren(parentId, radius, angleSpread = Math.PI * 1.2, angleOffset = -Math.PI / 1.5) {
+    // Place subhubs horizontally from hub
+    const subhubs = nodes.filter(n => n.type === 'subhub');
+    subhubs.forEach(sh => {
+      const parent = nodeMap['hub-' + sh.cluster];
+      const siblings = subhubs.filter(s => s.cluster === sh.cluster);
+      const idx = siblings.findIndex(s => s.id === sh.id);
+      const dir = idx % 2 === 0 ? -1 : 1;
+      sh.x = parent.x + dir * (100 + idx * 50);
+      sh.y = parent.y + subhubSpacing;
+    });
+
+    // Place leaves in a fan below parent
+    function placeChildren(parentId, radius, angleSpread = leafAngleSpread, angleOffset = Math.PI / 2 - angleSpread / 2) {
       const parent = nodeMap[parentId];
-      const children = childrenMap[parentId] || [];
+      const children = (childrenMap[parentId] || []).filter(c => nodeMap[c].type === 'leaf');
       const angleStep = angleSpread / (children.length || 1);
       children.forEach((childId, i) => {
         const child = nodeMap[childId];
-        if (child.x !== undefined) return; // Skip if already placed (for cross-edges)
+        if (child.x !== undefined) return;
         const angle = angleOffset + angleStep * i;
         child.x = parent.x + Math.cos(angle) * radius;
         child.y = parent.y + Math.sin(angle) * radius;
-        // Recurse for sub-children
-        placeChildren(childId, leafRadius, Math.PI * 0.8, angle - Math.PI / 2);
       });
     }
 
-    // Place from hubs
-    hubs.forEach(h => placeChildren(h.id, subhubRadius));
+    // Place leaves from hubs and subhubs
+    nodes.filter(n => n.type === 'hub' || n.type === 'subhub').forEach(p => placeChildren(p.id, leafRadius));
 
-    // Handle cross-edges by averaging positions or slight adjustments if needed
+    // Handle cross-edges by placing near the from node if not placed
     edges.forEach(([from, to]) => {
       const child = nodeMap[to];
-      if (child.x === undefined) {
-        // For cross-links, place near from if not placed
+      if (child.x === undefined && child.type === 'leaf') {
         const parent = nodeMap[from];
-        child.x = parent.x + (Math.random() - 0.5) * 50;
-        child.y = parent.y + leafRadius + (Math.random() - 0.5) * 50;
+        child.x = parent.x + (Math.random() - 0.5) * 40;
+        child.y = parent.y + leafRadius + (Math.random() - 0.5) * 40;
       }
     });
   }
 
   function resolveCollisionsAndLayout(callback) {
-    const nodeW = window.Leetree.NODE_W * 1.1; // Padding for collision
+    const nodeW = window.Leetree.NODE_W * 1.1;
     const nodeH = window.Leetree.NODE_H * 1.1;
     const arr = nodes.map(n => ({ id: n.id, x: n.x || 0, y: n.y || 0 }));
 
@@ -292,7 +300,7 @@ window.LeetreeLayout = (function () {
         }
       };
     } else {
-      const iters = 500;
+      const iters = 300; // Reduced iterations for less spreading
       for (let it = 0; it < iters; it++) {
         let moved = false;
         arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -304,11 +312,11 @@ window.LeetreeLayout = (function () {
             const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
             if (overlapX > 0 && overlapY > 0) {
-              const push = Math.min(overlapX, overlapY) / 2 + 6;
+              const push = Math.min(overlapX, overlapY) / 2 + 2; // Reduced push for closer nodes
               const dx = b.x - a.x;
               const dy = b.y - a.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              const bias = Math.abs(dy) > Math.abs(dx) ? 1.4 : 1; // Prefer vertical separation
+              const bias = Math.abs(dy) > Math.abs(dx) ? 1.2 : 1; // Mild bias
               a.x -= (dx / dist) * push * bias;
               a.y -= (dy / dist) * push * bias;
               b.x += (dx / dist) * push * bias;
@@ -463,7 +471,7 @@ window.LeetreeRender = (function () {
       let x2 = t.x + w2 / 2;
       let y2 = t.y + h2 / 2;
 
-      // Improved side attachment
+      // Side attachment
       const dx = x2 - x1;
       const dy = y2 - y1;
       const angle = Math.atan2(dy, dx);
@@ -475,7 +483,7 @@ window.LeetreeRender = (function () {
       y2 += side2.y;
 
       const dist = Math.hypot(dx, dy) || 1;
-      const curveFactor = dist * 0.15;
+      const curveFactor = dist * 0.08; // Reduced curve for less distant look
       const perpX = -dy / dist * curveFactor;
       const perpY = dx / dist * curveFactor;
       const cx1 = x1 + dx * 0.3 + perpX * 0.6;
@@ -701,7 +709,7 @@ window.LeetreeUtils = (function () {
     const stageH = stage.clientHeight;
     const fitScaleW = (stageW - 20) / width;
     const fitScaleH = (stageH - 20) / height;
-    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH));
+    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH) * 0.9); // Slight zoom out for better view
     setScale(fitScale);
     const centroidX = (minX + maxX) / 2 * fitScale;
     const centroidY = (minY + maxY) / 2 * fitScale;
@@ -990,7 +998,7 @@ self.addEventListener('message', (ev) => {
     const arr = data.nodes;
     const nodeW = data.nodeW;
     const nodeH = data.nodeH;
-    const iters = 500;
+    const iters = 300;
     for (let it = 0; it < iters; it++) {
       let moved = false;
       arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -1002,11 +1010,11 @@ self.addEventListener('message', (ev) => {
           const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
           const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
           if (overlapX > 0 && overlapY > 0) {
-            const push = Math.min(overlapX, overlapY) / 2 + 6;
+            const push = Math.min(overlapX, overlapY) / 2 + 2;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            const bias = Math.abs(dy) > Math.abs(dx) ? 1.4 : 1;
+            const bias = Math.abs(dy) > Math.abs(dx) ? 1.2 : 1;
             a.x -= (dx / dist) * push * bias;
             a.y -= (dy / dist) * push * bias;
             b.x += (dx / dist) * push * bias;
