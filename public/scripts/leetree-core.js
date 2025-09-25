@@ -207,11 +207,11 @@ window.LeetreeLayout = (function () {
 
   function computeGuidedPositions() {
     const viewWidth = window.innerWidth * (isMobile ? 1.1 : 0.8);
-    const columnWidths = [viewWidth * 0.2, viewWidth * 0.3, viewWidth * 0.5]; // Tighter columns
-    const hubRowSpacing = isMobile ? 80 : 120;
-    const subhubSpacing = isMobile ? 60 : 90;
-    const leafSpacing = isMobile ? 50 : 80;
-    const margin = isMobile ? 20 : 40;
+    const columnWidths = [viewWidth * 0.2, viewWidth * 0.3, viewWidth * 0.5];
+    const hubRowSpacing = isMobile ? 60 : 90;
+    const subhubSpacing = isMobile ? 40 : 60;
+    const leafSpacing = isMobile ? 30 : 50;
+    const margin = isMobile ? 10 : 20;
 
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
@@ -223,7 +223,7 @@ window.LeetreeLayout = (function () {
 
     // Column 2: Hubs vertically aligned
     const hubs = nodes.filter(n => n.type === 'hub');
-    const hubStartY = root.y + 150;
+    const hubStartY = root.y + 80;
     hubs.forEach((h, i) => {
       h.x = columnWidths[0] + columnWidths[1] / 2;
       h.y = hubStartY + i * hubRowSpacing;
@@ -296,7 +296,7 @@ window.LeetreeLayout = (function () {
         }
       };
     } else {
-      const iters = 250; // Fewer iterations to keep closer
+      const iters = 250;
       for (let it = 0; it < iters; it++) {
         let moved = false;
         arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -308,7 +308,7 @@ window.LeetreeLayout = (function () {
             const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
             if (overlapX > 0 && overlapY > 0) {
-              const push = Math.min(overlapX, overlapY) / 2 + 5; // Smaller push
+              const push = Math.min(overlapX, overlapY) / 2 + 5;
               const dx = b.x - a.x;
               const dy = b.y - a.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -389,10 +389,11 @@ window.LeetreeRender = (function () {
 
       window.LeetreeUtils.enableNodeDrag(el, n);
 
-      el.style.left = (n.x || 0) + 'px';
-      el.style.top = (n.y || 0) + 'px';
       container.appendChild(el);
       n.el = el;
+
+      el.style.left = (n.x || 0) + 'px';
+      el.style.top = (n.y || 0) + 'px';
 
       if (isInitial && window.Leetree.animationsEnabled) {
         el.style.opacity = 0;
@@ -707,7 +708,7 @@ window.LeetreeUtils = (function () {
     const stageH = stage.clientHeight;
     const fitScaleW = stageW / width;
     const fitScaleH = stageH / height;
-    const fitScale = Math.min(1, Math.min(fitScaleW, fitScaleH));
+    const fitScale = Math.min(fitScaleW, fitScaleH);
     setScale(fitScale);
     stage.scrollLeft = 0;
     stage.scrollTop = 0;
@@ -892,25 +893,16 @@ window.LeetreeUtils = (function () {
   function setupControlListeners() {
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
-    const resetView = document.getElementById('reset-view');
     const toggleAnimations = document.getElementById('toggle-animations');
     const useWorker = document.getElementById('use-worker');
 
-    if (!zoomIn || !zoomOut || !resetView || !toggleAnimations || !useWorker) {
+    if (!zoomIn || !zoomOut || !toggleAnimations || !useWorker) {
       console.warn('setupControlListeners: One or more control buttons not found');
       return;
     }
 
     zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
     zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
-    resetView.addEventListener('click', () => {
-      window.LeetreeLayout.computeGuidedPositions();
-      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
-        window.LeetreeRender.renderNodes(false);
-        window.LeetreeRender.drawEdges(false);
-        window.LeetreeUtils.fitCanvas(PADDING);
-      });
-    });
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
