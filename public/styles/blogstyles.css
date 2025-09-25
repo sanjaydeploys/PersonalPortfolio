@@ -886,7 +886,8 @@
     .flow-highlight { stroke-width:3.0 !important; opacity:1 !important; transition: stroke-width 200ms ease; }
     .path-pulse { animation: pulse 1.2s ease-in-out infinite alternate; }
     @keyframes pulse { 0% { stroke-width: 2.6; } 100% { stroke-width: 3.4; } }
-    .flow-highlight-advanced { stroke-width:3.2 !important; filter: drop-shadow(0 0 4px currentColor); }
+    .flow-highlight-advanced { stroke-width:3.2 !important; filter: drop-shadow(0 0 4px currentColor); animation: glow-pulse 1.5s ease-in-out infinite; }
+    @keyframes glow-pulse { 0% { filter: drop-shadow(0 0 4px currentColor); } 50% { filter: drop-shadow(0 0 8px currentColor); } 100% { filter: drop-shadow(0 0 4px currentColor); } }
     .path-pulse-advanced { animation: pulse-advanced 1.0s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate; }
     @keyframes pulse-advanced { 0% { stroke-width: 2.4; opacity: 0.8; } 100% { stroke-width: 3.6; opacity: 1; } }
     .node-enter { transition: opacity 400ms ease, transform 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275); }
