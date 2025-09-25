@@ -1,3 +1,4 @@
+// /leetree-utils.js
 window.Leetree = window.Leetree || {};
 window.LeetreeUtils = (function () {
   const nodes = window.Leetree.nodes || [];
@@ -8,11 +9,13 @@ window.LeetreeUtils = (function () {
   const container = document.getElementById('map-nodes');
   const svg = document.getElementById('map-svg');
   const searchInput = document.getElementById('node-search');
-  const PADDING = window.Leetree.PADDING || (window.innerWidth < 768 ? 10 : 15);
+  const PADDING = window.Leetree.PADDING;
   let activeCluster = null;
   const tooltip = document.createElement('div');
   tooltip.className = 'node-tooltip';
   document.body.appendChild(tooltip);
+  const animationsEnabled = () => window.Leetree.animationsEnabled;
+  const scale = () => window.Leetree.scale;
 
   function highlightPath(path, duration = 0, on = true) {
     if (path.length < 2) return;
@@ -20,7 +23,6 @@ window.LeetreeUtils = (function () {
     const pairs = [];
     for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]]);
     const svgpaths = svg.querySelectorAll('path.flow-line');
-    const enabled = window.Leetree.animationsEnabled;
     svgpaths.forEach((p) => {
       const from = p.dataset.from, to = p.dataset.to;
       const match = pairs.some((pair) => pair[0] === from && pair[1] === to);
@@ -28,26 +30,28 @@ window.LeetreeUtils = (function () {
       const pathColor = pathCluster ? clusters.find((c) => c.id === pathCluster).color : '#ffffff';
       if (match) {
         if (on) {
-          p.classList.add(enabled ? 'flow-highlight-advanced' : 'flow-highlight');
-          if (enabled) p.style.stroke = clusterColor;
-          else p.style.stroke = pathColor;
+          p.classList.add(animationsEnabled() ? 'flow-highlight-advanced' : 'flow-highlight');
+          p.style.stroke = hexToRgba(clusterColor, 1);
           p.style.opacity = '1';
-          if (on && enabled) p.classList.add('path-pulse-advanced');
-          else p.classList.remove('path-pulse-advanced');
+          if (animationsEnabled()) p.classList.add('path-pulse-advanced');
         } else {
           p.classList.remove('flow-highlight-advanced', 'flow-highlight', 'path-pulse-advanced');
-          if (enabled) p.style.stroke = '';
-          else p.style.stroke = pathColor;
+          p.style.stroke = hexToRgba(pathColor, p.classList.contains('flow-glow') ? 0.22 : 0.14);
           p.style.opacity = '';
         }
       } else {
         p.style.opacity = on ? '0.2' : '';
-        if (!enabled) p.style.stroke = on ? hexToRgba(pathColor, 0.12) : hexToRgba(pathColor, 0.3);
+        if (!animationsEnabled()) p.style.stroke = on ? hexToRgba(pathColor, 0.12) : hexToRgba(pathColor, 0.3);
       }
     });
     if (duration > 0) {
       setTimeout(() => {
-        svgpaths.forEach((p) => { p.classList.remove('flow-highlight-advanced'); p.style.stroke = ''; p.style.opacity = ''; p.classList.remove('path-pulse-advanced'); });
+        svgpaths.forEach((p) => { 
+          p.classList.remove('flow-highlight-advanced', 'path-pulse-advanced'); 
+          p.style.stroke = ''; 
+          p.style.opacity = ''; 
+        });
+        window.LeetreeRender.toggleEdgeAnimations();
       }, duration);
     }
   }
@@ -66,7 +70,7 @@ window.LeetreeUtils = (function () {
     if (top + tooltipRect.height > window.innerHeight + window.pageYOffset) top = rect.top + window.pageYOffset - tooltipRect.height - 8;
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
-    if (window.Leetree.animationsEnabled) tooltip.classList.add('tooltip-fade-in');
+    if (animationsEnabled()) tooltip.classList.add('tooltip-fade-in');
   }
 
   function hideTooltip() {
@@ -78,12 +82,12 @@ window.LeetreeUtils = (function () {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach((n) => {
       if (!n.el) return;
-      const left = n.x || parseFloat(n.el.style.left || 0);
-      const top = n.y || parseFloat(n.el.style.top || 0);
+      const left = n.x;
+      const top = n.y;
       minX = Math.min(minX, left);
       minY = Math.min(minY, top);
-      maxX = Math.max(maxX, left + (n.el.offsetWidth || window.Leetree.NODE_W));
-      maxY = Math.max(maxY, top + (n.el.offsetHeight || window.Leetree.NODE_H));
+      maxX = Math.max(maxX, left + n.el.offsetWidth);
+      maxY = Math.max(maxY, top + n.el.offsetHeight);
     });
     if (minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
     const width = Math.ceil(maxX - minX + padding * 2);
@@ -93,15 +97,12 @@ window.LeetreeUtils = (function () {
     svg.setAttribute('width', width);
     svg.setAttribute('height', height);
 
-    // Center the graph's centroid
-    const centroidX = (minX + maxX) / 2;
-    const centroidY = (minY + maxY) / 2;
-    const offsetX = padding - minX + (stage.clientWidth / window.Leetree.scale - width) / 2;
-    const offsetY = padding - minY + (stage.clientHeight / window.Leetree.scale - height) / 2;
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
     nodes.forEach((n) => {
       if (!n.el) return;
-      n.x = (n.x || parseFloat(n.el.style.left || 0)) + offsetX;
-      n.y = (n.y || parseFloat(n.el.style.top || 0)) + offsetY;
+      n.x += offsetX;
+      n.y += offsetY;
       n.el.style.left = n.x + 'px';
       n.el.style.top = n.y + 'px';
     });
@@ -114,19 +115,19 @@ window.LeetreeUtils = (function () {
     const fitScaleH = (stageH - 10) / height;
     const fitScale = Math.min(1, fitScaleW, fitScaleH);
     setScale(fitScale);
-    stage.scrollLeft = Math.max(0, centroidX * fitScale - stageW / 2);
-    stage.scrollTop = 0; // Start at top
+    stage.scrollLeft = (width * fitScale - stageW) / 2;
+    stage.scrollTop = 0;
   }
 
   function focusNode(nodeId) {
     const n = nodeMap[nodeId];
     if (!n || !n.el) return;
-    const cx = n.x + (n.el.offsetWidth || window.Leetree.NODE_W) / 2;
-    const cy = n.y + (n.el.offsetHeight || window.Leetree.NODE_H) / 2;
+    const cx = n.x + n.el.offsetWidth / 2;
+    const cy = n.y + n.el.offsetHeight / 2;
     setScale(Math.min(1.12, Math.max(0.7, 1.0)));
-    stage.scrollTo({ left: Math.max(0, cx * window.Leetree.scale - stage.clientWidth / 2), top: Math.max(0, cy * window.Leetree.scale - stage.clientHeight / 2), behavior: 'smooth' });
+    stage.scrollTo({ left: Math.max(0, cx * scale() - stage.clientWidth / 2), top: Math.max(0, cy * scale() - stage.clientHeight / 2), behavior: 'smooth' });
     highlightPath(findPathTo(nodeId), 1400);
-    if (window.Leetree.animationsEnabled) n.el.classList.add('node-focus-pulse');
+    if (animationsEnabled()) n.el.classList.add('node-focus-pulse');
     setTimeout(() => n.el.classList.remove('node-focus-pulse'), 1400);
   }
 
@@ -160,7 +161,6 @@ window.LeetreeUtils = (function () {
       const f = nodeMap[from], t = nodeMap[to];
       if ((f && f.cluster === activeCluster) || (t && t.cluster === activeCluster)) {
         p.style.opacity = '1';
-        p.style.stroke = '';
       } else {
         p.style.opacity = '0.06';
       }
@@ -168,10 +168,7 @@ window.LeetreeUtils = (function () {
   }
 
   function initSearch() {
-    if (!searchInput) {
-      console.warn('initSearch: #node-search element not found');
-      return;
-    }
+    if (!searchInput) return;
     const flat = nodes.map((n) => ({ id: n.id, title: n.title, sub: n.sub }));
     let currentFocus = -1;
     searchInput.addEventListener('input', function() {
@@ -231,8 +228,8 @@ window.LeetreeUtils = (function () {
     function startDrag(e) {
       e.preventDefault();
       isDragging = true;
-      startX = (e.clientX || e.touches[0].clientX) / window.Leetree.scale - n.x;
-      startY = (e.clientY || e.touches[0].clientY) / window.Leetree.scale - n.y;
+      startX = (e.clientX || e.touches[0].clientX) / scale() - n.x;
+      startY = (e.clientY || e.touches[0].clientY) / scale() - n.y;
       document.addEventListener('mousemove', drag);
       document.addEventListener('touchmove', drag, { passive: false });
       document.addEventListener('mouseup', endDrag);
@@ -242,8 +239,8 @@ window.LeetreeUtils = (function () {
     function drag(e) {
       if (!isDragging) return;
       e.preventDefault();
-      n.x = (e.clientX || e.touches[0].clientX) / window.Leetree.scale - startX;
-      n.y = (e.clientY || e.touches[0].clientY) / window.Leetree.scale - startY;
+      n.x = (e.clientX || e.touches[0].clientX) / scale() - startX;
+      n.y = (e.clientY || e.touches[0].clientY) / scale() - startY;
       el.style.left = n.x + 'px';
       el.style.top = n.y + 'px';
       window.LeetreeRender.drawEdges(false);
@@ -262,22 +259,24 @@ window.LeetreeUtils = (function () {
   function setupControlListeners() {
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
+    const resetView = document.getElementById('reset-view');
     const toggleAnimations = document.getElementById('toggle-animations');
     const useWorker = document.getElementById('use-worker');
 
-    if (!zoomIn || !zoomOut || !toggleAnimations || !useWorker) {
-      console.warn('setupControlListeners: One or more control buttons not found');
-      return;
-    }
-
-    zoomIn.addEventListener('click', () => setScale(Math.min(1.6, window.Leetree.scale + 0.12)));
-    zoomOut.addEventListener('click', () => setScale(Math.max(0.5, window.Leetree.scale - 0.12)));
+    zoomIn.addEventListener('click', () => setScale(Math.min(1.6, scale() + 0.12)));
+    zoomOut.addEventListener('click', () => setScale(Math.max(0.5, scale() - 0.12)));
+    resetView.addEventListener('click', () => {
+      window.LeetreeLayout.computeGuidedPositions();
+      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        fitCanvas(PADDING);
+        window.LeetreeRender.drawEdges(false);
+      });
+    });
     toggleAnimations.addEventListener('click', () => {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
-      toggleAnimations.classList.toggle('anim-on', window.Leetree.animationsEnabled);
-      toggleAnimations.classList.toggle('anim-off', !window.Leetree.animationsEnabled);
       window.dispatchEvent(new Event('leetree:toggleAnimations'));
+      window.LeetreeRender.drawEdges(false); // Redraw to apply changes robustly
     });
     useWorker.addEventListener('click', () => {
       if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
@@ -303,8 +302,8 @@ window.LeetreeUtils = (function () {
 
   function setScale(s) {
     window.Leetree.scale = s;
-    container.style.transform = 'scale(' + s + ')';
-    svg.style.transform = 'scale(' + s + ')';
+    container.style.transform = `scale(${s})`;
+    svg.style.transform = `scale(${s})`;
     window.LeetreeRender.drawEdges(false);
   }
 
@@ -346,7 +345,7 @@ window.LeetreeUtils = (function () {
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
-        initialScale = window.Leetree.scale;
+        initialScale = scale();
       }
     }, { passive: false });
     stage.addEventListener('touchmove', (e) => {
@@ -369,7 +368,7 @@ window.LeetreeUtils = (function () {
   function hexToRgba(hex, a = 1) {
     const h = hex.replace('#', '');
     const bi = parseInt(h, 16);
-    return 'rgba(' + ((bi >> 16) & 255) + ',' + ((bi >> 8) & 255) + ',' + (bi & 255) + ',' + a + ')';
+    return `rgba(${ (bi >> 16) & 255 },${ (bi >> 8) & 255 },${ bi & 255 },${a})`;
   }
 
   return {
@@ -382,8 +381,8 @@ window.LeetreeUtils = (function () {
     toggleCluster,
     initSearch,
     enableNodeDrag,
+    setupControlListeners,
     escapeHtml,
-    hexToRgba,
-    setupControlListeners
+    hexToRgba
   };
-})(); 
+})();
