@@ -276,20 +276,20 @@ window.LeetreeLayout = (function () {
   function computeGuidedPositions() {
     const viewWidth = window.innerWidth;
     const viewHeight = window.innerHeight;
-    // Tighter column widths to eliminate left-side gap and maximize space
-    const columnWidths = [viewWidth * 0.1, viewWidth * 0.2, viewWidth * 0.65];
-    const hubRowSpacing = isMobile ? 25 : 50;
-    const subhubSpacing = isMobile ? 15 : 30;
-    const leafSpacing = isMobile ? 12 : 25;
-    const margin = isMobile ? 3 : 8;
+    // Extremely tight column widths to eliminate left-side gap
+    const columnWidths = [viewWidth * 0.05, viewWidth * 0.2, viewWidth * 0.75];
+    const hubRowSpacing = isMobile ? 20 : 40;
+    const subhubSpacing = isMobile ? 12 : 25;
+    const leafSpacing = isMobile ? 10 : 20;
+    const margin = isMobile ? 2 : 5;
 
     // Reset positions
     nodes.forEach(n => { n.x = undefined; n.y = undefined; });
 
-    // Column 1: Root centered vertically, very close to left edge
+    // Column 1: Root centered vertically, as close to left edge as possible
     const root = nodeMap['root'];
     if (!root) return;
-    root.x = margin; // Minimal margin from left edge
+    root.x = margin; // Minimal margin to eliminate left-side gap
     root.y = viewHeight / 2; // Center vertically
 
     // Column 2: Hubs - Spread evenly around vertical center, constrained to viewport
@@ -325,7 +325,7 @@ window.LeetreeLayout = (function () {
       const siblingCount = siblings.length || 1;
       const idxNorm = idx - (siblingCount - 1) / 2;
       sh.x = Math.min(parent.x + subhubSpacing, viewWidth - margin - window.Leetree.NODE_W);
-      sh.y = parent.y + idxNorm * Math.max(6, subhubSpacing * 0.25);
+      sh.y = parent.y + idxNorm * Math.max(5, subhubSpacing * 0.2);
       // Constrain within viewport
       sh.y = Math.max(margin, Math.min(sh.y, viewHeight - margin - window.Leetree.NODE_H));
     });
@@ -336,7 +336,7 @@ window.LeetreeLayout = (function () {
       if (!parent) return;
       const children = (childrenMap[parentId] || []).filter(c => nodeMap[c] && nodeMap[c].type === 'leaf');
       if (!children.length) return;
-      const cols = Math.min(4, Math.ceil(Math.sqrt(children.length))); // Allow up to 4 columns for compactness
+      const cols = Math.min(5, Math.ceil(Math.sqrt(children.length))); // Up to 5 columns for maximum compactness
       const rows = Math.ceil(children.length / cols);
       const colSpacing = Math.min((viewWidth - columnWidths[0] - columnWidths[1] - 2 * margin) / cols, columnWidths[2] / (cols + 1));
       const rowSpacing = Math.min(leafSpacing, (viewHeight - 2 * margin - window.Leetree.NODE_H) / (rows + 1));
@@ -364,8 +364,8 @@ window.LeetreeLayout = (function () {
       const child = nodeMap[to];
       if (!child || child.x !== undefined || child.type !== 'leaf') return;
       const parent = nodeMap[from] || nodeMap['hub-' + (child.cluster || '')] || root;
-      const randXRange = columnWidths[2] * 0.08;
-      child.x = Math.min(parent.x + margin + columnWidths[1] * 0.1 + (Math.random() - 0.5) * randXRange, viewWidth - margin - window.Leetree.NODE_W);
+      const randXRange = columnWidths[2] * 0.05;
+      child.x = Math.min(parent.x + margin + columnWidths[1] * 0.08 + (Math.random() - 0.5) * randXRange, viewWidth - margin - window.Leetree.NODE_W);
       child.y = parent.y + (Math.random() - 0.5) * leafSpacing;
       // Constrain within viewport
       child.y = Math.max(margin, Math.min(child.y, viewHeight - margin - window.Leetree.NODE_H));
@@ -409,11 +409,11 @@ window.LeetreeLayout = (function () {
   }
 
   function resolveCollisionsAndLayout(callback) {
-    const nodeW = window.Leetree.NODE_W * 1.02; // Tighter padding for compact layout
-    const nodeH = window.Leetree.NODE_H * 1.02;
+    const nodeW = window.Leetree.NODE_W * 1.01; // Minimal padding for tightest fit
+    const nodeH = window.Leetree.NODE_H * 1.01;
     const viewWidth = window.innerWidth;
     const viewHeight = window.innerHeight;
-    const margin = isMobile ? 3 : 8;
+    const margin = isMobile ? 2 : 5;
     const arr = nodes.map(n => ({ id: n.id, x: n.x || 0, y: n.y || 0 }));
 
     if (window.Leetree.workerEnabled && window.Leetree.worker) {
@@ -431,7 +431,7 @@ window.LeetreeLayout = (function () {
         }
       };
     } else {
-      const iters = 150; // Fewer iterations for performance
+      const iters = 100; // Minimal iterations for performance
       for (let it = 0; it < iters; it++) {
         let moved = false;
         arr.sort((a, b) => a.x - b.x || a.y - b.y);
@@ -439,15 +439,15 @@ window.LeetreeLayout = (function () {
           const a = arr[i];
           for (let j = i + 1; j < arr.length; j++) {
             const b = arr[j];
-            if (b.x - a.x > nodeW * 1.2) break; // Tighter break for efficiency
+            if (b.x - a.x > nodeW * 1.1) break; // Very tight break condition
             const overlapX = Math.min(a.x + nodeW, b.x + nodeW) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + nodeH, b.y + nodeH) - Math.max(a.y, b.y);
             if (overlapX > 0 && overlapY > 0) {
-              const push = Math.min(overlapX, overlapY) / 2 + 2;
+              const push = Math.min(overlapX, overlapY) / 2 + 1;
               const dx = b.x - a.x;
               const dy = b.y - a.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              const bias = Math.abs(dy) > Math.abs(dx) ? 1.05 : 1;
+              const bias = Math.abs(dy) > Math.abs(dx) ? 1.02 : 1;
               a.x -= (dx / dist) * push * bias;
               a.y -= (dy / dist) * push * bias;
               b.x += (dx / dist) * push * bias;
