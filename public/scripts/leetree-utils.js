@@ -21,8 +21,9 @@ window.LeetreeUtils = (function () {
     if (path.length < 2) return;
     const clusterColor = nodeMap[path[path.length - 1]].cluster ? clusters.find((c) => c.id === nodeMap[path[path.length - 1]].cluster).color : '#fff';
     const pairs = [];
-    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]]);
+    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]);
     const svgpaths = svg.querySelectorAll('path.flow-line');
+    const enabled = animationsEnabled();
     svgpaths.forEach((p) => {
       const from = p.dataset.from, to = p.dataset.to;
       const match = pairs.some((pair) => pair[0] === from && pair[1] === to);
@@ -30,28 +31,30 @@ window.LeetreeUtils = (function () {
       const pathColor = pathCluster ? clusters.find((c) => c.id === pathCluster).color : '#ffffff';
       if (match) {
         if (on) {
-          p.classList.add(animationsEnabled() ? 'flow-highlight-advanced' : 'flow-highlight');
-          p.style.stroke = hexToRgba(clusterColor, 1);
+          p.classList.add(enabled ? 'flow-highlight-advanced' : 'flow-highlight');
+          p.style.color = clusterColor;
+          p.style.strokeOpacity = '1';
           p.style.opacity = '1';
-          if (animationsEnabled()) p.classList.add('path-pulse-advanced');
+          if (enabled) p.classList.add('path-pulse-advanced');
         } else {
           p.classList.remove('flow-highlight-advanced', 'flow-highlight', 'path-pulse-advanced');
-          p.style.stroke = hexToRgba(pathColor, p.classList.contains('flow-glow') ? 0.22 : 0.14);
+          p.style.color = pathColor;
+          p.style.strokeOpacity = p.classList.contains('flow-glow') ? '0.22' : '0.14';
           p.style.opacity = '';
         }
       } else {
-        p.style.opacity = on ? '0.2' : '';
-        if (!animationsEnabled()) p.style.stroke = on ? hexToRgba(pathColor, 0.12) : hexToRgba(pathColor, 0.3);
+        if (on) {
+          p.style.opacity = '0.2';
+          if (!enabled) p.style.strokeOpacity = '0.12';
+        } else {
+          p.style.opacity = '';
+          if (!enabled) p.style.strokeOpacity = p.classList.contains('flow-glow') ? '0.22' : '0.14';
+        }
       }
     });
     if (duration > 0) {
       setTimeout(() => {
-        svgpaths.forEach((p) => { 
-          p.classList.remove('flow-highlight-advanced', 'path-pulse-advanced'); 
-          p.style.stroke = ''; 
-          p.style.opacity = ''; 
-        });
-        window.LeetreeRender.toggleEdgeAnimations();
+        window.LeetreeRender.drawEdges(false);
       }, duration);
     }
   }
@@ -276,7 +279,6 @@ window.LeetreeUtils = (function () {
       window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
       toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
       window.dispatchEvent(new Event('leetree:toggleAnimations'));
-      window.LeetreeRender.drawEdges(false); // Redraw to apply changes robustly
     });
     useWorker.addEventListener('click', () => {
       if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
@@ -365,12 +367,6 @@ window.LeetreeUtils = (function () {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   }
 
-  function hexToRgba(hex, a = 1) {
-    const h = hex.replace('#', '');
-    const bi = parseInt(h, 16);
-    return `rgba(${ (bi >> 16) & 255 },${ (bi >> 8) & 255 },${ bi & 255 },${a})`;
-  }
-
   return {
     highlightPath,
     showTooltip,
@@ -382,7 +378,6 @@ window.LeetreeUtils = (function () {
     initSearch,
     enableNodeDrag,
     setupControlListeners,
-    escapeHtml,
-    hexToRgba
+    escapeHtml
   };
 })();
