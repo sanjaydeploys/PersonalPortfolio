@@ -1,265 +1,383 @@
-// /leetree-render.js
+// /leetree-utils.js
 window.Leetree = window.Leetree || {};
-window.LeetreeRender = (function () {
+window.LeetreeUtils = (function () {
   const nodes = window.Leetree.nodes || [];
   const edges = window.Leetree.edges || [];
   const nodeMap = window.Leetree.nodeMap || {};
   const clusters = window.Leetree.clusters || [];
-  const svg = document.getElementById('map-svg');
+  const stage = document.getElementById('map-stage');
   const container = document.getElementById('map-nodes');
-  const legendEl = document.getElementById('map-legend');
-  const problemButtons = document.getElementById('problem-buttons');
+  const svg = document.getElementById('map-svg');
+  const searchInput = document.getElementById('node-search');
+  const PADDING = window.Leetree.PADDING;
+  let activeCluster = null;
+  const tooltip = document.createElement('div');
+  tooltip.className = 'node-tooltip';
+  document.body.appendChild(tooltip);
   const animationsEnabled = () => window.Leetree.animationsEnabled;
-  const utils = window.LeetreeUtils;
+  const scale = () => window.Leetree.scale;
 
-  const hexToRgba = (hex, a = 1) => {
-    const h = hex.replace('#', '');
-    const bi = parseInt(h, 16);
-    return `rgba(${(bi >> 16) & 255},${(bi >> 8) & 255},${bi & 255},${a})`;
-  };
-
-  function renderNodes(isInitial = false) {
-    container.innerHTML = '';
-    nodes.forEach((n, idx) => {
-      const el = document.createElement('a');
-      el.className = 'node-box ' + (n.type === 'root' ? 'root-node' : (n.type === 'hub' || n.type === 'subhub' ? 'intermediate-node' : 'leaf-node'));
-      el.href = n.url || '#';
-      el.target = (n.url && n.url.startsWith('http')) ? '_blank' : '_self';
-      el.dataset.id = n.id;
-      el.setAttribute('role', 'link');
-      el.setAttribute('aria-label', n.title + ' — ' + (n.sub || ''));
-
-      const accent = document.createElement('span');
-      accent.className = 'cluster-accent';
-      accent.style.background = n.cluster ? clusters.find((c) => c.id === n.cluster).color : '#fff';
-      accent.style.boxShadow = '0 6px 18px ' + hexToRgba(accent.style.background, 0.12);
-      el.appendChild(accent);
-
-      const t = document.createElement('span');
-      t.className = 'node-title';
-      t.textContent = n.title;
-      const s = document.createElement('span');
-      s.className = 'node-sub';
-      s.textContent = n.sub || '';
-      el.appendChild(t);
-      el.appendChild(s);
-
-      el.addEventListener('mouseenter', (e) => { utils.highlightPath(utils.findPathTo(n.id), 0, true); utils.showTooltip(e, n); });
-      el.addEventListener('mouseleave', () => { utils.highlightPath(utils.findPathTo(n.id), 0, false); utils.hideTooltip(); });
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); utils.highlightPath(utils.findPathTo(n.id), 0, true); utils.showTooltip(e, n); });
-      el.addEventListener('touchend', () => { utils.highlightPath(utils.findPathTo(n.id), 0, false); utils.hideTooltip(); });
-      el.addEventListener('click', (ev) => {
-        if (!n.url || n.url === '#') {
-          ev.preventDefault();
-          utils.focusNode(n.id);
-        }
-      });
-
-      utils.enableNodeDrag(el, n);
-
-      container.appendChild(el);
-      n.el = el;
-
-      if (isInitial && animationsEnabled()) {
-        el.style.opacity = 0;
-        el.style.transform = 'scale(0.8) translateY(20px)';
-        setTimeout(() => {
-          el.classList.add('node-enter');
-          el.style.opacity = 1;
-          el.style.transform = 'scale(1) translateY(0)';
-        }, idx * 20);
-      }
-    });
-  }
-
-  function setupSvgDefs() {
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const ns = 'http://www.w3.org/2000/svg';
-    const defs = document.createElementNS(ns, 'defs');
-
-    const filt = document.createElementNS(ns, 'filter');
-    filt.setAttribute('id', 'map-glow');
-    filt.setAttribute('x', '-50%');
-    filt.setAttribute('y', '-50%');
-    filt.setAttribute('width', '200%');
-    filt.setAttribute('height', '200%');
-    const fe = document.createElementNS(ns, 'feGaussianBlur');
-    fe.setAttribute('stdDeviation', '4.0');
-    fe.setAttribute('result', 'coloredBlur');
-    filt.appendChild(fe);
-    const merge = document.createElementNS(ns, 'feMerge');
-    const m1 = document.createElementNS(ns, 'feMergeNode');
-    m1.setAttribute('in', 'coloredBlur');
-    const m2 = document.createElementNS(ns, 'feMergeNode');
-    m2.setAttribute('in', 'SourceGraphic');
-    merge.appendChild(m1);
-    merge.appendChild(m2);
-    filt.appendChild(merge);
-    defs.appendChild(filt);
-
-    const marker = document.createElementNS(ns, 'marker');
-    marker.setAttribute('id', 'map-arrow');
-    marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '10');
-    marker.setAttribute('refY', '5');
-    marker.setAttribute('markerUnits', 'strokeWidth');
-    marker.setAttribute('markerWidth', '6');
-    marker.setAttribute('markerHeight', '6');
-    marker.setAttribute('orient', 'auto');
-    const mpath = document.createElementNS(ns, 'path');
-    mpath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    mpath.setAttribute('fill', 'currentColor');
-    marker.appendChild(mpath);
-    defs.appendChild(marker);
-
-    svg.appendChild(defs);
-  }
-
-  function getBoundaryPoint(rect, centerFrom, centerTo, isExit) {
-    const dx = centerTo.x - centerFrom.x;
-    const dy = centerTo.y - centerFrom.y;
-    if (dx === 0 && dy === 0) return { x: centerFrom.x, y: centerFrom.y };
-
-    const ts = [];
-    if (dx !== 0) {
-      const t = (dx > 0 ? (rect.right - centerFrom.x) / dx : (rect.left - centerFrom.x) / dx);
-      if ((t > 0) === isExit) {
-        const y = centerFrom.y + t * dy;
-        if (y >= rect.top && y <= rect.bottom) ts.push({ t, x: dx > 0 ? rect.right : rect.left, y });
-      }
-    }
-    if (dy !== 0) {
-      const t = (dy > 0 ? (rect.bottom - centerFrom.y) / dy : (rect.top - centerFrom.y) / dy);
-      if ((t > 0) === isExit) {
-        const x = centerFrom.x + t * dx;
-        if (x >= rect.left && x <= rect.right) ts.push({ t, x, y: dy > 0 ? rect.bottom : rect.top });
-      }
-    }
-    if (!ts.length) return { x: centerFrom.x, y: centerFrom.y };
-    ts.sort((a, b) => isExit ? a.t - b.t : b.t - a.t);
-    return ts[0];
-  }
-
-  function drawEdges(initial = false) {
-    const defs = svg.querySelector('defs');
-    svg.innerHTML = '';
-    if (defs) svg.appendChild(defs);
-
-    edges.forEach(([from, to], idx) => {
-      const f = nodeMap[from], t = nodeMap[to];
-      if (!f || !t || !f.el || !t.el) return;
-
-      const w1 = f.el.offsetWidth;
-      const h1 = f.el.offsetHeight;
-      const w2 = t.el.offsetWidth;
-      const h2 = t.el.offsetHeight;
-
-      const center1 = { x: f.x + w1 / 2, y: f.y + h1 / 2 };
-      const center2 = { x: t.x + w2 / 2, y: t.y + h2 / 2 };
-
-      const sourceRect = { left: f.x, top: f.y, right: f.x + w1, bottom: f.y + h1 };
-      const targetRect = { left: t.x, top: t.y, right: t.x + w2, bottom: t.y + h2 };
-
-      const p1 = getBoundaryPoint(sourceRect, center1, center2, true);
-      const p2 = getBoundaryPoint(targetRect, center2, center1, true);
-
-      const x1 = p1.x;
-      const y1 = p1.y;
-      const x2 = p2.x;
-      const y2 = p2.y;
-
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const lift = Math.min(60, Math.max(10, dist * 0.12));
-      const perpX = -dy / dist * lift;
-      const perpY = dx / dist * lift;
-      const cx1 = x1 + dx * 0.35 + perpX * 0.55;
-      const cy1 = y1 + dy * 0.35 + perpY * 0.55;
-      const cx2 = x1 + dx * 0.65 + perpX * 0.45;
-      const cy2 = y1 + dy * 0.65 + perpY * 0.45;
-      const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('class', 'flow-line');
-      const isGlow = f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub';
-      if (isGlow) path.classList.add('flow-glow');
-      path.setAttribute('marker-end', 'url(#map-arrow)');
-      path.dataset.from = from;
-      path.dataset.to = to;
-      const clusterId = f.cluster || t.cluster;
-      path.dataset.cluster = clusterId;
-      const color = clusterId ? clusters.find(c => c.id === clusterId).color : '#ffffff';
-      path.style.stroke = hexToRgba(color, isGlow ? 0.22 : 0.14);
-      svg.appendChild(path);
-
-      if (animationsEnabled()) {
-        if (initial) {
-          const len = path.getTotalLength();
-          path.style.strokeDasharray = len;
-          path.style.strokeDashoffset = len;
-          requestAnimationFrame(() => {
-            path.classList.add('path-draw-advanced');
-            path.style.strokeDashoffset = '0';
-            setTimeout(() => { path.classList.remove('path-draw-advanced'); path.classList.add('flow-anim-advanced'); }, 1200);
-          });
-        } else {
-          path.classList.add('flow-anim-advanced');
-        }
-      }
-    });
-  }
-
-  function toggleEdgeAnimations() {
-    const paths = svg.querySelectorAll('path.flow-line');
+  function highlightPath(path, duration = 0, on = true) {
+    if (path.length < 2) return;
+    const clusterColor = nodeMap[path[path.length - 1]].cluster ? clusters.find((c) => c.id === nodeMap[path[path.length - 1]].cluster).color : '#fff';
+    const pairs = [];
+    for (let i = 0; i < path.length - 1; i++) pairs.push([path[i], path[i + 1]);
+    const svgpaths = svg.querySelectorAll('path.flow-line');
     const enabled = animationsEnabled();
-    paths.forEach((path) => {
-      path.classList.remove('path-draw-advanced', 'flow-anim-advanced', 'flow-anim');
-      if (enabled) {
-        path.classList.add('flow-anim-advanced');
+    svgpaths.forEach((p) => {
+      const from = p.dataset.from, to = p.dataset.to;
+      const match = pairs.some((pair) => pair[0] === from && pair[1] === to);
+      const pathCluster = p.dataset.cluster;
+      const pathColor = pathCluster ? clusters.find((c) => c.id === pathCluster).color : '#ffffff';
+      if (match) {
+        if (on) {
+          p.classList.add(enabled ? 'flow-highlight-advanced' : 'flow-highlight');
+          p.style.color = clusterColor;
+          p.style.strokeOpacity = '1';
+          p.style.opacity = '1';
+          if (enabled) p.classList.add('path-pulse-advanced');
+        } else {
+          p.classList.remove('flow-highlight-advanced', 'flow-highlight', 'path-pulse-advanced');
+          p.style.color = pathColor;
+          p.style.strokeOpacity = p.classList.contains('flow-glow') ? '0.22' : '0.14';
+          p.style.opacity = '';
+        }
+      } else {
+        if (on) {
+          p.style.opacity = '0.2';
+          if (!enabled) p.style.strokeOpacity = '0.12';
+        } else {
+          p.style.opacity = '';
+          if (!enabled) p.style.strokeOpacity = p.classList.contains('flow-glow') ? '0.22' : '0.14';
+        }
+      }
+    });
+    if (duration > 0) {
+      setTimeout(() => {
+        window.LeetreeRender.drawEdges(false);
+      }, duration);
+    }
+  }
+
+  function showTooltip(e, n) {
+    let desc = n.sub || 'No description';
+    if (n.type === 'leaf') desc += '<br>Click to view solution';
+    tooltip.innerHTML = '<strong>' + escapeHtml(n.title) + '</strong><div style="margin-top:6px;font-size:12px;opacity:0.9">' + escapeHtml(desc) + '</div>';
+    tooltip.style.display = 'block';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let left = rect.left + window.pageXOffset + rect.width / 2 - tooltipRect.width / 2;
+    let top = rect.bottom + window.pageYOffset + 8;
+    if (left < 0) left = 0;
+    if (left + tooltipRect.width > window.innerWidth) left = window.innerWidth - tooltipRect.width;
+    if (top + tooltipRect.height > window.innerHeight + window.pageYOffset) top = rect.top + window.pageYOffset - tooltipRect.height - 8;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+    if (animationsEnabled()) tooltip.classList.add('tooltip-fade-in');
+  }
+
+  function hideTooltip() {
+    tooltip.style.display = 'none';
+    tooltip.classList.remove('tooltip-fade-in');
+  }
+
+  function fitCanvas(padding = PADDING) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach((n) => {
+      if (!n.el) return;
+      const left = n.x;
+      const top = n.y;
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, left + n.el.offsetWidth);
+      maxY = Math.max(maxY, top + n.el.offsetHeight);
+    });
+    if (minX === Infinity) { minX = 0; minY = 0; maxX = 800; maxY = 600; }
+    const width = Math.ceil(maxX - minX + padding * 2);
+    const height = Math.ceil(maxY - minY + padding * 2);
+    container.style.width = width + 'px';
+    container.style.height = height + 'px';
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
+    nodes.forEach((n) => {
+      if (!n.el) return;
+      n.x += offsetX;
+      n.y += offsetY;
+      n.el.style.left = n.x + 'px';
+      n.el.style.top = n.y + 'px';
+    });
+
+    window.LeetreeRender.drawEdges(false);
+
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    const fitScaleW = (stageW - 10) / width;
+    const fitScaleH = (stageH - 10) / height;
+    const fitScale = Math.min(1, fitScaleW, fitScaleH);
+    setScale(fitScale);
+    stage.scrollLeft = (width * fitScale - stageW) / 2;
+    stage.scrollTop = 0;
+  }
+
+  function focusNode(nodeId) {
+    const n = nodeMap[nodeId];
+    if (!n || !n.el) return;
+    const cx = n.x + n.el.offsetWidth / 2;
+    const cy = n.y + n.el.offsetHeight / 2;
+    setScale(Math.min(1.12, Math.max(0.7, 1.0)));
+    stage.scrollTo({ left: Math.max(0, cx * scale() - stage.clientWidth / 2), top: Math.max(0, cy * scale() - stage.clientHeight / 2), behavior: 'smooth' });
+    highlightPath(findPathTo(nodeId), 1400);
+    if (animationsEnabled()) n.el.classList.add('node-focus-pulse');
+    setTimeout(() => n.el.classList.remove('node-focus-pulse'), 1400);
+  }
+
+  function findPathTo(nodeId) {
+    const visited = new Set();
+    const queue = [{ id: 'root', path: ['root'] }];
+    while (queue.length) {
+      const { id, path } = queue.shift();
+      if (id === nodeId) return path;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      edges.forEach(([from, to]) => {
+        if (from === id) queue.push({ id: to, path: [...path, to] });
+        if (to === id) queue.push({ id: from, path: [...path, from] });
+      });
+    }
+    return [];
+  }
+
+  function toggleCluster(clusterId) {
+    activeCluster = activeCluster === clusterId ? null : clusterId;
+    nodes.forEach((n) => {
+      if (!n.el) return;
+      if (activeCluster && n.type !== 'root' && n.cluster !== activeCluster) n.el.style.opacity = '0.24';
+      else n.el.style.opacity = '';
+    });
+    const svgpaths = svg.querySelectorAll('path.flow-line');
+    svgpaths.forEach((p) => {
+      if (!activeCluster) { p.style.opacity = ''; return; }
+      const from = p.dataset.from, to = p.dataset.to;
+      const f = nodeMap[from], t = nodeMap[to];
+      if ((f && f.cluster === activeCluster) || (t && t.cluster === activeCluster)) {
+        p.style.opacity = '1';
+      } else {
+        p.style.opacity = '0.06';
       }
     });
   }
 
-  function renderLegend() {
-    legendEl.innerHTML = '';
-    clusters.forEach((c) => {
-      const item = document.createElement('div');
-      item.className = 'legend-item';
-      const sw = document.createElement('div');
-      sw.className = 'legend-swatch';
-      sw.style.background = c.color;
-      const label = document.createElement('div');
-      label.textContent = c.label;
-      item.appendChild(sw);
-      item.appendChild(label);
-      item.addEventListener('click', () => utils.toggleCluster(c.id));
-      legendEl.appendChild(item);
+  function initSearch() {
+    if (!searchInput) return;
+    const flat = nodes.map((n) => ({ id: n.id, title: n.title, sub: n.sub }));
+    let currentFocus = -1;
+    searchInput.addEventListener('input', function() {
+      const val = this.value.trim().toLowerCase();
+      closeAllLists();
+      if (!val) return;
+      const list = document.createElement('div');
+      list.className = 'autocomplete-items';
+      document.body.appendChild(list);
+      const inputRect = this.getBoundingClientRect();
+      list.style.position = 'absolute';
+      list.style.left = inputRect.left + 'px';
+      list.style.top = (inputRect.bottom + window.pageYOffset) + 'px';
+      list.style.width = inputRect.width + 'px';
+      list.style.zIndex = '1000';
+      const matches = flat.filter((it) => it.title.toLowerCase().includes(val) || (it.sub || '').toLowerCase().includes(val));
+      matches.slice(0, 10).forEach((m) => {
+        const item = document.createElement('div');
+        item.innerHTML = '<strong>' + escapeHtml(m.title) + '</strong><div style="font-size:12px;color:rgba(255,255,255,0.75)">' + escapeHtml(m.sub || '') + '</div>';
+        item.addEventListener('click', () => { searchInput.value = m.title; closeAllLists(); focusNode(m.id); });
+        list.appendChild(item);
+      });
+    });
+    searchInput.addEventListener('keydown', (e) => {
+      const list = document.querySelector('.autocomplete-items');
+      if (!list) return;
+      const items = list.getElementsByTagName('div');
+      if (e.key === 'ArrowDown') { currentFocus++; addActive(items); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { currentFocus--; addActive(items); e.preventDefault(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (currentFocus > -1 && items[currentFocus]) items[currentFocus].click(); }
+      function addActive(items) {
+        if (!items) return;
+        removeActive(items);
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        items[currentFocus].classList.add('autocomplete-active');
+      }
+      function removeActive(items) {
+        for (let it of items) it.classList.remove('autocomplete-active');
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target)) closeAllLists();
+    });
+    function closeAllLists() {
+      const items = document.getElementsByClassName('autocomplete-items');
+      for (let i = items.length - 1; i >= 0; i--) items[i].parentNode.removeChild(items[i]);
+    }
+  }
+
+  function enableNodeDrag(el, n) {
+    let isDragging = false;
+    let startX, startY;
+    el.addEventListener('mousedown', startDrag);
+    el.addEventListener('touchstart', startDrag, { passive: false });
+
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      startX = (e.clientX || e.touches[0].clientX) / scale() - n.x;
+      startY = (e.clientY || e.touches[0].clientY) / scale() - n.y;
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('touchmove', drag, { passive: false });
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchend', endDrag);
+    }
+
+    function drag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      n.x = (e.clientX || e.touches[0].clientX) / scale() - startX;
+      n.y = (e.clientY || e.touches[0].clientY) / scale() - startY;
+      el.style.left = n.x + 'px';
+      el.style.top = n.y + 'px';
+      window.LeetreeRender.drawEdges(false);
+    }
+
+    function endDrag() {
+      isDragging = false;
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('touchmove', drag);
+      document.removeEventListener('mouseup', endDrag);
+      document.removeEventListener('touchend', endDrag);
+      fitCanvas(PADDING);
+    }
+  }
+
+  function setupControlListeners() {
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    const resetView = document.getElementById('reset-view');
+    const toggleAnimations = document.getElementById('toggle-animations');
+    const useWorker = document.getElementById('use-worker');
+
+    zoomIn.addEventListener('click', () => setScale(Math.min(1.6, scale() + 0.12)));
+    zoomOut.addEventListener('click', () => setScale(Math.max(0.5, scale() - 0.12)));
+    resetView.addEventListener('click', () => {
+      window.LeetreeLayout.computeGuidedPositions();
+      window.LeetreeLayout.resolveCollisionsAndLayout(() => {
+        fitCanvas(PADDING);
+        window.LeetreeRender.drawEdges(false);
+      });
+    });
+    toggleAnimations.addEventListener('click', () => {
+      window.Leetree.animationsEnabled = !window.Leetree.animationsEnabled;
+      toggleAnimations.textContent = `Anim: ${window.Leetree.animationsEnabled ? 'ON' : 'OFF'}`;
+      window.dispatchEvent(new Event('leetree:toggleAnimations'));
+    });
+    useWorker.addEventListener('click', () => {
+      if (!window.Worker) { alert('Web Worker not supported in this browser.'); return; }
+      if (window.Leetree.workerEnabled) {
+        window.Leetree.workerEnabled = false;
+        useWorker.textContent = 'Worker: OFF';
+        if (window.Leetree.worker) { window.Leetree.worker.terminate(); window.Leetree.worker = null; }
+      } else {
+        try {
+          window.Leetree.worker = new Worker('/public/scripts/leetree-worker.js');
+          window.Leetree.workerEnabled = true;
+          useWorker.textContent = 'Worker: ON';
+          window.Leetree.worker.postMessage({ type: 'init' });
+        } catch (err) {
+          console.error('Worker spawn failed', err);
+          alert('Failed to start worker');
+          window.Leetree.workerEnabled = false;
+          useWorker.textContent = 'Worker: OFF';
+        }
+      }
     });
   }
 
-  function renderProblemButtons() {
-    problemButtons.innerHTML = '';
-    window.Leetree.problems.forEach((p) => {
-      const btn = document.createElement('button');
-      btn.textContent = p.title;
-      btn.title = p.sub || '';
-      btn.addEventListener('click', () => utils.focusNode(p.id));
-      problemButtons.appendChild(btn);
-    });
+  function setScale(s) {
+    window.Leetree.scale = s;
+    container.style.transform = `scale(${s})`;
+    svg.style.transform = `scale(${s})`;
+    window.LeetreeRender.drawEdges(false);
   }
 
-  window.addEventListener('leetree:toggleAnimations', () => {
-    toggleEdgeAnimations();
-  });
+  (function enablePan() {
+    let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+    stage.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.node-box')) return;
+      isDown = true;
+      startX = e.pageX - stage.offsetLeft;
+      startY = e.pageY - stage.offsetTop;
+      scrollLeft = stage.scrollLeft;
+      scrollTop = stage.scrollTop;
+      stage.classList.add('dragging');
+    });
+    window.addEventListener('mouseup', () => {
+      isDown = false;
+      stage.classList.remove('dragging');
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - stage.offsetLeft;
+      const y = e.pageY - stage.offsetTop;
+      stage.scrollLeft = scrollLeft + (startX - x);
+      stage.scrollTop = scrollTop + (startY - y);
+    });
+    stage.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) return;
+      stage.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }, { passive: false });
+  })();
+
+  if (window.Leetree.isMobile) {
+    let initialDistance = 0;
+    let initialScale = 1;
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialScale = scale();
+      }
+    }, { passive: false });
+    stage.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const distance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        setScale(Math.max(0.5, Math.min(1.6, initialScale * (distance / initialDistance))));
+      }
+    }, { passive: false });
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  }
 
   return {
-    renderNodes,
-    setupSvgDefs,
-    drawEdges,
-    toggleEdgeAnimations,
-    renderLegend,
-    renderProblemButtons
+    highlightPath,
+    showTooltip,
+    hideTooltip,
+    fitCanvas,
+    focusNode,
+    findPathTo,
+    toggleCluster,
+    initSearch,
+    enableNodeDrag,
+    setupControlListeners,
+    escapeHtml
   };
 })();
