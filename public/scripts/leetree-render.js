@@ -1,3 +1,4 @@
+// /leetree-render.js
 window.Leetree = window.Leetree || {};
 window.LeetreeRender = (function () {
   const nodes = window.Leetree.nodes || [];
@@ -8,6 +9,8 @@ window.LeetreeRender = (function () {
   const container = document.getElementById('map-nodes');
   const legendEl = document.getElementById('map-legend');
   const problemButtons = document.getElementById('problem-buttons');
+  const animationsEnabled = () => window.Leetree.animationsEnabled;
+  const utils = window.LeetreeUtils;
 
   function renderNodes(isInitial = false) {
     container.innerHTML = '';
@@ -23,7 +26,7 @@ window.LeetreeRender = (function () {
       const accent = document.createElement('span');
       accent.className = 'cluster-accent';
       accent.style.background = n.cluster ? clusters.find((c) => c.id === n.cluster).color : '#fff';
-      accent.style.boxShadow = '0 6px 18px ' + window.LeetreeUtils.hexToRgba(accent.style.background, 0.12);
+      accent.style.boxShadow = '0 6px 18px ' + utils.hexToRgba(accent.style.background, 0.12);
       el.appendChild(accent);
 
       const t = document.createElement('span');
@@ -35,23 +38,23 @@ window.LeetreeRender = (function () {
       el.appendChild(t);
       el.appendChild(s);
 
-      el.addEventListener('mouseenter', (e) => { window.LeetreeUtils.highlightPath(window.LeetreeUtils.findPathTo(n.id), 0, true); window.LeetreeUtils.showTooltip(e, n); });
-      el.addEventListener('mouseleave', () => { window.LeetreeUtils.highlightPath(window.LeetreeUtils.findPathTo(n.id), 0, false); window.LeetreeUtils.hideTooltip(); });
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); window.LeetreeUtils.highlightPath(window.LeetreeUtils.findPathTo(n.id), 0, true); window.LeetreeUtils.showTooltip(e, n); });
-      el.addEventListener('touchend', () => { window.LeetreeUtils.highlightPath(window.LeetreeUtils.findPathTo(n.id), 0, false); window.LeetreeUtils.hideTooltip(); });
+      el.addEventListener('mouseenter', (e) => { utils.highlightPath(utils.findPathTo(n.id), 0, true); utils.showTooltip(e, n); });
+      el.addEventListener('mouseleave', () => { utils.highlightPath(utils.findPathTo(n.id), 0, false); utils.hideTooltip(); });
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); utils.highlightPath(utils.findPathTo(n.id), 0, true); utils.showTooltip(e, n); });
+      el.addEventListener('touchend', () => { utils.highlightPath(utils.findPathTo(n.id), 0, false); utils.hideTooltip(); });
       el.addEventListener('click', (ev) => {
         if (!n.url || n.url === '#') {
           ev.preventDefault();
-          window.LeetreeUtils.focusNode(n.id);
+          utils.focusNode(n.id);
         }
       });
 
-      window.LeetreeUtils.enableNodeDrag(el, n);
+      utils.enableNodeDrag(el, n);
 
       container.appendChild(el);
       n.el = el;
 
-      if (isInitial && window.Leetree.animationsEnabled) {
+      if (isInitial && animationsEnabled()) {
         el.style.opacity = 0;
         el.style.transform = 'scale(0.8) translateY(20px)';
         setTimeout(() => {
@@ -99,11 +102,38 @@ window.LeetreeRender = (function () {
     marker.setAttribute('orient', 'auto');
     const mpath = document.createElementNS(ns, 'path');
     mpath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    mpath.setAttribute('fill', 'rgba(255,255,255,0.4)');
+    mpath.setAttribute('fill', 'currentColor');
     marker.appendChild(mpath);
     defs.appendChild(marker);
 
     svg.appendChild(defs);
+  }
+
+  function getBoundaryPoint(rect, centerFrom, centerTo, isExit) {
+    const dx = centerTo.x - centerFrom.x;
+    const dy = centerTo.y - centerFrom.y;
+    if (dx === 0 && dy === 0) return { x: centerFrom.x, y: centerFrom.y };
+
+    const ts = [];
+    if (dx !== 0) {
+      const side = isExit ? (dx > 0 ? rect.right : rect.left) : (dx > 0 ? rect.left : rect.right);
+      const t = (side - centerFrom.x) / dx;
+      if (t > 0 === isExit) {
+        const y = centerFrom.y + t * dy;
+        if (y >= rect.top && y <= rect.bottom) ts.push({ t, x: side, y });
+      }
+    }
+    if (dy !== 0) {
+      const side = isExit ? (dy > 0 ? rect.bottom : rect.top) : (dy > 0 ? rect.top : rect.bottom);
+      const t = (side - centerFrom.y) / dy;
+      if (t > 0 === isExit) {
+        const x = centerFrom.x + t * dx;
+        if (x >= rect.left && x <= rect.right) ts.push({ t, x, y: side });
+      }
+    }
+    if (!ts.length) return { x: centerFrom.x, y: centerFrom.y };
+    ts.sort((a, b) => isExit ? a.t - b.t : b.t - a.t);
+    return ts[0];
   }
 
   function drawEdges(initial = false) {
@@ -114,24 +144,25 @@ window.LeetreeRender = (function () {
     edges.forEach(([from, to], idx) => {
       const f = nodeMap[from], t = nodeMap[to];
       if (!f || !t || !f.el || !t.el) return;
+
       const w1 = f.el.offsetWidth;
       const h1 = f.el.offsetHeight;
       const w2 = t.el.offsetWidth;
       const h2 = t.el.offsetHeight;
-      let x1 = f.x + w1 / 2;
-      let y1 = f.y + h1 / 2;
-      let x2 = t.x + w2 / 2;
-      let y2 = t.y + h2 / 2;
 
-      const temp_dx = x2 - x1;
-      const temp_dy = y2 - y1;
-      if (Math.abs(temp_dx) > Math.abs(temp_dy)) {
-        x1 += temp_dx > 0 ? w1 / 2 : -w1 / 2;
-        x2 += temp_dx > 0 ? -w2 / 2 : w2 / 2;
-      } else {
-        y1 += temp_dy > 0 ? h1 / 2 : -h1 / 2;
-        y2 += temp_dy > 0 ? -h2 / 2 : h2 / 2;
-      }
+      const center1 = { x: f.x + w1 / 2, y: f.y + h1 / 2 };
+      const center2 = { x: t.x + w2 / 2, y: t.y + h2 / 2 };
+
+      const sourceRect = { left: f.x, top: f.y, right: f.x + w1, bottom: f.y + h1 };
+      const targetRect = { left: t.x, top: t.y, right: t.x + w2, bottom: t.y + h2 };
+
+      const p1 = getBoundaryPoint(sourceRect, center1, center2, true);
+      const p2 = getBoundaryPoint(targetRect, center2, center1, true); // true for exit in reverse = entry forward
+
+      const x1 = p1.x;
+      const y1 = p1.y;
+      const x2 = p2.x;
+      const y2 = p2.y;
 
       const dx = x2 - x1;
       const dy = y2 - y1;
@@ -143,7 +174,7 @@ window.LeetreeRender = (function () {
       const cy1 = y1 + dy * 0.35 + perpY * 0.55;
       const cx2 = x1 + dx * 0.65 + perpX * 0.45;
       const cy2 = y1 + dy * 0.65 + perpY * 0.45;
-      const d = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + x2 + ' ' + y2;
+      const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
@@ -152,11 +183,13 @@ window.LeetreeRender = (function () {
       path.setAttribute('marker-end', 'url(#map-arrow)');
       path.dataset.from = from;
       path.dataset.to = to;
-      path.dataset.cluster = f.cluster || t.cluster;
+      const clusterId = f.cluster || t.cluster;
+      path.dataset.cluster = clusterId;
+      const color = clusterId ? clusters.find(c => c.id === clusterId).color : '#ffffff';
+      path.style.stroke = utils.hexToRgba(color, (f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub') ? 0.22 : 0.14);
       svg.appendChild(path);
 
-      const enabled = window.Leetree.animationsEnabled;
-      if (enabled) {
+      if (animationsEnabled()) {
         if (initial) {
           const len = path.getTotalLength();
           path.style.strokeDasharray = len;
@@ -169,26 +202,19 @@ window.LeetreeRender = (function () {
         } else {
           path.classList.add('flow-anim-advanced');
         }
-      } else {
-        const cluster = path.dataset.cluster;
-        const color = cluster ? clusters.find((c) => c.id === cluster).color : '#ffffff';
-        path.style.stroke = window.LeetreeUtils.hexToRgba(color, 0.3);
       }
     });
   }
 
   function toggleEdgeAnimations() {
     const paths = svg.querySelectorAll('path.flow-line');
-    const enabled = window.Leetree.animationsEnabled;
+    const enabled = animationsEnabled();
     paths.forEach((path) => {
       path.classList.remove('path-draw-advanced', 'flow-anim-advanced', 'flow-anim');
-      path.style.stroke = '';
       if (enabled) {
         path.classList.add('flow-anim-advanced');
       } else {
-        const cluster = path.dataset.cluster;
-        const color = cluster ? clusters.find((c) => c.id === cluster).color : '#ffffff';
-        path.style.stroke = window.LeetreeUtils.hexToRgba(color, 0.3);
+        // Keep stroke as is, since set in drawEdges
       }
     });
   }
@@ -205,7 +231,7 @@ window.LeetreeRender = (function () {
       label.textContent = c.label;
       item.appendChild(sw);
       item.appendChild(label);
-      item.addEventListener('click', () => window.LeetreeUtils.toggleCluster(c.id));
+      item.addEventListener('click', () => utils.toggleCluster(c.id));
       legendEl.appendChild(item);
     });
   }
@@ -216,7 +242,7 @@ window.LeetreeRender = (function () {
       const btn = document.createElement('button');
       btn.textContent = p.title;
       btn.title = p.sub || '';
-      btn.addEventListener('click', () => window.LeetreeUtils.focusNode(p.id));
+      btn.addEventListener('click', () => utils.focusNode(p.id));
       problemButtons.appendChild(btn);
     });
   }
