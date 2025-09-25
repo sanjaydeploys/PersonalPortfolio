@@ -12,6 +12,12 @@ window.LeetreeRender = (function () {
   const animationsEnabled = () => window.Leetree.animationsEnabled;
   const utils = window.LeetreeUtils;
 
+  const hexToRgba = (hex, a = 1) => {
+    const h = hex.replace('#', '');
+    const bi = parseInt(h, 16);
+    return `rgba(${(bi >> 16) & 255},${(bi >> 8) & 255},${bi & 255},${a})`;
+  };
+
   function renderNodes(isInitial = false) {
     container.innerHTML = '';
     nodes.forEach((n, idx) => {
@@ -26,7 +32,7 @@ window.LeetreeRender = (function () {
       const accent = document.createElement('span');
       accent.className = 'cluster-accent';
       accent.style.background = n.cluster ? clusters.find((c) => c.id === n.cluster).color : '#fff';
-      accent.style.boxShadow = '0 6px 18px ' + utils.hexToRgba(accent.style.background, 0.12);
+      accent.style.boxShadow = '0 6px 18px ' + hexToRgba(accent.style.background, 0.12);
       el.appendChild(accent);
 
       const t = document.createElement('span');
@@ -116,19 +122,17 @@ window.LeetreeRender = (function () {
 
     const ts = [];
     if (dx !== 0) {
-      const side = isExit ? (dx > 0 ? rect.right : rect.left) : (dx > 0 ? rect.left : rect.right);
-      const t = (side - centerFrom.x) / dx;
-      if (t > 0 === isExit) {
+      const t = (dx > 0 ? (rect.right - centerFrom.x) / dx : (rect.left - centerFrom.x) / dx);
+      if ((t > 0) === isExit) {
         const y = centerFrom.y + t * dy;
-        if (y >= rect.top && y <= rect.bottom) ts.push({ t, x: side, y });
+        if (y >= rect.top && y <= rect.bottom) ts.push({ t, x: dx > 0 ? rect.right : rect.left, y });
       }
     }
     if (dy !== 0) {
-      const side = isExit ? (dy > 0 ? rect.bottom : rect.top) : (dy > 0 ? rect.top : rect.bottom);
-      const t = (side - centerFrom.y) / dy;
-      if (t > 0 === isExit) {
+      const t = (dy > 0 ? (rect.bottom - centerFrom.y) / dy : (rect.top - centerFrom.y) / dy);
+      if ((t > 0) === isExit) {
         const x = centerFrom.x + t * dx;
-        if (x >= rect.left && x <= rect.right) ts.push({ t, x, y: side });
+        if (x >= rect.left && x <= rect.right) ts.push({ t, x, y: dy > 0 ? rect.bottom : rect.top });
       }
     }
     if (!ts.length) return { x: centerFrom.x, y: centerFrom.y };
@@ -157,7 +161,7 @@ window.LeetreeRender = (function () {
       const targetRect = { left: t.x, top: t.y, right: t.x + w2, bottom: t.y + h2 };
 
       const p1 = getBoundaryPoint(sourceRect, center1, center2, true);
-      const p2 = getBoundaryPoint(targetRect, center2, center1, true); // true for exit in reverse = entry forward
+      const p2 = getBoundaryPoint(targetRect, center2, center1, true);
 
       const x1 = p1.x;
       const y1 = p1.y;
@@ -179,14 +183,15 @@ window.LeetreeRender = (function () {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
       path.setAttribute('class', 'flow-line');
-      if (f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub') path.classList.add('flow-glow');
+      const isGlow = f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub';
+      if (isGlow) path.classList.add('flow-glow');
       path.setAttribute('marker-end', 'url(#map-arrow)');
       path.dataset.from = from;
       path.dataset.to = to;
       const clusterId = f.cluster || t.cluster;
       path.dataset.cluster = clusterId;
       const color = clusterId ? clusters.find(c => c.id === clusterId).color : '#ffffff';
-      path.style.stroke = utils.hexToRgba(color, (f.type === 'hub' || t.type === 'hub' || f.type === 'subhub' || t.type === 'subhub') ? 0.22 : 0.14);
+      path.style.stroke = hexToRgba(color, isGlow ? 0.22 : 0.14);
       svg.appendChild(path);
 
       if (animationsEnabled()) {
@@ -213,8 +218,6 @@ window.LeetreeRender = (function () {
       path.classList.remove('path-draw-advanced', 'flow-anim-advanced', 'flow-anim');
       if (enabled) {
         path.classList.add('flow-anim-advanced');
-      } else {
-        // Keep stroke as is, since set in drawEdges
       }
     });
   }
