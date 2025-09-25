@@ -1,8 +1,9 @@
+// /leetree-core.js
 (function () {
   window.Leetree = window.Leetree || {};
   window.Leetree.initialized = false;
 
-  const isMobile = window.innerWidth < 768;
+  let isMobile = window.innerWidth < 768;
 
   const clusters = [
     { id: 'sum', label: 'Sum & Pair', color: '#ff7b7b' },
@@ -146,6 +147,7 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
+        window.Leetree.isMobile = window.innerWidth < 768;
         window.LeetreeLayout.computeGuidedPositions();
         window.LeetreeLayout.resolveCollisionsAndLayout(() => {
           window.LeetreeUtils.fitCanvas(PADDING);
@@ -196,11 +198,6 @@
       window.LeetreeUtils.fitCanvas(PADDING);
       window.LeetreeRender.renderProblemButtons();
     });
-  };
-
-  window.Leetree.toggleWorker = function(enable) {
-    const useWorker = document.getElementById('use-worker');
-    if (useWorker) useWorker.click();
   };
 
   start();
