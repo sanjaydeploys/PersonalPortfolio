@@ -1,4 +1,4 @@
-// /leetree-layout.js (new dedicated script for layout logic)
+// /leetree-layout.js
 window.Leetree = window.Leetree || {};
 window.LeetreeLayout = (function () {
   const nodes = window.Leetree.nodes || [];
@@ -82,7 +82,7 @@ window.LeetreeLayout = (function () {
           for (let j = i + 1; j < nodeData.length; j++) {
             const b = nodeData[j];
             const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-            const overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+            const overlapY = Math.min(a.y + a.h, b.y + a.h) - Math.max(a.y, b.y);
             if (overlapX <= 0 || overlapY <= 0) continue;
             const push = Math.min(overlapX, overlapY) / 2 + 8;
             const dx = a.x - b.x;
