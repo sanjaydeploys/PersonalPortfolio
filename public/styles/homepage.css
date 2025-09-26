@@ -1321,7 +1321,7 @@
   justify-content: center;
   min-height: 85vh;
   padding: 2rem 1rem;
-  background: #0a0a1a;
+  background: transparent;
   overflow: hidden;
 }
 
@@ -1333,12 +1333,12 @@
   height: auto;
   max-height: 150px;
   object-fit: contain;
-  opacity: 0.15;
+  opacity: 0.25;
   pointer-events: none;
   z-index: 1;
   transition: opacity 0.5s ease, transform 0.5s ease;
-  image-rendering: -webkit-optimize-contrast;
-  -ms-interpolation-mode: bicubic;
+  filter: none;
+  image-rendering: pixelated;
 }
 
 .hero-banner.hide {
@@ -1356,11 +1356,11 @@
     transform: scale(0.9) translateY(-20%);
   }
   50% {
-    opacity: 0.08;
+    opacity: 0.12;
     transform: scale(1.05) translateY(0);
   }
   100% {
-    opacity: 0.15;
+    opacity: 0.25;
     transform: scale(1) translateY(0);
   }
 }
@@ -1421,7 +1421,8 @@
   width: 100%;
   height: auto;
   border-radius: 12px;
-  transition: transform 0.4s ease, filter 0.4s ease;
+  transition: transform 0.4s ease, filter 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 0 0 rgba(0, 183, 235, 0);
 }
 
 .hero-image::after {
@@ -1430,17 +1431,29 @@
   right: 0;
   top: 0;
   bottom: 0;
-  width: 6px;
-  background: linear-gradient(180deg, #1e90ff, #ff4500, #ffd700);
-  box-shadow: 0 0 15px #1e90ff, 0 0 25px #ff4500, 0 0 35px #ffd700;
+  width: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(211, 211, 211, 0.7), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(169, 169, 169, 0.4), inset 0 0 6px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
-  z-index: 1;
+  opacity: 0.85;
+  animation: shinyPulse 3s infinite ease-in-out;
+}
+
+@keyframes shinyPulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(169, 169, 169, 0.4), inset 0 0 6px rgba(0, 0, 0, 0.3);
+    transform: scaleY(1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.8), 0 0 30px rgba(169, 169, 169, 0.6), inset 0 0 8px rgba(0, 0, 0, 0.4);
+    transform: scaleY(1.02);
+  }
 }
 
 .hero-title {
   font-size: clamp(1.8rem, 5vw, 3rem);
-  color: #00b7eb;
-  text-shadow: 0 0 10px #00b7eb;
+  color: var(--primary);
+  text-shadow: 0 0 8px var(--primary);
   line-height: 1.2;
   padding-bottom: 0.5rem;
   position: relative;
@@ -1461,12 +1474,12 @@
 }
 
 .hero-title.glitch::before {
-  color: #ff8c00;
+  color: var(--secondary);
   animation: glitch-before 2s infinite linear;
 }
 
 .hero-title.glitch::after {
-  color: #ffc107;
+  color: var(--accent);
   animation: glitch-after 2s infinite linear;
 }
 
