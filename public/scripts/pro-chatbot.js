@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('system', 'Signal Disruption Detected. Aborting.');
         stopPolling();
       }
-    }, 1000); // Reduced to 1s for better real-time feel
+    }, 1000); // 1s polling for real-time feel
   }
 
   function stopPolling() {
@@ -187,13 +187,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openCodeEditor(text) {
-    const editor = window.open('', 'CodeEditor', 'width=600,height=400');
-    editor.document.write(`
-      <html><body style="background: #1e1e1e; color: #d4d4d4; font-family: Consolas;">
-        <h2 style="text-align: center;">InterUniverse AI Response</h2>
-        <pre style="padding: 10px;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-        <button onclick="window.close()">Close Signal</button>
-      </body></html>
-    `);
+    let editor = window.open('', 'CodeEditor', 'width=600,height=400');
+    if (editor && !editor.closed && editor.document) {
+      editor.document.write(`
+        <html><body style="background: #1e1e1e; color: #d4d4d4; font-family: Consolas;">
+          <h2 style="text-align: center;">InterUniverse AI Response</h2>
+          <pre style="padding: 10px;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          <button onclick="window.close()">Close Signal</button>
+        </body></html>
+      `);
+      editor.document.close();
+    } else {
+      // Fallback: Display in overlay if popup is blocked
+      const editorDiv = document.createElement('div');
+      editorDiv.className = 'pro-chat-editor';
+      editorDiv.innerHTML = `
+        <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; margin: 10px 0;">
+          <h3>InterUniverse AI Response</h3>
+          <pre style="padding: 10px;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          <button onclick="this.parentElement.remove()">Close</button>
+        </div>
+      `;
+      messagesDiv.appendChild(editorDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
   }
 });
