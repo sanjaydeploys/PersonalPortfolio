@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let silenceTimer;
   let pollInterval;
   let sessionID = crypto.randomUUID();
-  let currentLang = localStorage.getItem('chat-lang') || 'en'; // From old chatbot
+  let currentLang = localStorage.getItem('chat-lang') || 'en';
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
@@ -56,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   recognition.onspeechend = () => {
     silenceTimer = setTimeout(() => {
-      if (isRecording && input.value.trim()) sendTextMessage();
-    }, 2500);
+      if (isRecording && input.value.trim()) sendVoiceMessage();
+    }, 3000); // 3s silence threshold
   };
 
   recognition.onerror = (event) => {
@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetSilenceTimer() {
     clearTimeout(silenceTimer);
     silenceTimer = setTimeout(() => {
-      if (isRecording && input.value.trim()) sendTextMessage();
-    }, 2500);
+      if (isRecording && input.value.trim()) sendVoiceMessage();
+    }, 3000);
   }
 
   async function sendTextMessage() {
@@ -114,6 +114,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function sendVoiceMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    input.value = '';
+    addMessage('system', 'Sending Voice Signal to AI Universe...');
+    try {
+      const response = await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionID, query: text, lang: currentLang })
+      });
+      if (response.ok) {
+        startPolling();
+      } else {
+        addMessage('system', 'Signal Transmission Failed. Retry.');
+      }
+    } catch (error) {
+      console.error('Send Error:', error);
+      addMessage('system', 'Universe Connection Lost. Retry.');
+    }
+    stopRecording();
+  }
+
   function startPolling() {
     addMessage('system', 'Scanning for Response Signal...');
     pollInterval = setInterval(async () => {
@@ -125,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => {
             addMessage('ai', data.text);
             speakResponse(data.text);
+            openCodeEditor(data.text);
           }, 1000);
           stopPolling();
         } else if (data.status === 'processing') {
@@ -137,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('system', 'Signal Disruption Detected. Aborting.');
         stopPolling();
       }
-    }, 1500); // 1.5s poll for real-time simulation
+    }, 1000); // Reduced to 1s for better real-time feel
   }
 
   function stopPolling() {
@@ -159,5 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
     utterance.rate = 1.1;
     utterance.pitch = 1.2;
     window.speechSynthesis.speak(utterance);
+  }
+
+  function openCodeEditor(text) {
+    const editor = window.open('', 'CodeEditor', 'width=600,height=400');
+    editor.document.write(`
+      <html><body style="background: #1e1e1e; color: #d4d4d4; font-family: Consolas;">
+        <h2 style="text-align: center;">InterUniverse AI Response</h2>
+        <pre style="padding: 10px;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+        <button onclick="window.close()">Close Signal</button>
+      </body></html>
+    `);
   }
 });
