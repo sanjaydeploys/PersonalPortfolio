@@ -12,17 +12,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let silenceTimer;
   let pollInterval;
   let sessionID = crypto.randomUUID();
+  let currentLang = localStorage.getItem('chat-lang') || 'en'; // From old chatbot
+
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
   recognition.interimResults = true;
 
   proCta.addEventListener('click', (e) => {
     e.preventDefault();
-    sessionID = crypto.randomUUID(); // New session
+    sessionID = crypto.randomUUID();
     overlay.classList.remove('hidden');
     overlay.classList.add('visible');
     addMessage('system', 'Establishing InterUniverse Connection...');
-    setTimeout(() => addMessage('system', 'Signal Established. Ready for Professional Query.'), 1500);
+    setTimeout(() => addMessage('system', 'Signal Established. Ready for Query.'), 1500);
   });
 
   closeBtn.addEventListener('click', () => {
@@ -67,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isRecording) {
       stopRecording();
     } else {
+      recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
       recognition.start();
       isRecording = true;
       voiceBtn.classList.add('recording');
@@ -98,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionID, query: text })
+        body: JSON.stringify({ sessionID, query: text, lang: currentLang })
       });
       if (response.ok) {
         startPolling();
@@ -125,8 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 1000);
           stopPolling();
         } else if (data.status === 'processing') {
-          // Simulate thinking
-          addMessage('system', 'AI Articulating Response...');
+          addMessage('system', 'AI Articulating Response... (Fuzzy Logic Active)');
         } else {
           addMessage('system', 'No Signal Yet. Continuing Scan.');
         }
@@ -135,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('system', 'Signal Disruption Detected. Aborting.');
         stopPolling();
       }
-    }, 1500); // Poll every 1.5s for real-time feel
+    }, 1500); // 1.5s poll for real-time simulation
   }
 
   function stopPolling() {
@@ -152,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function speakResponse(text) {
     const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
     utterance.volume = 1;
     utterance.rate = 1.1;
     utterance.pitch = 1.2;
