@@ -141,6 +141,11 @@
       "source": "/chatbot",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/chatbot"
     },
+     {
+      "source": "/api/pro-chat",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat"
+    },
+    
          {
       "source": "/agribot-case-study",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/agribot-case-study"
