@@ -125,8 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function transmitSignal(text) {
     addMessage('system', 'Transmitting Signal to InterUniverse...');
+    console.log(`Sending message: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}" }`);
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ action: 'query', text, lang: currentLang, sessionID }));
+      ws.send(JSON.stringify({ text, lang: currentLang, sessionID }));
     } else {
       addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
       initWebSocket();
@@ -134,12 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initWebSocket() {
+    console.log(`Attempting to connect to wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/`);
     ws = new WebSocket('wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/');
     ws.onopen = () => {
-      ws.send(JSON.stringify({ action: 'connect', sessionID }));
-      console.log('Connected to InterUniverse');
+      console.log('Connected to InterUniverse with sessionID:', sessionID);
+      // No need to send { action: 'connect' } since $connect is handled by routeKey
     };
     ws.onmessage = (event) => {
+      console.log('Received message from InterUniverse:', event.data);
       const data = JSON.parse(event.data);
       if (data.text) {
         setTimeout(() => {
