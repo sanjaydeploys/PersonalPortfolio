@@ -1,4 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // --- VanillaTilt for Impact Cards ---
+  const tiltCards = document.querySelectorAll('.impact-item.animate-3d-tilt');
+  if (tiltCards.length > 0 && window.VanillaTilt) {
+    VanillaTilt.init(tiltCards, {
+      max: 10,
+      speed: 400,
+      glare: true,
+      'max-glare': 0.2,
+      scale: 1.05,
+      perspective: 1000,
+    });
+  }
+
+  // --- Hero Particles ---
+  const heroParticles = document.getElementById('hero-particles');
+  if (heroParticles && window.particlesJS) {
+    particlesJS.load('hero-particles', 'particles.json', function () {
+      console.log('Hero particles loaded!');
+      heroParticles.classList.add('particles-fade-in');
+    });
+  }
+
+  // --- AI Particles Background ---
   const canvas = document.getElementById('ai-particles-bg');
   if (canvas) {
     const ctx = canvas.getContext('2d');
@@ -73,32 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const banner = document.querySelector('.hero-banner');
-  if (banner) {
-    let lastScroll = 0;
-    let isRemoved = false;
-
-    window.addEventListener('scroll', () => {
-      const current = window.scrollY;
-
-      if (current > lastScroll && current > 50) {
-        if (!isRemoved) {
-          banner.classList.add('hide');
-          setTimeout(() => {
-            banner.remove();
-            isRemoved = true;
-          }, 500);
-        }
-      } else if (current <= 50 && isRemoved) {
-        banner.classList.remove('hide');
-        banner.classList.add('show');
-        isRemoved = false;
-      }
-
-      lastScroll = current;
-    });
-  }
-
+  // --- Intersection Observer Animations ---
   const generalObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -107,7 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = entry.target;
         el.classList.add('animate');
 
-        if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
+        if (el.classList.contains('card')) el.classList.add('slide-left');
+        else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
+        else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
+        else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
+        else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
+        else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
+        else if (el.id === 'who-i-am') el.classList.add('fade-left');
 
         generalObserver.unobserve(el);
       });
@@ -115,5 +119,56 @@ document.addEventListener('DOMContentLoaded', () => {
     { threshold: 0.25 }
   );
 
-  document.querySelectorAll('.hero-img').forEach((el) => generalObserver.observe(el));
+  document.querySelectorAll(
+    '.section, .card, .faq-item, .tech-item, .impact-item, .hero-section, .hero-title, .hero-img, #who-i-am'
+  ).forEach((el) => generalObserver.observe(el));
+
+  // --- CTA Button Observer ---
+  const ctaObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const button = entry.target;
+        button.classList.add('drop-init');
+        setTimeout(() => button.classList.add('drop-in'), 100);
+        ctaObserver.unobserve(button);
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  document.querySelectorAll('.cta-button').forEach((btn) => ctaObserver.observe(btn));
+
+  // --- Banner Scroll Handling ---
+  const banner = document.querySelector('.hero-banner');
+  if (banner) {
+    const bannerParent = banner.parentNode;
+    const bannerNextSibling = banner.nextSibling;
+    let lastScroll = 0;
+    let isRemoved = false;
+
+    window.addEventListener('scroll', () => {
+      const current = window.scrollY;
+
+      if (current > lastScroll && current > 50) {
+        // Scroll down
+        if (!isRemoved) {
+          banner.classList.add('hide');
+          setTimeout(() => {
+            banner.remove();
+            isRemoved = true;
+          }, 500);
+        }
+      } else if (current < lastScroll && current <= 50) {
+        // Scroll up to top
+        if (isRemoved) {
+          banner.classList.remove('hide');
+          banner.classList.add('show');
+          bannerParent.insertBefore(banner, bannerNextSibling);
+          isRemoved = false;
+        }
+      }
+      lastScroll = current;
+    });
+  }
 });
