@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Hero Particles (Particle.js or custom logic) ---
+  // --- Hero Particles ---
   const heroParticles = document.getElementById('hero-particles');
   if (heroParticles && window.particlesJS) {
     particlesJS.load('hero-particles', 'particles.json', function () {
-      console.log('Hero particles loaded successfully!');
-      heroParticles.classList.add('particles-fade-in'); // smooth fade-in
+      console.log('Hero particles loaded!');
+      heroParticles.classList.add('particles-fade-in');
     });
   }
 
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Intersection Observer for Animations ---
+  // --- Intersection Observer Animations ---
   const generalObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -90,21 +90,14 @@ document.addEventListener('DOMContentLoaded', () => {
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-
         const button = entry.target;
         button.classList.add('drop-init');
-
-        setTimeout(() => {
-          button.classList.add('drop-in');
-        }, 100);
-
+        setTimeout(() => button.classList.add('drop-in'), 100);
         ctaObserver.unobserve(button);
       });
     },
     { threshold: 0.4 }
   );
 
-  document.querySelectorAll('.cta-button').forEach((btn) => {
-    ctaObserver.observe(btn);
-  });
+  document.querySelectorAll('.cta-button').forEach((btn) => ctaObserver.observe(btn));
 });
