@@ -1316,14 +1316,24 @@
       
 
           
-   .hero-section {
+  .hero-section {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 85vh;
-  padding: 2rem 1rem;
-  background: transparent;
+  z-index: 1;
+}
+
+#hero-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none; /* important, so clicks go through */
+}
+.hero-title,
+.hero-img {
+  position: relative;
+  z-index: 2; /* ensures text & image are above particles/bg */
 }
 .hero-banner {
   position: absolute;
