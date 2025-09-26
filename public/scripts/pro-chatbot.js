@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let sessionID = crypto.randomUUID();
   let currentLang = localStorage.getItem('chat-lang') || 'en';
   let lastTranscript = '';
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 3;
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
@@ -128,6 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Sending message: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}" }`);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ text, lang: currentLang, sessionID }));
+      setTimeout(() => {
+        if (!document.querySelector('.pro-chat-message.ai')) {
+          addMessage('system', 'InterUniverse response delayed. Retrying...');
+          initWebSocket();
+        }
+      }, 5000); // 5s timeout
     } else {
       addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
       initWebSocket();
@@ -135,11 +143,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initWebSocket() {
-    console.log(`Attempting to connect to wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/`);
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      addMessage('system', 'Failed to connect to InterUniverse after multiple attempts.');
+      return;
+    }
+    console.log(`Attempting to connect to wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/, attempt ${reconnectAttempts + 1}`);
     ws = new WebSocket('wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/');
     ws.onopen = () => {
       console.log('Connected to InterUniverse with sessionID:', sessionID);
-      // No need to send { action: 'connect' } since $connect is handled by routeKey
+      reconnectAttempts = 0; // Reset on successful connection
     };
     ws.onmessage = (event) => {
       console.log('Received message from InterUniverse:', event.data);
@@ -155,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      reconnectAttempts++;
       setTimeout(initWebSocket, 1000); // Retry after 1s
     };
     ws.onclose = () => {
