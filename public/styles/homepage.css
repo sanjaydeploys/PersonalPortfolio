@@ -58,11 +58,13 @@
   transition: opacity 0.5s ease, transform 0.5s ease;
   opacity: 0;
   transform: scale(0.95);
+  pointer-events: none;
 }
 
 .pro-chat-overlay.visible {
   opacity: 1;
   transform: scale(1);
+  pointer-events: auto;
 }
 
 .pro-chat-window {
@@ -249,6 +251,11 @@
   }
 }
 
+.cta-button, .cta-button.secondary {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  user-select: none;
+}
 
 
 
