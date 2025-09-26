@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Hero Particles (Particle.js or custom logic) ---
+  const heroParticles = document.getElementById('hero-particles');
+  if (heroParticles && window.particlesJS) {
+    particlesJS.load('hero-particles', 'particles.json', function () {
+      console.log('Hero particles loaded successfully!');
+      heroParticles.classList.add('particles-fade-in'); // smooth fade-in
+    });
+  }
+
   // --- Matrix Background ---
   const canvas = document.getElementById('matrix-bg');
   if (canvas) {
@@ -58,18 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = entry.target;
         el.classList.add('animate');
 
-        // Add class-based animation triggers
         if (el.classList.contains('card')) el.classList.add('slide-left');
         else if (el.classList.contains('faq-item')) el.classList.add('fade-zoom');
         else if (el.classList.contains('tech-item')) el.classList.add('flip-in');
-        else if (el.classList.contains('hero-section')) {
-          el.classList.add('fade-parallax');
-          // Smooth hero particle fade-in
-          const heroParticles = document.querySelector('#hero-particles');
-          if (heroParticles) {
-            heroParticles.classList.add('particles-fade-in');
-          }
-        }
+        else if (el.classList.contains('hero-section')) el.classList.add('fade-parallax');
         else if (el.classList.contains('hero-title')) el.classList.add('fade-glitch');
         else if (el.classList.contains('hero-img')) el.classList.add('zoom-rotate');
         else if (el.id === 'who-i-am') el.classList.add('fade-left');
