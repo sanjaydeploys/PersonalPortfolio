@@ -1,4 +1,4 @@
-// pro-chatbot.js (public/scripts/pro-chatbot.js, include <script src="/public/scripts/pro-chatbot.js" defer></script> in HTML)
+// pro-chatbot.js (public/scripts/pro-chatbot.js)
 document.addEventListener('DOMContentLoaded', () => {
   const proCta = document.getElementById('pro-chat-cta');
   const overlay = document.getElementById('pro-chat-overlay');
@@ -11,13 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let isRecording = false;
   let silenceTimer;
   let pollInterval;
-  let sessionID = crypto.randomUUID(); // Unique session per open
+  let sessionID = crypto.randomUUID();
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
   recognition.interimResults = true;
 
   proCta.addEventListener('click', (e) => {
     e.preventDefault();
+    sessionID = crypto.randomUUID(); // New session
     overlay.classList.remove('hidden');
     overlay.classList.add('visible');
     addMessage('system', 'Establishing InterUniverse Connection...');
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start(); // Restart for continuous
+    if (isRecording) recognition.start();
   };
 
   recognition.onspeechend = () => {
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   recognition.onerror = (event) => {
     console.error('STT Error:', event.error);
-    addMessage('system', 'Signal Interference in Voice Transmission. Retry.');
+    addMessage('system', 'Voice Signal Interference. Retry.');
   };
 
   function toggleVoice() {
@@ -102,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok) {
         startPolling();
       } else {
-        addMessage('system', 'Signal Failed. Retry Transmission.');
+        addMessage('system', 'Signal Transmission Failed. Retry.');
       }
     } catch (error) {
       console.error('Send Error:', error);
@@ -117,21 +118,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(`https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat?sessionID=${sessionID}`);
         const data = await response.json();
         if (data.status === 'ready') {
-          addMessage('ai', data.text);
-          speakResponse(data.text);
+          addMessage('system', 'Response Signal Received from Universe.');
+          setTimeout(() => {
+            addMessage('ai', data.text);
+            speakResponse(data.text);
+          }, 1000);
           stopPolling();
-          sessionID = crypto.randomUUID(); // New session for next query
         } else if (data.status === 'processing') {
-          // Optional: Update system message if needed
+          // Simulate thinking
+          addMessage('system', 'AI Articulating Response...');
         } else {
           addMessage('system', 'No Signal Yet. Continuing Scan.');
         }
       } catch (error) {
         console.error('Poll Error:', error);
-        addMessage('system', 'Signal Disruption. Aborting Scan.');
+        addMessage('system', 'Signal Disruption Detected. Aborting.');
         stopPolling();
       }
-    }, 2000); // Poll every 2s
+    }, 1500); // Poll every 1.5s for real-time feel
   }
 
   function stopPolling() {
