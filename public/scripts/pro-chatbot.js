@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let isRecording = false;
   let silenceTimer;
-  let pollInterval;
+  let ws;
   let sessionID = crypto.randomUUID();
   let currentLang = localStorage.getItem('chat-lang') || 'en';
   let lastTranscript = '';
@@ -21,18 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   proCta.addEventListener('click', (e) => {
     e.preventDefault();
-    sessionID = crypto.randomUUID();
+    sessionID = crypto.randomUUID(); // New session on each open
     overlay.classList.remove('hidden');
     overlay.classList.add('visible');
     addMessage('system', 'Initiating InterUniverse Portal...');
-    setTimeout(() => addMessage('system', 'Portal Active. Send Your Signal.'), 1500);
+    setTimeout(() => {
+      addMessage('system', 'Portal Active. Send Your Signal.');
+      initWebSocket();
+    }, 1500);
   });
 
   closeBtn.addEventListener('click', () => {
     overlay.classList.remove('visible');
     setTimeout(() => overlay.classList.add('hidden'), 500);
     stopRecording();
-    stopPolling();
+    if (ws) ws.close();
   });
 
   sendBtn.addEventListener('click', sendTextMessage);
@@ -103,66 +106,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
   }
 
-  async function sendTextMessage() {
+  function sendTextMessage() {
     const text = input.value.trim();
     if (!text) return;
     addMessage('user', text);
     input.value = '';
-    await transmitSignal(text);
+    transmitSignal(text);
   }
 
-  async function sendVoiceMessage() {
+  function sendVoiceMessage() {
     const text = input.value.trim();
     if (!text || text === lastTranscript) return;
     addMessage('user', text);
     input.value = '';
-    await transmitSignal(text);
+    transmitSignal(text);
     stopRecording();
   }
 
-  async function transmitSignal(text) {
+  function transmitSignal(text) {
     addMessage('system', 'Transmitting Signal to InterUniverse...');
-    try {
-      const response = await fetch('https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionID, query: text, lang: currentLang })
-      });
-      if (response.ok) {
-        startPolling();
-      } else {
-        addMessage('system', 'Transmission failed. Resend your signal.');
-      }
-    } catch (error) {
-      console.error('Transmission Error:', error);
-      addMessage('system', 'InterUniverse link disrupted. Retry.');
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'query', text, lang: currentLang, sessionID }));
+    } else {
+      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      initWebSocket();
     }
   }
 
-  function startPolling() {
-    addMessage('system', 'Decoding Response from InterUniverse...');
-    pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/api/pro-chat?sessionID=${sessionID}`);
-        const data = await response.json();
-        if (data.status === 'ready') {
-          setTimeout(() => {
-            addMessage('ai', data.text);
-            speakResponse(data.text);
-            displayAIInsight(data.text);
-          }, 500); // Simulate decoding delay
-          stopPolling();
-        }
-      } catch (error) {
-        console.error('Decoding Error:', error);
-        addMessage('system', 'Decoding failed. Reattempting...');
-        stopPolling();
+  function initWebSocket() {
+    ws = new WebSocket('wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/');
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ action: 'connect', sessionID }));
+      console.log('Connected to InterUniverse');
+    };
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.text) {
+        setTimeout(() => {
+          addMessage('ai', data.text);
+          speakResponse(data.text);
+          displayAIInsight(data.text);
+        }, 500); // Simulate decoding delay
       }
-    }, 500); // 500ms polling for real-time feel
-  }
-
-  function stopPolling() {
-    clearInterval(pollInterval);
+    };
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      setTimeout(initWebSocket, 1000); // Retry after 1s
+    };
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      addMessage('system', 'InterUniverse portal closed. Reopen to reconnect.');
+    };
   }
 
   function addMessage(sender, text) {
