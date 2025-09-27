@@ -154,6 +154,11 @@
       "source": "/agribot",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/agribot"
     },
+    {
+      "source": "/dsa-leetcode-guide",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-leetcode-guide"
+    },
+    
        {
       "source": "/interview-prep",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/interview-prep"
