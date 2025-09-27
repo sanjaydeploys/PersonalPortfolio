@@ -1,235 +1,244 @@
-const AWS = require('aws-sdk');
-const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
-const natural = require('natural');
+// pro-chatbot.js (public/scripts/pro-chatbot.js)
+document.addEventListener('DOMContentLoaded', () => {
+  const proCta = document.getElementById('pro-chat-cta');
+  const overlay = document.getElementById('pro-chat-overlay');
+  const closeBtn = document.getElementById('pro-chat-close');
+  const input = document.getElementById('pro-chat-input');
+  const sendBtn = document.getElementById('pro-chat-send');
+  const voiceBtn = document.getElementById('pro-chat-voice');
+  const messagesDiv = document.getElementById('pro-chat-messages');
 
-const mongoURIMyDB = process.env.MONGODB_URI_MYDB;
-mongoose.connect(mongoURIMyDB, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('MongoDB Connection Established for WebSocket')).catch(err => console.error('MongoDB Connection Error:', err));
+  // Add language selector
+  const langSelect = document.createElement('select');
+  langSelect.id = 'pro-chat-lang';
+  langSelect.innerHTML = `
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+  `;
+  langSelect.style.margin = '10px';
+  closeBtn.parentNode.insertBefore(langSelect, closeBtn.nextSibling);
 
-const chatSchema = new mongoose.Schema({
-  sessionID: { type: String, required: true, unique: true },
-  query: String,
-  lang: { type: String, default: 'en' },
-  response: String,
-  status: { type: String, default: 'processing' },
-  timestamp: { type: Date, default: Date.now },
-  isVoice: { type: Boolean, default: false },
-  connectionId: String
-});
-const Chat = mongoose.model('Chat', chatSchema);
+  let isRecording = false;
+  let silenceTimer;
+  let ws;
+  let sessionID = crypto.randomUUID();
+  let currentLang = localStorage.getItem('chat-lang') || 'en';
+  langSelect.value = currentLang;
+  let lastTranscript = '';
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 3;
 
-const contextPath = path.join(__dirname, 'proContext.js');
-const rawContext = fs.readFileSync(contextPath, 'utf8').replace(/^module\.exports = `/,'').replace(/`$/,'');
-const contextLines = rawContext.split('\n').map(line => line.trim()).filter(line => line);
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.continuous = true;
+  recognition.interimResults = false;
 
-let contextData = { intro: '', sections: {} };
-let currentSection = 'intro';
-contextLines.forEach(line => {
-  if (line.startsWith('###')) {
-    currentSection = line.replace('### ', '').toLowerCase();
-    contextData.sections[currentSection] = contextData.sections[currentSection] || [];
-    console.log(`Switching to section: ${currentSection}`);
-  } else if (line && !line.startsWith('-') && currentSection === 'intro') {
-    contextData.intro += line + ' ';
-  } else if (line.startsWith('-')) {
-    contextData.sections[currentSection] = contextData.sections[currentSection] || [];
-    contextData.sections[currentSection].push(line.replace(/^-\s*/, ''));
-    console.log(`Added to ${currentSection}: ${line.replace(/^-\s*/, '')}`);
-  }
-});
+  langSelect.addEventListener('change', () => {
+    currentLang = langSelect.value;
+    localStorage.setItem('chat-lang', currentLang);
+    if (isRecording) {
+      stopRecording();
+      toggleVoice(); // Restart recognition with new language
+    }
+  });
 
-const tokenizer = new natural.WordTokenizer();
-const stemmer = natural.PorterStemmer;
+  proCta.addEventListener('click', (e) => {
+    e.preventDefault();
+    sessionID = crypto.randomUUID(); // New session on each open
+    overlay.classList.remove('hidden');
+    overlay.classList.add('visible');
+    addMessage('system', 'Initiating InterUniverse Portal...');
+    setTimeout(() => {
+      addMessage('system', 'Portal Active. Send Your Signal.');
+      initWebSocket();
+    }, 1500);
+  });
 
-function extractIntent(query, lang) {
-  console.log(`Extracting intent for query: ${query}, lang: ${lang}`);
-  const tokens = tokenizer.tokenize(query.toLowerCase());
-  const stems = tokens.map(token => stemmer.stem(token));
-  const intentMap = {
-    en: {
-      'who': ['intro'],
-      'project': ['projects'],
-      'skill': ['skills'],
-      'tech': ['technical practices and designs'],
-      'achiev': ['achievements']
-    },
-    hi: {
-      'कौन': ['intro'],
-      'प्रोजेक्ट': ['projects'],
-      'स्किल': ['skills'],
-      'तकनीक': ['technical practices and designs'],
-      'उपलब्धि': ['achievements']
+  closeBtn.addEventListener('click', () => {
+    overlay.classList.remove('visible');
+    setTimeout(() => overlay.classList.add('hidden'), 500);
+    stopRecording();
+    if (ws) ws.close();
+  });
+
+  sendBtn.addEventListener('click', sendTextMessage);
+
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendTextMessage();
+  });
+
+  voiceBtn.addEventListener('click', toggleVoice);
+
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .map(result => result[0].transcript)
+      .join('')
+      .trim();
+    if (transcript !== lastTranscript) {
+      input.value = transcript;
+      lastTranscript = transcript;
+      resetSilenceTimer();
     }
   };
-  const langMap = intentMap[lang] || intentMap.en;
-  const intents = stems.reduce((acc, stem) => {
-    for (let [key, sections] of Object.entries(langMap)) {
-      if (stem.includes(key)) acc.push(...sections);
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start();
+  };
+
+  recognition.onspeechend = () => {
+    silenceTimer = setTimeout(() => {
+      if (isRecording && input.value.trim()) {
+        sendVoiceMessage();
+      }
+    }, 2000); // 2s silence threshold
+  };
+
+  recognition.onerror = (event) => {
+    console.error('STT Error:', event.error);
+    addMessage('system', 'Signal interference detected. Retry.');
+    stopRecording();
+  };
+
+  function toggleVoice() {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+      input.value = '';
+      lastTranscript = '';
+      recognition.start();
+      isRecording = true;
+      voiceBtn.classList.add('recording');
+      addMessage('system', 'Voice Signal Engaged. Speak to the Universe.');
     }
-    return [...new Set(acc)];
-  }, []);
-  console.log(`Extracted intents: ${intents.join(', ')}`);
-  return intents;
-}
-
-function generateResponse(query, lang) {
-  console.log(`Generating response for query: ${query}, lang: ${lang}`);
-  const intents = extractIntent(query, lang);
-  let response = '';
-  const maxItems = 5; // Limit to top 5 items for brevity
-
-  if (intents.includes('intro')) {
-    response = `I am Sanjay Patidar, ${contextData.intro.trim()}. Dive into my projects, skills, or achievements for more details.`;
-  } else if (intents.includes('projects')) {
-    const projects = (contextData.sections.projects || []).slice(0, maxItems);
-    response = 'My key projects include:\n' + projects.join('\n');
-    if (contextData.sections.projects.length > maxItems) response += '\n... and more. Ask for details on specific projects.';
-  } else if (intents.includes('skills')) {
-    const skills = (contextData.sections.skills || []).slice(0, maxItems);
-    response = 'My professional skills include:\n' + skills.join('\n');
-    if (contextData.sections.skills.length > maxItems) response += '\n... and more.';
-  } else if (intents.includes('technical practices and designs')) {
-    const tech = (contextData.sections['technical practices and designs'] || []).slice(0, maxItems);
-    response = 'My technical expertise includes:\n' + tech.join('\n');
-    if (contextData.sections['technical practices and designs'].length > maxItems) response += '\n... and more.';
-  } else if (intents.includes('achievements')) {
-    const achievements = (contextData.sections.achievements || []).slice(0, maxItems);
-    response = 'My notable achievements include:\n' + achievements.join('\n');
-    if (contextData.sections.achievements.length > maxItems) response += '\n... and more.';
-  } else {
-    response = `Your signal was unclear. I am Sanjay Patidar, ${contextData.intro.trim().substring(0, 100)}... Send a query about my projects, skills, or achievements.`;
   }
-  console.log(`Generated response: ${response}`);
-  return response;
-}
 
-exports.handler = async (event, context) => {
-  console.log('Lambda Function Invoked', { event, context });
-  const { routeKey, connectionId } = event.requestContext;
-  const body = event.body;
-  console.log(`Processing routeKey: ${routeKey}, connectionId: ${connectionId}, raw body: ${body}`);
-
-  try {
-    if (routeKey === '$connect') {
-      console.log(`Handling $connect for connectionId: ${connectionId}`);
-      await Chat.findOneAndUpdate(
-        { sessionID: connectionId },
-        { connectionId, status: 'connected' },
-        { upsert: true }
-      );
-      console.log(`$connect updated Chat document for sessionID: ${connectionId}`);
-      return { statusCode: 200, body: '' };
-    }
-
-    if (routeKey === '$disconnect') {
-      console.log(`Handling $disconnect for connectionId: ${connectionId}`);
-      await Chat.findOneAndDelete({ connectionId });
-      console.log(`$disconnect deleted Chat document for sessionId: ${connectionId}`);
-      return { statusCode: 200, body: '' };
-    }
-
-    // Create ApiGatewayManagementApi client dynamically for message handling
-    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-      apiVersion: '2018-11-29',
-      endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`
-    });
-
-    if (routeKey === 'query') {
-      console.log(`Handling query for connectionId: ${connectionId}, raw body: ${body}`);
-      let parsedBody;
-      try {
-        parsedBody = JSON.parse(body);
-        console.log(`Parsed body: ${JSON.stringify(parsedBody, null, 2)}`);
-      } catch (parseError) {
-        console.error('Failed to parse body:', parseError);
-        return { statusCode: 400, body: 'Invalid JSON format' };
-      }
-      const { text: query, lang = 'en', sessionID } = parsedBody;
-      console.log(`Parsed query: ${query}, lang: ${lang}, sessionID: ${sessionID}`);
-
-      if (!query) {
-        console.log('No query provided, returning 400');
-        return { statusCode: 400, body: 'Missing query' };
-      }
-
-      await Chat.findOneAndUpdate(
-        { sessionID: connectionId },
-        { query, lang, status: 'processing', timestamp: Date.now() }
-      );
-      console.log(`Updated Chat document with query for sessionID: ${connectionId}`);
-
-      const responseText = generateResponse(query, lang);
-      await Chat.findOneAndUpdate({ sessionID: connectionId }, { response: responseText, status: 'ready' });
-      console.log(`Updated Chat with response: ${responseText}`);
-
-      const postParams = {
-        ConnectionId: connectionId,
-        Data: JSON.stringify({ text: responseText, sessionID })
-      };
-      console.log(`Attempting postToConnection with params: ${JSON.stringify(postParams, null, 2)}`);
-      try {
-        const result = await apigwManagementApi.postToConnection(postParams).promise();
-        console.log(`Successfully sent response to connectionId: ${connectionId}`, result);
-      } catch (postError) {
-        console.error('postToConnection failed:', postError);
-        if (postError.code === 'GoneException') {
-          console.log('Connection closed, removing from Chat:', connectionId);
-          await Chat.findOneAndDelete({ connectionId });
-        }
-        return { statusCode: 500, body: 'Failed to send response' };
-      }
-      return { statusCode: 200, body: '' };
-    }
-
-    // Handle $default route for unmatched messages
-    if (routeKey === '$default') {
-      console.log(`Handling $default for connectionId: ${connectionId}, raw body: ${body}`);
-      let parsedBody;
-      try {
-        parsedBody = JSON.parse(body);
-        console.log(`Parsed body in $default: ${JSON.stringify(parsedBody, null, 2)}`);
-      } catch (parseError) {
-        console.error('Failed to parse body in $default:', parseError);
-        return { statusCode: 400, body: 'Invalid JSON in default route' };
-      }
-      const { text: query, lang = 'en', sessionID } = parsedBody;
-      if (query) {
-        console.log(`Treating $default as query for connectionId: ${connectionId}`);
-        await Chat.findOneAndUpdate(
-          { sessionID: connectionId },
-          { query, lang, status: 'processing', timestamp: Date.now() }
-        );
-        const responseText = generateResponse(query, lang);
-        await Chat.findOneAndUpdate({ sessionID: connectionId }, { response: responseText, status: 'ready' });
-
-        const postParams = {
-          ConnectionId: connectionId,
-          Data: JSON.stringify({ text: responseText, sessionID })
-        };
-        console.log(`Fallback postToConnection params: ${JSON.stringify(postParams, null, 2)}`);
-        try {
-          const result = await apigwManagementApi.postToConnection(postParams).promise();
-          console.log(`Fallback response sent to connectionId: ${connectionId}`, result);
-        } catch (postError) {
-          console.error('Fallback postToConnection failed:', postError);
-          if (postError.code === 'GoneException') {
-            console.log('Connection closed, removing from Chat:', connectionId);
-            await Chat.findOneAndDelete({ connectionId });
-          }
-          return { statusCode: 500, body: 'Failed to send fallback response' };
-        }
-      }
-      return { statusCode: 200, body: '' };
-    }
-
-    console.log(`Invalid routeKey: ${routeKey}, returning 400`);
-    return { statusCode: 400, body: 'Invalid route' };
-  } catch (error) {
-    console.error('WebSocket Error Details:', error, 'Context:', context.awsRequestId);
-    return { statusCode: 500, body: 'Internal error' };
+  function stopRecording() {
+    recognition.stop();
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    clearTimeout(silenceTimer);
   }
-};
+
+  function resetSilenceTimer() {
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      if (isRecording && input.value.trim()) {
+        sendVoiceMessage();
+      }
+    }, 2000);
+  }
+
+  function sendTextMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    input.value = '';
+    transmitSignal(text);
+  }
+
+  function sendVoiceMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    input.value = '';
+    lastTranscript = '';
+    transmitSignal(text);
+    stopRecording();
+  }
+
+  function transmitSignal(text) {
+    addMessage('system', 'Transmitting Signal to InterUniverse...');
+    console.log(`Sending message: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}" }`);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ text, lang: currentLang, sessionID }));
+      setTimeout(() => {
+        if (!document.querySelector('.pro-chat-message.ai')) {
+          addMessage('system', 'InterUniverse response delayed. Retrying...');
+          initWebSocket();
+        }
+      }, 5000); // 5s timeout
+    } else {
+      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      initWebSocket();
+    }
+  }
+
+  function initWebSocket() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      addMessage('system', 'Failed to connect to InterUniverse after multiple attempts.');
+      return;
+    }
+    console.log(`Attempting to connect to wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/, attempt ${reconnectAttempts + 1}`);
+    ws = new WebSocket('wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/');
+    ws.onopen = () => {
+      console.log('Connected to InterUniverse with sessionID:', sessionID);
+      reconnectAttempts = 0; // Reset on successful connection
+    };
+    ws.onmessage = (event) => {
+      console.log('Received message from InterUniverse:', event.data);
+      const data = JSON.parse(event.data);
+      if (data.text) {
+        setTimeout(() => {
+          addMessage('ai', data.text);
+          speakResponse(data.text);
+          displayAIInsight(data.text);
+        }, 500); // Simulate decoding delay
+      }
+    };
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      reconnectAttempts++;
+      setTimeout(initWebSocket, 1000); // Retry after 1s
+    };
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      addMessage('system', 'InterUniverse portal closed. Reopen to reconnect.');
+    };
+  }
+
+  function addMessage(sender, text) {
+    const div = document.createElement('div');
+    div.className = `pro-chat-message ${sender}`;
+    div.textContent = text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function speakResponse(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.volume = 1;
+    utterance.rate = 1.1;
+    utterance.pitch = 1.2;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function displayAIInsight(text) {
+    const editor = window.open('', 'AIInsight', 'width=700,height=500');
+    if (editor && !editor.closed && editor.document) {
+      editor.document.write(`
+        <html><body style="background: #0a0a23; color: #e6e6fa; font-family: 'Courier New', monospace; padding: 20px;">
+          <h1 style="text-align: center; color: #00ffcc;">InterUniverse AI Insight</h1>
+          <div style="border: 2px solid #00ffcc; padding: 15px; border-radius: 10px;">
+            <pre style="white-space: pre-wrap; color: #e6e6fa;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          </div>
+          <button onclick="window.close()" style="background: #00ffcc; color: #0a0a23; padding: 10px; border: none; cursor: pointer;">Close Portal</button>
+        </body></html>
+      `);
+      editor.document.close();
+    } else {
+      const insightDiv = document.createElement('div');
+      insightDiv.className = 'ai-insight';
+      insightDiv.innerHTML = `
+        <div style="background: #0a0a23; color: #e6e6fa; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #00ffcc;">
+          <h3>InterUniverse AI Insight</h3>
+          <pre style="white-space: pre-wrap; color: #e6e6fa;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          <button onclick="this.parentElement.remove()" style="background: #00ffcc; color: #0a0a23; padding: 5px; border: none; cursor: pointer;">Close</button>
+        </div>
+      `;
+      messagesDiv.appendChild(insightDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  }
+});
