@@ -1,4 +1,4 @@
-// pro-chatbot.js (public/scripts/pro-chatbot.js)
+// pro-chatbot.js (updated frontend for better STT handling, lang detection, auto-send, and realtime feel)
 document.addEventListener('DOMContentLoaded', () => {
   const proCta = document.getElementById('pro-chat-cta');
   const overlay = document.getElementById('pro-chat-overlay');
@@ -8,54 +8,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceBtn = document.getElementById('pro-chat-voice');
   const messagesDiv = document.getElementById('pro-chat-messages');
 
-  // Add language selector
-  const langSelect = document.createElement('select');
-  langSelect.id = 'pro-chat-lang';
-  langSelect.innerHTML = `
-    <option value="en">English</option>
-    <option value="hi">Hindi</option>
-  `;
-  langSelect.style.margin = '10px';
-  closeBtn.parentNode.insertBefore(langSelect, closeBtn.nextSibling);
-
   let isRecording = false;
   let silenceTimer;
   let ws;
   let sessionID = crypto.randomUUID();
-  let currentLang = localStorage.getItem('chat-lang') || 'en';
-  langSelect.value = currentLang;
+  let currentLang = detectBrowserLanguage(); // Improved lang detection
   let lastTranscript = '';
   let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 3;
+  const MAX_RECONNECT_ATTEMPTS = 5; // Increased for better reliability
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
-  recognition.interimResults = false;
+  recognition.interimResults = true; // Changed to true for realtime transcription display
 
-  langSelect.addEventListener('change', () => {
-    currentLang = langSelect.value;
-    localStorage.setItem('chat-lang', currentLang);
-    if (isRecording) {
-      stopRecording();
-      toggleVoice(); // Restart recognition with new language
-    }
-  });
+  function detectBrowserLanguage() {
+    const lang = navigator.language || navigator.userLanguage || 'en-US';
+    return lang.startsWith('hi') ? 'hi' : 'en'; // Auto-detect based on browser, fix Hindi issue
+  }
 
   proCta.addEventListener('click', (e) => {
     e.preventDefault();
-    sessionID = crypto.randomUUID(); // New session on each open
+    sessionID = crypto.randomUUID();
     overlay.classList.remove('hidden');
     overlay.classList.add('visible');
     addMessage('system', 'Initiating InterUniverse Portal...');
     setTimeout(() => {
       addMessage('system', 'Portal Active. Send Your Signal.');
       initWebSocket();
-    }, 1500);
+    }, 1000); // Reduced delay for faster feel
   });
 
   closeBtn.addEventListener('click', () => {
     overlay.classList.remove('visible');
-    setTimeout(() => overlay.classList.add('hidden'), 500);
+    setTimeout(() => overlay.classList.add('hidden'), 300);
     stopRecording();
     if (ws) ws.close();
   });
@@ -73,27 +58,31 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(result => result[0].transcript)
       .join('')
       .trim();
+    input.value = transcript; // Update in realtime
+    if (!event.results[event.results.length - 1].isFinal) return; // Wait for final
     if (transcript !== lastTranscript) {
-      input.value = transcript;
       lastTranscript = transcript;
       resetSilenceTimer();
     }
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start();
+    if (isRecording) {
+      recognition.start(); // Auto-restart for continuous
+    }
   };
 
   recognition.onspeechend = () => {
     silenceTimer = setTimeout(() => {
       if (isRecording && input.value.trim()) {
-        sendVoiceMessage();
+        sendVoiceMessage(); // Auto-send after silence
       }
-    }, 2000); // 2s silence threshold
+    }, 1500); // Reduced to 1.5s for faster response
   };
 
   recognition.onerror = (event) => {
     console.error('STT Error:', event.error);
+    if (event.error === 'no-speech' || event.error === 'aborted') return; // Ignore minor
     addMessage('system', 'Signal interference detected. Retry.');
     stopRecording();
   };
@@ -125,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isRecording && input.value.trim()) {
         sendVoiceMessage();
       }
-    }, 2000);
+    }, 1500);
   }
 
   function sendTextMessage() {
@@ -142,58 +131,57 @@ document.addEventListener('DOMContentLoaded', () => {
     addMessage('user', text);
     input.value = '';
     lastTranscript = '';
-    transmitSignal(text);
-    stopRecording();
+    transmitSignal(text, true); // Flag as voice for potential backend handling
+    // Do not stop recording here; keep continuous for realtime speech-to-speech
   }
 
-  function transmitSignal(text) {
+  function transmitSignal(text, isVoice = false) {
     addMessage('system', 'Transmitting Signal to InterUniverse...');
-    console.log(`Sending message: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}" }`);
+    console.log(`Sending: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}", isVoice: ${isVoice} }`);
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ text, lang: currentLang, sessionID }));
+      ws.send(JSON.stringify({ text, lang: currentLang, sessionID, isVoice }));
       setTimeout(() => {
-        if (!document.querySelector('.pro-chat-message.ai')) {
-          addMessage('system', 'InterUniverse response delayed. Retrying...');
+        if (!document.querySelector('.pro-chat-message.ai:last-of-type')) {
+          addMessage('system', 'Response delayed. Retrying...');
           initWebSocket();
         }
-      }, 5000); // 5s timeout
+      }, 3000); // Reduced timeout for faster retry
     } else {
-      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      addMessage('system', 'Link disrupted. Reconnecting...');
       initWebSocket();
     }
   }
 
   function initWebSocket() {
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      addMessage('system', 'Failed to connect to InterUniverse after multiple attempts.');
+      addMessage('system', 'Failed to connect after attempts. Check network.');
       return;
     }
-    console.log(`Attempting to connect to wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/, attempt ${reconnectAttempts + 1}`);
+    console.log(`Connecting to wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/, attempt ${reconnectAttempts + 1}`);
     ws = new WebSocket('wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/');
     ws.onopen = () => {
-      console.log('Connected to InterUniverse with sessionID:', sessionID);
-      reconnectAttempts = 0; // Reset on successful connection
+      console.log('Connected with sessionID:', sessionID);
+      reconnectAttempts = 0;
+      addMessage('system', 'InterUniverse Linked. Ready for Realtime Signals.');
     };
     ws.onmessage = (event) => {
-      console.log('Received message from InterUniverse:', event.data);
+      console.log('Received:', event.data);
       const data = JSON.parse(event.data);
       if (data.text) {
-        setTimeout(() => {
-          addMessage('ai', data.text);
-          speakResponse(data.text);
-          displayAIInsight(data.text);
-        }, 500); // Simulate decoding delay
+        addMessage('ai', data.text);
+        speakResponse(data.text);
+        displayAIInsight(data.text);
       }
     };
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      addMessage('system', 'InterUniverse link disrupted. Reconnecting...');
+      console.error('WS error:', error);
+      addMessage('system', 'Link disrupted. Reconnecting...');
       reconnectAttempts++;
-      setTimeout(initWebSocket, 1000); // Retry after 1s
+      setTimeout(initWebSocket, 500); // Faster retry
     };
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      addMessage('system', 'InterUniverse portal closed. Reopen to reconnect.');
+      console.log('WS disconnected');
+      addMessage('system', 'Portal closed. Reopen to reconnect.');
     };
   }
 
@@ -209,36 +197,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
     utterance.volume = 1;
-    utterance.rate = 1.1;
-    utterance.pitch = 1.2;
+    utterance.rate = 1.0; // Adjusted for natural speed
+    utterance.pitch = 1.0;
+    utterance.onend = () => {
+      if (isRecording) recognition.start(); // Resume listening after TTS for true two-way
+    };
     window.speechSynthesis.speak(utterance);
   }
 
   function displayAIInsight(text) {
-    const editor = window.open('', 'AIInsight', 'width=700,height=500');
-    if (editor && !editor.closed && editor.document) {
-      editor.document.write(`
-        <html><body style="background: #0a0a23; color: #e6e6fa; font-family: 'Courier New', monospace; padding: 20px;">
-          <h1 style="text-align: center; color: #00ffcc;">InterUniverse AI Insight</h1>
-          <div style="border: 2px solid #00ffcc; padding: 15px; border-radius: 10px;">
-            <pre style="white-space: pre-wrap; color: #e6e6fa;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-          </div>
-          <button onclick="window.close()" style="background: #00ffcc; color: #0a0a23; padding: 10px; border: none; cursor: pointer;">Close Portal</button>
-        </body></html>
-      `);
-      editor.document.close();
-    } else {
-      const insightDiv = document.createElement('div');
-      insightDiv.className = 'ai-insight';
-      insightDiv.innerHTML = `
-        <div style="background: #0a0a23; color: #e6e6fa; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #00ffcc;">
-          <h3>InterUniverse AI Insight</h3>
-          <pre style="white-space: pre-wrap; color: #e6e6fa;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-          <button onclick="this.parentElement.remove()" style="background: #00ffcc; color: #0a0a23; padding: 5px; border: none; cursor: pointer;">Close</button>
-        </div>
-      `;
-      messagesDiv.appendChild(insightDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+    // Simplified to overlay div for better UX, no new window to avoid pop-up blockers
+    const insightDiv = document.createElement('div');
+    insightDiv.className = 'ai-insight';
+    insightDiv.style = 'background: rgba(0, 255, 204, 0.1); border: 1px solid #00ffcc; padding: 10px; margin: 10px 0; border-radius: 5px;';
+    insightDiv.innerHTML = `
+      <h4 style="color: #00ffcc;">AI Insight</h4>
+      <p style="color: #e6e6fa;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+      <button onclick="this.parentElement.remove()" style="background: #00ffcc; color: #0a0a23; padding: 5px; border: none; cursor: pointer;">Close</button>
+    `;
+    messagesDiv.appendChild(insightDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 });
