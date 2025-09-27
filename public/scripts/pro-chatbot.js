@@ -1,7 +1,7 @@
 // pro-chatbot.js (updated frontend for language selection to fix Hindi issue, continuous listening for two-way speech-to-speech, auto-send on silence, improved reconnection)
 // Added language selector buttons for EN/HI to allow user choice, default to 'en' to fix English speaking issue.
 // Kept continuous recording, resume after TTS. Simplified insight to div only.
-// Fixed insertBefore error by inserting before input directly, assuming input is a direct child of overlay or adjusting reference.
+// Fixed insertBefore error by using input.parentNode.insertBefore to ensure correct parent is used.
 document.addEventListener('DOMContentLoaded', () => {
   const proCta = document.getElementById('pro-chat-cta');
   const overlay = document.getElementById('pro-chat-overlay');
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <button id="lang-en" class="lang-btn active">EN</button>
     <button id="lang-hi" class="lang-btn">HI</button>
   `;
-  overlay.insertBefore(langSelector, input); // Fixed: insert before input, assuming input is direct child of overlay
+  input.parentNode.insertBefore(langSelector, input); // Fixed: use input's parent to insert before input
 
   let isRecording = false;
   let silenceTimer;
