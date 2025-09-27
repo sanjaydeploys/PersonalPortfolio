@@ -33,6 +33,11 @@
       "source": "/contact",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/contact"
     },
+  {
+      "source": "/blogs-by-sanjay",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/blogs-by-sanjay"
+    },
+    
     {
       "source": "/kileshwar-mahadev-ji-neemuch",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/kileshwar-mahadev-ji-neemuch"
