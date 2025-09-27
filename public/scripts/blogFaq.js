@@ -1,7 +1,8 @@
+
 /* blogFaq.js
    Dual-language (en/hi) FAQ builder for Sanjay Patidar's SSR blog page.
    Maintains class names/attributes for compatibility with interviewFaqToggle.js and interviewAudio.js.
-   Covers blog topics: Full-Stack, DSA, React, AI, AWS, JavaScript, cold email, education reform, prompt engineering.
+   Covers guides for mastering DSA, LeetCode, Full-Stack, AWS, and FAANG interviews.
 */
 
 /* ========== helpers (reused from portfolioFaqBuilder.js) ========== */
@@ -96,122 +97,162 @@ const buildULDual = (items = []) => {
 /* ========== FAQ data for blog page ========== */
 const blogQA = [
   {
-    q: { en: "What topics does Sanjay Patidar’s blog cover?", hi: "संजय पाटीदार का ब्लॉग किन विषयों को कवर करता है?" },
+    q: { en: "What guides are available on this blog page?", hi: "इस ब्लॉग पेज पर कौन सी गाइड उपलब्ध हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s blog offers guides on Full-Stack development, DSA, React, AI, AWS, JavaScript, and career strategies like cold email."
+        "This page offers guides to excel in coding interviews with DSA, Full-Stack, AWS, and LeetCode solutions."
       ], parts_hi: [
-        "संजय पाटीदार का ब्लॉग फुल-स्टैक डेवलपमेंट, DSA, React, AI, AWS, JavaScript और करियर रणनीतियों जैसे कोल्ड ईमेल पर गाइड प्रदान करता है।"
+        "यह पेज DSA, फुल-स्टैक, AWS और LeetCode समाधानों के साथ कोडिंग साक्षात्कार में उत्कृष्टता के लिए गाइड प्रदान करता है।"
       ]},
       { type: 'ul', items: [
-        { en: "Career & Interview: Full-Stack prep, DSA, AWS roadmaps.", hi: "करियर और साक्षात्कार: फुल-स्टैक तैयारी, DSA, AWS रोडमैप।" },
-        { en: "Software Engineering: React, JavaScript, VS Code guides.", hi: "सॉफ्टवेयर इंजीनियरिंग: React, JavaScript, VS Code गाइड।" },
-        { en: "Featured Research: Cold email, AI, education reform.", hi: "विशेष शोध: कोल्ड ईमेल, AI, शिक्षा सुधार।" }
+        { en: "DSA Prep: Pattern recognition, easy/medium LeetCode guides.", hi: "DSA तैयारी: पैटर्न पहचान, आसान/मध्यम LeetCode गाइड।" },
+        { en: "Full-Stack: 200+ Q&A for interview prep.", hi: "फुल-स्टैक: साक्षात्कार तैयारी के लिए 200+ प्रश्नोत्तर।" },
+        { en: "AWS: Career roadmaps and cloud strategies.", hi: "AWS: करियर रोडमैप और क्लाउड रणनीतियाँ।" },
+        { en: "LeetCode: Solutions for Two Sum, 3Sum, and more.", hi: "LeetCode: Two Sum, 3Sum और अन्य के लिए समाधान।" }
       ]}
     ]
   },
   {
-    q: { en: "What is Sanjay Patidar’s Full-Stack Interview Prep?", hi: "संजय पाटीदार की फुल-स्टैक साक्षात्कार तैयारी क्या है?" },
+    q: { en: "How does Sanjay Patidar’s Full-Stack guide help?", hi: "संजय पाटीदार की फुल-स्टैक गाइड कैसे मदद करती है?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s Full-Stack Interview Prep guide offers 200+ categorized Q&A with toggle reveals and audio playback."
+        "Sanjay Patidar’s Full-Stack Interview Prep guide equips developers with tools to ace technical interviews."
       ], parts_hi: [
-        "संजय पाटीदार की फुल-स्टैक साक्षात्कार तैयारी गाइड 200+ वर्गीकृत प्रश्नोत्तर प्रदान करती है जिसमें टॉगल रिवील और ऑडियो प्लेबैक शामिल हैं।"
+        "संजय पाटीदार की फुल-स्टैक साक्षात्कार गाइड डेवलपर्स को तकनीकी साक्षात्कार में सफलता के लिए उपकरण प्रदान करती है।"
       ]},
       { type: 'ul', items: [
-        { en: "Covers HR, Technical, Behavioral, and Product questions.", hi: "HR, तकनीकी, व्यवहारिक और उत्पाद प्रश्नों को कवर करता है।" },
-        { en: "Interactive format with audio for effective learning.", hi: "प्रभावी शिक्षण के लिए ऑडियो के साथ इंटरैक्टिव प्रारूप।" },
+        { en: "Includes 200+ Q&A on HR, Technical, and Behavioral topics.", hi: "HR, तकनीकी और व्यवहारिक विषयों पर 200+ प्रश्नोत्तर शामिल हैं।" },
+        { en: "Features toggle reveals and audio for interactive learning.", hi: "इंटरैक्टिव शिक्षण के लिए टॉगल रिवील और ऑडियो शामिल हैं।" },
+        { en: "Tailored for FAANG and top-tier tech interviews.", hi: "FAANG और शीर्ष तकनीकी साक्षात्कार के लिए तैयार।" },
         { type: 'link', en: "Explore the guide.", hi: "गाइड देखें।", href: "https://sanjay-patidar.vercel.app/interview-prep" }
       ]}
     ]
   },
   {
-    q: { en: "How does Sanjay Patidar’s DSA Prep Guide help beginners?", hi: "संजय पाटीदार की DSA तैयारी गाइड शुरुआती लोगों की कैसे मदद करती है?" },
+    q: { en: "What is covered in the DSA Prep Guidance Series?", hi: "DSA तैयारी गाइड सीरीज में क्या शामिल है?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s DSA Prep Guide is a 20-day plan for LeetCode beginners, covering key data structures and algorithms."
+        "The DSA Prep Guidance Series helps beginners tackle LeetCode with structured learning paths."
       ], parts_hi: [
-        "संजय पाटीदार की DSA तैयारी गाइड LeetCode शुरुआती लोगों के लिए 20-दिवसीय योजना है, जो प्रमुख डेटा संरचनाओं और एल्गोरिदम को कवर करती है।"
+        "DSA तैयारी गाइड सीरीज शुरुआती लोगों को संरचित शिक्षण पथ के साथ LeetCode से निपटने में मदद करती है।"
       ]},
       { type: 'ul', items: [
-        { en: "Topics: Arrays, Linked Lists, Trees, Graphs, and more.", hi: "विषय: Arrays, Linked Lists, Trees, Graphs और बहुत कुछ।" },
-        { en: "JavaScript solutions for practical coding practice.", hi: "प्रैक्टिकल कोडिंग अभ्यास के लिए JavaScript समाधान।" },
-        { type: 'link', en: "Explore the guide.", hi: "गाइड देखें।", href: "https://sanjay-patidar.vercel.app/dsa-prep-easy" }
+        { en: "Guides for easy and medium LeetCode problems.", hi: "आसान और मध्यम LeetCode समस्याओं के लिए गाइड।" },
+        { en: "Focuses on pattern recognition for problem-solving.", hi: "समस्या समाधान के लिए पैटर्न पहचान पर ध्यान।" },
+        { en: "Includes JavaScript solutions with Big O analysis.", hi: "Big O विश्लेषण के साथ JavaScript समाधान शामिल हैं।" },
+        { type: 'link', en: "Explore pattern recognition.", hi: "पैटर्न पहचान देखें।", href: "https://sanjay-patidar.vercel.app/dsa-pattern-recognition" }
       ]}
     ]
   },
   {
-    q: { en: "What does Sanjay Patidar’s AWS Career Roadmap cover?", hi: "संजय पाटीदार का AWS करियर रोडमैप क्या कवर करता है?" },
+    q: { en: "What does Sanjay Patidar’s AWS guide offer?", hi: "संजय पाटीदार की AWS गाइड क्या प्रदान करती है?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s AWS Career Roadmap explores certifications, core services, and hybrid architectures."
+        "Sanjay Patidar’s AWS Career Roadmap guides developers through cloud career paths."
       ], parts_hi: [
-        "संजय पाटीदार का AWS करियर रोडमैप प्रमाणन, मुख्य सेवाओं और हाइब्रिड आर्किटेक्चर को कवर करता है।"
+        "संजय पाटीदार का AWS करियर रोडमैप डेवलपर्स को क्लाउड करियर पथ के माध्यम से मार्गदर्शन करता है।"
       ]},
       { type: 'ul', items: [
-        { en: "Guides on AWS certifications and career paths.", hi: "AWS प्रमाणन और करियर पथ पर गाइड।" },
-        { en: "Real-world applications and cloud strategies.", hi: "वास्तविक दुनिया के अनुप्रयोग और क्लाउड रणनीतियाँ।" },
+        { en: "Covers AWS certifications and core services.", hi: "AWS प्रमाणन और मुख्य सेवाओं को कवर करता है।" },
+        { en: "Explores hybrid architectures and real-world use cases.", hi: "हाइब्रिड आर्किटेक्चर और वास्तविक उपयोग के मामलों की खोज।" },
+        { en: "Ideal for building cloud-focused careers.", hi: "क्लाउड-केंद्रित करियर बनाने के लिए आदर्श।" },
         { type: 'link', en: "Explore the guide.", hi: "गाइड देखें।", href: "https://eduxcel.vercel.app/careers/aws" }
       ]}
     ]
   },
   {
-    q: { en: "Why follow Sanjay Patidar’s React and JavaScript blogs?", hi: "संजय पाटीदार के React और JavaScript ब्लॉग क्यों पढ़ें?" },
+    q: { en: "What are the In-Depth DSA LeetCode Solutions?", hi: "इन-डेप्थ DSA LeetCode समाधान क्या हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s blogs on React and JavaScript provide beginner-friendly guides and advanced setup tips."
+        "In-Depth DSA LeetCode Solutions offer detailed guides for solving key coding problems."
       ], parts_hi: [
-        "संजय पाटीदार के React और JavaScript ब्लॉग शुरुआती लोगों के लिए गाइड और उन्नत सेटअप टिप्स प्रदान करते हैं।"
+        "इन-डेप्थ DSA LeetCode समाधान प्रमुख कोडिंग समस्याओं को हल करने के लिए विस्तृत गाइड प्रदान करते हैं।"
       ]},
       { type: 'ul', items: [
-        { en: "Covers React components, JSX, hooks, and Vite setups.", hi: "React कंपोनेंट्स, JSX, हुक और Vite सेटअप को कवर करता है।" },
-        { en: "JavaScript basics with real code examples.", hi: "वास्तविक कोड उदाहरणों के साथ JavaScript मूल बातें।" },
-        { type: 'link', en: "Read React blogs.", hi: "React ब्लॉग पढ़ें।", href: "https://zedemy.vercel.app/post/what-is-react-and-why-use-it-for-web-development" }
+        { en: "Covers Two Sum, 3Sum, and Sliding Window Maximum.", hi: "Two Sum, 3Sum और Sliding Window Maximum को कवर करता है।" },
+        { en: "Includes JavaScript code with dry runs and edge cases.", hi: "ड्राई रन और एज केस के साथ JavaScript कोड शामिल है।" },
+        { en: "Designed for FAANG interview coding rounds.", hi: "FAANG साक्षात्कार कोडिंग राउंड के लिए डिज़ाइन किया गया।" },
+        { type: 'link', en: "Explore Two Sum solution.", hi: "Two Sum समाधान देखें।", href: "https://sanjay-patidar.vercel.app/two-sum-pattern" }
       ]}
     ]
   },
   {
-    q: { en: "What is Sanjay Patidar’s Cold Email Strategy for 2025?", hi: "2025 के लिए संजय पाटीदार की कोल्ड ईमेल रणनीति क्या है?" },
+    q: { en: "How do Sanjay Patidar’s LeetCode guides aid FAANG prep?", hi: "संजय पाटीदार की LeetCode गाइड FAANG तैयारी में कैसे मदद करती हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s Cold Email Guide offers templates and strategies for jobs and internships, recognized by Amazon and Microsoft."
+        "Sanjay Patidar’s LeetCode solutions provide in-depth strategies for FAANG interviews."
       ], parts_hi: [
-        "संजय पाटीदार की कोल्ड ईमेल गाइड नौकरी और इंटर्नशिप के लिए टेम्पलेट और रणनीतियाँ प्रदान करती है, जिसे Amazon और Microsoft ने मान्यता दी है।"
+        "संजय पाटीदार की LeetCode समाधान FAANG साक्षात्कार के लिए गहन रणनीतियाँ प्रदान करते हैं।"
       ]},
       { type: 'ul', items: [
-        { en: "Ranked #4 on Google for cold email internship queries.", hi: "कोल्ड ईमेल इंटर्नशिप क्वेरी के लिए Google पर #4 रैंक।" },
-        { en: "Practical tips for effective outreach.", hi: "प्रभावी आउटरीच के लिए व्यावहारिक टिप्स।" },
-        { type: 'link', en: "Read the guide.", hi: "गाइड पढ़ें।", href: "https://sanjay-patidar.vercel.app/cold-email-guide" }
+        { en: "Explains problems like 3Sum Closest and Find All Anagrams.", hi: "3Sum Closest और Find All Anagrams जैसे समस्याओं की व्याख्या।" },
+        { en: "Includes multi-language code and interview tips.", hi: "बहु-भाषा कोड और साक्षात्कार टिप्स शामिल हैं।" },
+        { en: "Focuses on patterns like two pointers and hash maps.", hi: "टू पॉइंटर्स और हैश मैप जैसे पैटर्न पर ध्यान।" },
+        { type: 'link', en: "Explore 3Sum solution.", hi: "3Sum समाधान देखें।", href: "https://sanjay-patidar.vercel.app/three-sum" }
       ]}
     ]
   },
   {
-    q: { en: "How does Sanjay Patidar address India’s education crisis?", hi: "संजय पाटीदार भारत की शिक्षा संकट को कैसे संबोधित करते हैं?" },
+    q: { en: "What techniques are used in Two Sum solutions?", hi: "Two Sum समाधानों में कौन सी तकनीकें उपयोग की जाती हैं?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s blog on India’s education crisis proposes school reforms and is featured in Google AI Overview."
+        "Two Sum solutions teach efficient problem-solving for coding interviews."
       ], parts_hi: [
-        "संजय पाटीदार का भारत की शिक्षा संकट पर ब्लॉग स्कूल सुधारों का प्रस्ताव करता है और Google AI Overview में शामिल है।"
+        "Two Sum समाधान कोडिंग साक्षात्कार के लिए कुशल समस्या समाधान सिखाते हैं।"
       ]},
       { type: 'ul', items: [
-        { en: "Ranked #3 for education reform queries.", hi: "शिक्षा सुधार क्वेरी के लिए #3 रैंक।" },
-        { en: "Guides policymakers and educators.", hi: "नीति निर्माताओं और शिक्षकों के लिए मार्गदर्शन।" },
-        { type: 'link', en: "Read the blog.", hi: "ब्लॉग पढ़ें।", href: "https://sanjay-patidar.vercel.app/indian-education-crisis" }
+        { en: "Covers brute force, two pointers, and one-pass hash map.", hi: "ब्रूट फोर्स, टू पॉइंटर्स और वन-पास हैश मैप को कवर करता है।" },
+        { en: "Includes dry runs and edge case analysis in JavaScript.", hi: "JavaScript में ड्राई रन और एज केस विश्लेषण शामिल हैं।" },
+        { en: "Prepares for FAANG technical interviews.", hi: "FAANG तकनीकी साक्षात्कार के लिए तैयार करता है।" },
+        { type: 'link', en: "Explore Two Sum solution.", hi: "Two Sum समाधान देखें।", href: "https://sanjay-patidar.vercel.app/two-sum-pattern" }
       ]}
     ]
   },
   {
-    q: { en: "What is Sanjay Patidar’s Prompt Engineering Guide?", hi: "संजय पाटीदार की प्रॉम्प्ट इंजीनियरिंग गाइड क्या है?" },
+    q: { en: "How does Sanjay Patidar’s Sliding Window guide work?", hi: "संजय पाटीदार की Sliding Window गाइड कैसे काम करती है?" },
     a: [
       { type: 'p', parts_en: [
-        "Sanjay Patidar’s Prompt Engineering Guide for AI in India is peer-reviewed by the ChatGPT team with 50k+ reads."
+        "Sanjay Patidar’s Sliding Window guides tackle complex LeetCode problems efficiently."
       ], parts_hi: [
-        "संजय पाटीदार की भारत में AI के लिए प्रॉम्प्ट इंजीनियरिंग गाइड को ChatGPT टीम द्वारा समीक्षा की गई है और इसे 50k+ बार पढ़ा गया है।"
+        "संजय पाटीदार की Sliding Window गाइड जटिल LeetCode समस्याओं को कुशलतापूर्वक हल करती हैं।"
       ]},
       { type: 'ul', items: [
-        { en: "Covers AI prompt strategies for 2025.", hi: "2025 के लिए AI प्रॉम्प्ट रणनीतियों को कवर करता है।" },
-        { en: "In-depth guide for AI enthusiasts.", hi: "AI उत्साही लोगों के लिए गहन गाइड।" },
-        { type: 'link', en: "Read the guide.", hi: "गाइड पढ़ें।", href: "https://sanjay-patidar.vercel.app/prompt-engineering-guide-2025" }
+        { en: "Covers Minimum Window Substring and Sliding Window Maximum.", hi: "Minimum Window Substring और Sliding Window Maximum को कवर करता है।" },
+        { en: "Uses two pointers and frequency maps for optimization.", hi: "अनुकूलन के लिए टू पॉइंटर्स और फ्रीक्वेंसी मैप का उपयोग।" },
+        { en: "Includes ASCII dry runs and FAANG-focused tips.", hi: "ASCII ड्राई रन और FAANG-केंद्रित टिप्स शामिल हैं।" },
+        { type: 'link', en: "Explore Sliding Window.", hi: "Sliding Window देखें।", href: "https://sanjay-patidar.vercel.app/minimum-variable-window-substring" }
+      ]}
+    ]
+  },
+  {
+    q: { en: "Why are JavaScript solutions emphasized in LeetCode guides?", hi: "LeetCode गाइड में JavaScript समाधानों पर क्यों जोर दिया गया है?" },
+    a: [
+      { type: 'p', parts_en: [
+        "JavaScript solutions make LeetCode guides practical for web developers."
+      ], parts_hi: [
+        "JavaScript समाधान LeetCode गाइड को वेब डेवलपर्स के लिए व्यावहारिक बनाते हैं।"
+      ]},
+      { type: 'ul', items: [
+        { en: "Covers problems like Find All Anagrams and Subarray Sum.", hi: "Find All Anagrams और Subarray Sum जैसी समस्याओं को कवर करता है।" },
+        { en: "Optimized for clarity and interview readiness.", hi: "स्पष्टता और साक्षात्कार तत्परता के लिए अनुकूलित।" },
+        { en: "Includes Big O analysis and edge case handling.", hi: "Big O विश्लेषण और एज केस हैंडलिंग शामिल है।" },
+        { type: 'link', en: "Explore Subarray Sum.", hi: "Subarray Sum देखें।", href: "https://sanjay-patidar.vercel.app/lc560-subarray-sum-k-solution" }
+      ]}
+    ]
+  },
+  {
+    q: { en: "How does Sanjay Patidar’s DSA Pattern guide help?", hi: "संजय पाटीदार की DSA पैटर्न गाइड कैसे मदद करती है?" },
+    a: [
+      { type: 'p', parts_en: [
+        "Sanjay Patidar’s DSA Pattern Recognition guide boosts LeetCode problem-solving skills."
+      ], parts_hi: [
+        "संजय पाटीदार की DSA पैटर्न पहचान गाइड LeetCode समस्या समाधान कौशल को बढ़ाती है।"
+      ]},
+      { type: 'ul', items: [
+        { en: "Teaches 15 key patterns for FAANG interviews.", hi: "FAANG साक्षात्कार के लिए 15 प्रमुख पैटर्न सिखाता है।" },
+        { en: "Includes strategies for Two Sum, 3Sum, and more.", hi: "Two Sum, 3Sum और अन्य के लिए रणनीतियाँ शामिल हैं।" },
+        { en: "Offers practical JavaScript coding tips.", hi: "व्यावहारिक JavaScript कोडिंग टिप्स प्रदान करता है।" },
+        { type: 'link', en: "Explore the guide.", hi: "गाइड देखें।", href: "https://sanjay-patidar.vercel.app/dsa-pattern-recognition" }
       ]}
     ]
   }
@@ -264,8 +305,8 @@ const buildBlogFAQSection = (id, title, qaArray) => {
     <section class="section faq-section" id="${id}">
       <h2>${renderLangSpans(titleEn, titleHi)}</h2>
       <p>${renderLangSpans(
-        "Explore Sanjay Patidar’s blogs on Full-Stack, DSA, React, AI, AWS, and career strategies.",
-        "संजय पाटीदार के फुल-स्टैक, DSA, React, AI, AWS और करियर रणनीतियों पर ब्लॉग देखें।"
+        "Explore Sanjay Patidar’s guides on DSA, Full-Stack, AWS, and LeetCode for coding interviews.",
+        "संजय पाटीदार की DSA, फुल-स्टैक, AWS और LeetCode पर कोडिंग साक्षात्कार के लिए गाइड देखें।"
       )}</p>
       ${faqList}
     </section>
@@ -279,7 +320,7 @@ function injectBlogFAQs() {
 
   if (container.dataset.faqsInjected === '1') return true;
 
-  const html = buildBlogFAQSection('blog-faqs', 'Sanjay Patidar’s Blog FAQs', blogQA);
+  const html = buildBlogFAQSection('blog-faqs', 'Blog FAQs', blogQA);
   container.innerHTML = html;
   container.dataset.faqsInjected = '1';
 
