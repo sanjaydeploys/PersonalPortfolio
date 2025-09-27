@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     console.log(`Attempting to connect to wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/, attempt ${reconnectAttempts + 1}`);
-    ws = new WebSocket('wss://jsmee2qcek.execute-api.ap-south-1.amazonaws.com/prod/');
+ws = new WebSocket('wss://coc9wnbdbe.execute-api.ap-south-1.amazonaws.com/prod/');
     ws.onopen = () => {
       console.log('Connected to InterUniverse with sessionID:', sessionID);
       reconnectAttempts = 0; // Reset on successful connection
