@@ -8,11 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceBtn = document.getElementById('pro-chat-voice');
   const messagesDiv = document.getElementById('pro-chat-messages');
 
+  // Add language selector
+  const langSelect = document.createElement('select');
+  langSelect.id = 'pro-chat-lang';
+  langSelect.innerHTML = `
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+  `;
+  langSelect.style.margin = '10px';
+  overlay.insertBefore(langSelect, messagesDiv);
+
   let isRecording = false;
   let silenceTimer;
   let ws;
   let sessionID = crypto.randomUUID();
   let currentLang = localStorage.getItem('chat-lang') || 'en';
+  langSelect.value = currentLang;
   let lastTranscript = '';
   let reconnectAttempts = 0;
   const MAX_RECONNECT_ATTEMPTS = 3;
@@ -20,6 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
   recognition.interimResults = false;
+
+  langSelect.addEventListener('change', () => {
+    currentLang = langSelect.value;
+    localStorage.setItem('chat-lang', currentLang);
+    if (isRecording) {
+      stopRecording();
+      toggleVoice(); // Restart recognition with new language
+    }
+  });
 
   proCta.addEventListener('click', (e) => {
     e.preventDefault();
@@ -66,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   recognition.onspeechend = () => {
     silenceTimer = setTimeout(() => {
-      if (isRecording && input.value.trim() && input.value !== lastTranscript) {
+      if (isRecording && input.value.trim()) {
         sendVoiceMessage();
       }
     }, 2000); // 2s silence threshold
@@ -102,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetSilenceTimer() {
     clearTimeout(silenceTimer);
     silenceTimer = setTimeout(() => {
-      if (isRecording && input.value.trim() && input.value !== lastTranscript) {
+      if (isRecording && input.value.trim()) {
         sendVoiceMessage();
       }
     }, 2000);
@@ -118,9 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function sendVoiceMessage() {
     const text = input.value.trim();
-    if (!text || text === lastTranscript) return;
+    if (!text) return;
     addMessage('user', text);
     input.value = '';
+    lastTranscript = '';
     transmitSignal(text);
     stopRecording();
   }
