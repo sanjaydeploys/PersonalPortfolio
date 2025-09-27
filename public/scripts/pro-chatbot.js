@@ -1,4 +1,6 @@
-// pro-chatbot.js (updated frontend for better STT handling, lang detection, auto-send, and realtime feel)
+// pro-chatbot.js (updated frontend for language selection to fix Hindi issue, continuous listening for two-way speech-to-speech, auto-send on silence, improved reconnection)
+// Added language selector buttons for EN/HI to allow user choice, default to 'en' to fix English speaking issue.
+// Kept continuous recording, resume after TTS. Simplified insight to div only.
 document.addEventListener('DOMContentLoaded', () => {
   const proCta = document.getElementById('pro-chat-cta');
   const overlay = document.getElementById('pro-chat-overlay');
@@ -8,22 +10,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceBtn = document.getElementById('pro-chat-voice');
   const messagesDiv = document.getElementById('pro-chat-messages');
 
+  // Add language selector
+  const langSelector = document.createElement('div');
+  langSelector.id = 'lang-selector';
+  langSelector.innerHTML = `
+    <button id="lang-en" class="lang-btn active">EN</button>
+    <button id="lang-hi" class="lang-btn">HI</button>
+  `;
+  overlay.insertBefore(langSelector, input.parentElement); // Insert before input
+
   let isRecording = false;
   let silenceTimer;
   let ws;
   let sessionID = crypto.randomUUID();
-  let currentLang = detectBrowserLanguage(); // Improved lang detection
+  let currentLang = 'en'; // Default to English to fix issue
   let lastTranscript = '';
   let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 5; // Increased for better reliability
+  const MAX_RECONNECT_ATTEMPTS = 5;
 
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.continuous = true;
-  recognition.interimResults = true; // Changed to true for realtime transcription display
+  recognition.interimResults = true;
 
-  function detectBrowserLanguage() {
-    const lang = navigator.language || navigator.userLanguage || 'en-US';
-    return lang.startsWith('hi') ? 'hi' : 'en'; // Auto-detect based on browser, fix Hindi issue
+  // Language button listeners
+  document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+  document.getElementById('lang-hi').addEventListener('click', () => setLanguage('hi'));
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`lang-${lang}`).classList.add('active');
+    if (isRecording) {
+      recognition.stop();
+      recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+      recognition.start();
+    }
+    addMessage('system', `Language set to ${lang.toUpperCase()}.`);
   }
 
   proCta.addEventListener('click', (e) => {
@@ -35,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       addMessage('system', 'Portal Active. Send Your Signal.');
       initWebSocket();
-    }, 1000); // Reduced delay for faster feel
+    }, 1000);
   });
 
   closeBtn.addEventListener('click', () => {
@@ -58,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(result => result[0].transcript)
       .join('')
       .trim();
-    input.value = transcript; // Update in realtime
-    if (!event.results[event.results.length - 1].isFinal) return; // Wait for final
+    input.value = transcript;
+    if (!event.results[event.results.length - 1].isFinal) return;
     if (transcript !== lastTranscript) {
       lastTranscript = transcript;
       resetSilenceTimer();
@@ -68,23 +90,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   recognition.onend = () => {
     if (isRecording) {
-      recognition.start(); // Auto-restart for continuous
+      setTimeout(() => recognition.start(), 100); // Slight delay to avoid errors
     }
   };
 
   recognition.onspeechend = () => {
     silenceTimer = setTimeout(() => {
       if (isRecording && input.value.trim()) {
-        sendVoiceMessage(); // Auto-send after silence
+        sendVoiceMessage();
       }
-    }, 1500); // Reduced to 1.5s for faster response
+    }, 1500);
   };
 
   recognition.onerror = (event) => {
     console.error('STT Error:', event.error);
-    if (event.error === 'no-speech' || event.error === 'aborted') return; // Ignore minor
-    addMessage('system', 'Signal interference detected. Retry.');
-    stopRecording();
+    if (event.error !== 'no-speech' && event.error !== 'aborted') {
+      addMessage('system', 'Signal interference detected. Retry.');
+      stopRecording();
+    }
   };
 
   function toggleVoice() {
@@ -131,8 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
     addMessage('user', text);
     input.value = '';
     lastTranscript = '';
-    transmitSignal(text, true); // Flag as voice for potential backend handling
-    // Do not stop recording here; keep continuous for realtime speech-to-speech
+    transmitSignal(text, true);
+    // Keep recording for two-way conversation
   }
 
   function transmitSignal(text, isVoice = false) {
@@ -140,12 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Sending: { text: "${text}", lang: "${currentLang}", sessionID: "${sessionID}", isVoice: ${isVoice} }`);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ text, lang: currentLang, sessionID, isVoice }));
-      setTimeout(() => {
-        if (!document.querySelector('.pro-chat-message.ai:last-of-type')) {
-          addMessage('system', 'Response delayed. Retrying...');
-          initWebSocket();
-        }
-      }, 3000); // Reduced timeout for faster retry
     } else {
       addMessage('system', 'Link disrupted. Reconnecting...');
       initWebSocket();
@@ -169,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = JSON.parse(event.data);
       if (data.text) {
         addMessage('ai', data.text);
-        speakResponse(data.text);
+        speakResponse(data.text, data.lang || currentLang);
         displayAIInsight(data.text);
       }
     };
@@ -177,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('WS error:', error);
       addMessage('system', 'Link disrupted. Reconnecting...');
       reconnectAttempts++;
-      setTimeout(initWebSocket, 500); // Faster retry
+      setTimeout(initWebSocket, 500);
     };
     ws.onclose = () => {
       console.log('WS disconnected');
@@ -193,20 +210,21 @@ document.addEventListener('DOMContentLoaded', () => {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  function speakResponse(text) {
+  function speakResponse(text, lang) {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
     utterance.volume = 1;
-    utterance.rate = 1.0; // Adjusted for natural speed
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
+    // Pause recognition during TTS to avoid echo/feedback
+    if (isRecording) recognition.stop();
     utterance.onend = () => {
-      if (isRecording) recognition.start(); // Resume listening after TTS for true two-way
+      if (isRecording) recognition.start();
     };
     window.speechSynthesis.speak(utterance);
   }
 
   function displayAIInsight(text) {
-    // Simplified to overlay div for better UX, no new window to avoid pop-up blockers
     const insightDiv = document.createElement('div');
     insightDiv.className = 'ai-insight';
     insightDiv.style = 'background: rgba(0, 255, 204, 0.1); border: 1px solid #00ffcc; padding: 10px; margin: 10px 0; border-radius: 5px;';
