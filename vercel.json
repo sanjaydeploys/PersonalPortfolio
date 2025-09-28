@@ -176,7 +176,11 @@
       "source": "/sliding-window-patterns",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sliding-window-patterns"
     },
-    
+ {
+      "source": "/prefix-sum-monotonic-queue-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/prefix-sum-monotonic-queue-patterns"
+    },
+   
      {
       "source": "/dsa-prep-easy",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
