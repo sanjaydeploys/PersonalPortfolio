@@ -163,7 +163,10 @@
       "source": "/dsa-pattern-recognition",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-pattern-recognition"
     },
-    
+  {
+      "source": "/two-pointer-k-sum-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/two-pointer-k-sum-patterns"
+    },
        {
       "source": "/interview-prep",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/interview-prep"
