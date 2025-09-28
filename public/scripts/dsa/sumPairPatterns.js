@@ -1852,3 +1852,27 @@ if (!document.getElementById('faqs-container') || document.getElementById('faqs-
     injectSumPairFAQs();
   });
 }
+
+const cssStyles = `
+.level-fresher {
+  border-left: 4px solid green;
+  padding-left: 10px;
+}
+.level-intermediate {
+  border-left: 4px solid orange;
+  padding-left: 10px;
+}
+.level-senior {
+  border-left: 4px solid red;
+  padding-left: 10px;
+}
+.faq-item.problem-statement {
+  background-color: #f0f8ff;
+  font-weight: bold;
+}
+`;
+
+// Inject CSS
+const styleElement = document.createElement('style');
+styleElement.textContent = cssStyles;
+document.head.appendChild(styleElement);
