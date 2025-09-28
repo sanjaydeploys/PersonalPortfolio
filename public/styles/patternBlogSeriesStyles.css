@@ -44,7 +44,22 @@
     backdrop-filter: blur(10px);
   }
 
-
+.level-fresher {
+  border-left: 4px solid green;
+  padding-left: 10px;
+}
+.level-intermediate {
+  border-left: 4px solid orange;
+  padding-left: 10px;
+}
+.level-senior {
+  border-left: 4px solid red;
+  padding-left: 10px;
+}
+.faq-item.problem-statement {
+  background-color: #f0f8ff;
+  font-weight: bold;
+}
 /* Global Box-Sizing */
 * {
   box-sizing: border-box;
