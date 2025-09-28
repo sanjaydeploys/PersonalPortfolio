@@ -1485,6 +1485,245 @@
     opacity: 1;
   }
 
+/* ===========================
+   Enhanced FAQ styles (Active highlight + VS Code theme)
+   Drop-in replacement / augmentation for previous FAQ styles
+   =========================== */
+
+/* Base container adjustments (slightly tighter) */
+.faq-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: var(--text-color, #e6eef8);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Heading */
+.faq-section > h2 {
+  font-size: 1.6rem;
+  color: var(--secondary-color, #e85a5a);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.3px;
+}
+
+/* FAQ list spacing */
+.faq-list { gap: 1rem; display: flex; flex-direction: column; }
+
+/* Card / item - stronger "editor" look */
+.faq-item {
+  border-radius: 12px;
+  padding: 0.9rem 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
+  gap: 0.45rem;
+  position: relative;
+  transition: box-shadow .18s ease, transform .12s ease, background .18s ease, border-color .18s ease;
+  background: linear-gradient(180deg, rgba(10,10,12,0.36), rgba(8,8,10,0.28));
+  border: 1px solid rgba(255,255,255,0.04);
+  overflow: visible;
+}
+
+/* default neutral card */
+.faq-item:not(:has(.faq-answer.active)) {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+}
+
+/* Active highlight – two ways: with :has() (modern) and fallback using question aria-expanded */
+.faq-item:has(.faq-answer.active),
+.faq-question[aria-expanded="true"].active,
+.faq-question[aria-expanded="true"] + .speak-btn,
+.faq-answer.active {
+  border-color: color-mix(in srgb, var(--secondary-color, #e85a5a) 25%, rgba(255,255,255,0.06));
+}
+
+/* Parent glow when active */
+.faq-item:has(.faq-answer.active) {
+  box-shadow: 0 14px 40px rgba(232,90,90,0.12), 0 2px 8px rgba(0,0,0,0.45);
+  transform: translateY(-4px);
+  background: linear-gradient(180deg, rgba(18,18,22,0.6), rgba(12,12,14,0.56));
+}
+
+/* Fallback highlight using adjacent selectors */
+.faq-question[aria-expanded="true"] {
+  color: var(--secondary-color, #e85a5a);
+}
+
+/* Chevron rotation & stronger color when active */
+.faq-question::after {
+  content: '›';
+  margin-left: 0.5rem;
+  transition: transform .25s ease, color .18s ease, opacity .18s ease;
+  color: var(--muted-text, rgba(255,255,255,0.6));
+}
+.faq-question[aria-expanded="true"]::after {
+  transform: rotate(90deg) translateX(1px);
+  color: var(--secondary-color, #e85a5a);
+  opacity: 1;
+}
+
+/* Question (bigger & more prominent) */
+.faq-question {
+  font-weight: 700;
+  font-size: 1.03rem;
+  line-height: 1.15;
+  color: var(--text-color, #fff);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+/* Speak button style – becomes accent when item expanded */
+.speak-btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--muted-text, rgba(255,255,255,0.88));
+  padding: 0.36rem 0.62rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
+  min-width: 92px;
+}
+
+/* Make play button accent when its FAQ is active (adjacent selector) */
+.faq-question[aria-expanded="true"] + .speak-btn,
+.speak-btn:focus {
+  border-color: rgba(232,90,90,0.18);
+  color: var(--secondary-color, #e85a5a);
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(180deg, rgba(232,90,90,0.03), rgba(255,255,255,0.01));
+}
+
+/* Answer area transition */
+.faq-answer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .42s cubic-bezier(.2,.85,.25,1), opacity .22s ease, padding-top .18s ease;
+  opacity: 0;
+  padding-top: 0;
+}
+
+/* Active answer visible */
+.faq-answer.active {
+  opacity: 1;
+  padding-top: 0.75rem;
+}
+
+/* VSCode-style code-panel for bullets and inline code */
+
+/* Answer inner wrapper: give a code editor feeling */
+.faq-answer > .faq-bullets,
+.faq-answer > p {
+  background: linear-gradient(180deg, rgba(6,8,12,0.45), rgba(10,12,16,0.42));
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.03);
+  margin: 0.25rem 0;
+  font-family: "SFMono-Regular", Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
+  font-size: 0.95rem;
+  color: #dfefff;
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+}
+
+/* When rendering multiple blocks, keep spacing */
+.faq-answer > .faq-bullets + p,
+.faq-answer > p + .faq-bullets,
+.faq-answer > p + p {
+  margin-top: 0.6rem;
+}
+
+/* Make list items look like code lines with a gutter (line numbers) */
+.faq-bullets {
+  counter-reset: line;
+  list-style: none;
+  padding-left: 0.9rem;
+  margin: 0;
+  display: block;
+}
+
+/* Each bullet renders a line number in the left gutter */
+.faq-bullets li {
+  counter-increment: line;
+  position: relative;
+  padding-left: 1.1rem; /* space for number */
+  margin: 0.25rem 0;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* gutter number pseudo-element */
+.faq-bullets li::before {
+  content: counter(line);
+  position: absolute;
+  left: -0.9rem;
+  top: 0;
+  width: 2rem;
+  text-align: right;
+  color: rgba(255,255,255,0.25);
+  font-size: 0.85rem;
+  font-family: "Roboto Mono", monospace;
+  padding-right: 0.6rem;
+  transform: translateY(0.08rem);
+  user-select: none;
+}
+
+/* Inline code styling */
+.faq-answer code {
+  background: rgba(0,0,0,0.32);
+  padding: 0.08rem 0.35rem;
+  border-radius: 6px;
+  border-left: 3px solid rgba(232,90,90,0.14);
+  color: #cff0ff;
+  font-family: "SFMono-Regular", Menlo, Monaco, monospace;
+  font-size: 0.9rem;
+}
+
+/* Links inside code panel */
+.faq-bullets a {
+  color: #9be1ff;
+  text-decoration: underline;
+}
+
+/* accessibility: ensure focus visibility */
+.faq-item :focus {
+  outline: 3px solid rgba(232,90,90,0.12);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .faq-item { grid-template-columns: 1fr auto; }
+  .faq-answer > .faq-bullets,
+  .faq-answer > p { padding: 0.6rem; }
+  .faq-bullets li::before { left: -0.6rem; padding-right: 0.5rem; width: 1.6rem; font-size: .8rem; }
+}
+
+/* Narrow mobile layout: stacked */
+@media (max-width: 480px) {
+  .faq-item {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+  .speak-btn { justify-self: end; }
+  .faq-answer > .faq-bullets,
+  .faq-answer > p {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+}
+
+/* Fallback if :has() not supported - use sibling selectors already provided above.
+   :has() enhances parent styling where browser supports it. */
+
+/* END enhanced-faq-styles */
+
 
   
 .footer {
