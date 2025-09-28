@@ -168,6 +168,11 @@
       "source": "/interview-prep",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/interview-prep"
     },
+      {
+      "source": "/sum-pair-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sum-pair-patterns"
+    },
+  
      {
       "source": "/dsa-prep-easy",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
