@@ -8743,19 +8743,13 @@ i=1 (-1): left=2 (-1), right=5 (2) → -3 → adjust
 ];
 
 
-/* ========== builder: renders FAQ HTML with navigation ========== */
+/* ========== builder: renders FAQ HTML without sidebar navigation ========== */
 const buildSumPairFAQSection = (id, title, qaArray) => {
   let faqList = '<div class="faq-list">';
   qaArray.forEach((item, index) => {
     const uniqueId = `${id}-q${index + 1}`;
     const qObj = getLangText(item.q, 'en');
     const qEn = qObj.en;
-
-    // Add navigation link only for problem statement FAQs
-    if (qEn.includes("Problem Statement")) {
-      const problemId = qEn.split(" (")[1].replace(")", "").toLowerCase().replace(/ /g, "-");
-      navLinks += `<a href="#${problemId}" class="sidebar-link">${index + 1}. ${qEn}</a>`;
-    }
 
     faqList += `
       <div class="faq-item">
@@ -8790,14 +8784,12 @@ const buildSumPairFAQSection = (id, title, qaArray) => {
       </div>
     `;
   });
-  navLinks += '</nav>';
   faqList += '</div>';
 
   const titleObj = getLangText({ en: title }, 'en');
   const titleEn = titleObj.en;
 
   return `
-    ${navLinks}
     <section class="section faq-section" id="${id}">
       <h2>${titleEn}</h2>
       <p>
