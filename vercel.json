@@ -172,7 +172,11 @@
       "source": "/sum-pair-patterns",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sum-pair-patterns"
     },
-  
+    {
+      "source": "/sliding-window-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/sliding-window-patterns"
+    },
+    
      {
       "source": "/dsa-prep-easy",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
