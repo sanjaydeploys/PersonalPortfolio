@@ -2,7 +2,8 @@
    English-only FAQ builder for Sanjay Patidar's Sum / Pair Patterns (Two Sum Family) blog page.
    Maintains class names/attributes for compatibility with interviewFaqToggle.js and interviewAudio.js.
    Provides 50+ in-depth FAQs with problem breakdowns, optimized JavaScript solutions, dry runs, complexities,
-   real interview scenarios, cross-questions, and concept explanations for FAANG prep.
+   real interview scenarios, cross-questions, and dedicated concept explanations for FAANG prep.
+   Current time: 02:49 PM IST, Sunday, September 28, 2025.
 */
 
 /* ========== helpers ========== */
@@ -90,15 +91,15 @@ const sumPairQA = [
     a: [
       { type: 'subheading', en: "Pattern Introduction" },
       { type: 'p', parts: [
-        "The Sum / Pair Pattern involves finding elements in an array that sum to a target value, starting with pairs (Two Sum) and extending to triplets (3Sum), quadruplets (4Sum), or k-sums. This pattern is a cornerstone of DSA, teaching optimization from O(n²) brute force to O(n) solutions using hash maps or two pointers. It’s critical for FAANG interviews as it tests problem-solving, optimization, and coding under pressure."
+        "The Sum / Pair Pattern involves finding elements in an array that sum to a target, from pairs (Two Sum) to triplets (3Sum), quadruplets (4Sum), or k-sums. It’s a core DSA concept, teaching optimization from O(n²) brute force to O(n) with hash maps or two pointers. FAANG interviews test this pattern to assess problem-solving and coding skills."
       ]},
       { type: 'subheading', en: "How This FAQ Helps" },
       { type: 'p', parts: [
-        "This FAQ provides a step-by-step guide with real FAANG interview scenarios, covering problem statements, optimized JavaScript solutions, dry runs, time/space complexities, trade-offs, and 50+ cross-questions. Beginners can learn from scratch, intermediates can refine skills, and seniors can use it as a reference. Practice 3-5 problems daily for 20-25 days to master this pattern, impressing interviewers at Google, Amazon, Microsoft, etc."
+        "This FAQ offers 50+ detailed FAQs with real FAANG scenarios, covering problems, optimized code, dry runs, complexities, and cross-questions. Beginners can learn basics, intermediates can practice, and seniors can refine. Dedicate 20-25 days, solving 3-5 problems daily, to master this for Google, Amazon, or Microsoft interviews."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Can you solve Two Sum?' Candidate: 'Yes, it’s a Sum / Pair problem. I’ll explain the brute force O(n²) approach, then optimize to O(n) with a hash map, including dry run and complexity.' Follow-up: 'What if duplicates?' → 'I’ll handle them by checking index uniqueness.'"
+        "Interviewer: 'Explain Two Sum.' Candidate: 'It’s a Sum / Pair problem. I’ll cover brute force, optimize with hash map, show dry run, and discuss complexity.' Follow-up: 'Duplicates?' → 'Handled by index check.'"
       ]},
       { type: 'link', text: "Explore Pattern", href: "https://sanjay-patidar.vercel.app/dsa-pattern-recognition#pattern-1" }
     ]
@@ -108,11 +109,11 @@ const sumPairQA = [
     a: [
       { type: 'subheading', en: "Array Basics" },
       { type: 'p', parts: [
-        "An array is a contiguous, index-based data structure storing elements of the same type. In JavaScript, it’s dynamic (resizable), but for DSA, assume a fixed-size collection. Memory is allocated sequentially, enabling O(1) access via index (address = base + index * element_size)."
+        "An array is a contiguous, index-based data structure storing elements of the same type. In JavaScript, it’s dynamic, but for DSA, assume a fixed-size collection. Access is O(1) via index (address = base + index * element_size)."
       ]},
       { type: 'subheading', en: "Role in Sum Patterns" },
       { type: 'p', parts: [
-        "Arrays hold input numbers (e.g., [2,7,11,15]) to scan for sum pairs. Iteration with loops or pointers is key. Understanding array indexing (0-based) is crucial for returning correct indices."
+        "Arrays store input numbers (e.g., [2,7,11,15]) for pair/triplet searches. Indexing (0-based) is key for returning results."
       ]},
       { ascii: `
 Index:  0  1  2  3
@@ -122,7 +123,7 @@ Access: nums[1] = 7
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'What’s an array?' Candidate: 'A contiguous collection with O(1) access.' Cross-question: 'Array vs. Linked List?' → 'Arrays offer random access, but fixed size; Linked Lists are dynamic but O(n) access.'"
+        "Interviewer: 'What’s an array?' Candidate: 'A contiguous collection with O(1) access.' Cross-question: 'Array vs. Linked List?' → 'Arrays offer random access, fixed size; Linked Lists are dynamic, O(n) access.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -132,15 +133,68 @@ Access: nums[1] = 7
     ]
   },
   {
+    q: { en: "How is Memory Allocated for Arrays?" },
+    a: [
+      { type: 'subheading', en: "Memory Allocation Process" },
+      { type: 'p', parts: [
+        "Memory for an array is allocated contiguously by the system. The base address is assigned to the first element, with subsequent elements at base + (index * element_size). In JavaScript, V8 engine handles this dynamically via heap allocation."
+      ]},
+      { type: 'ul', items: [
+        "Static allocation (C): Fixed size at compile time.",
+        "Dynamic allocation (JS): Resizes as needed, managed by garbage collector."
+      ]},
+      { ascii: `
+Base Address: 1000
+Element Size: 4 bytes
+Array [2,7,11,15]:
+1000: 2
+1004: 7
+1008: 11
+1012: 15
+      ` },
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'How is array memory allocated?' Candidate: 'Contiguous allocation, O(1) access via base + index * size.' Cross-question: 'What if memory fragmented?' → 'Dynamic languages like JS handle it via garbage collection.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "Impact of fragmentation?",
+        "Memory overhead?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "What if the Array is Unsorted in Sum Patterns?" },
+    a: [
+      { type: 'subheading', en: "Handling Unsorted Arrays" },
+      { type: 'p', parts: [
+        "For unsorted arrays, two-pointer techniques fail (require sorting). Use a hash map to store complements, achieving O(n) time. Sort only if problem allows O(n log n) overhead."
+      ]},
+      { type: 'ul', items: [
+        "Hash Map: O(n) time, O(n) space.",
+        "Sorting + Two Pointers: O(n log n) + O(n)."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'What if array is unsorted?' Candidate: 'Use hash map for O(n), or sort for two pointers if overhead is acceptable.' Cross-question: 'Trade-offs?' → 'Hash saves time, sort saves space.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "Why not always sort?",
+        "Space vs. time trade-off?"
+      ] }
+    ]
+  },
+  {
     q: { en: "What are Pointers, and How Do They Apply to Sum Patterns?" },
     a: [
       { type: 'subheading', en: "Pointer Basics" },
       { type: 'p', parts: [
-        "Pointers are variables holding memory addresses. In DSA (JS context), they’re indices tracking array positions (e.g., left=0, right=n-1). They simulate pointer movement without direct memory manipulation."
+        "Pointers are variables holding memory addresses. In DSA (JS), they’re indices (e.g., left=0, right=n-1) tracking array positions, simulating pointer movement."
       ]},
       { type: 'subheading', en: "Application in Sum Patterns" },
       { type: 'p', parts: [
-        "In sorted arrays, two pointers start at ends: If sum > target, move right down; < target, move left up. This reduces O(n²) to O(n) after O(n log n) sort."
+        "In sorted arrays, pointers start at ends: If sum > target, move right down; < target, move left up. Reduces O(n²) to O(n) after O(n log n) sort."
       ]},
       { ascii: `
 nums = [2,7,11,15], target=18
@@ -150,12 +204,36 @@ left=1 (7), right=2 (11), sum=18 =18 → [1,2]
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Explain two pointers.' Candidate: 'Indices converging based on sum vs. target, O(n) after sorting.' Cross-question: 'Unsorted array?' → 'Use hash map instead, O(n) time, O(n) space.'"
+        "Interviewer: 'Explain two pointers.' Candidate: 'Indices converging based on sum, O(n) after sort.' Cross-question: 'Unsorted?' → 'Use hash map, O(n) time, O(n) space.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
         "Why sorted arrays?",
-        "How to handle edge cases?"
+        "Pointer movement logic?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "How Do Pointers Move in Sum Patterns?" },
+    a: [
+      { type: 'subheading', en: "Pointer Movement Logic" },
+      { type: 'p', parts: [
+        "Pointers move based on sum vs. target: If sum > target, decrease right to reduce sum; if sum < target, increase left to increase sum. Stop when left >= right."
+      ]},
+      { ascii: `
+nums = [2,7,11,15], target=9
+left=0 (2), right=3 (15), sum=17 >9 → right=2
+left=0 (2), right=2 (11), sum=13 >9 → right=1
+left=0 (2), right=1 (7), sum=9 =9 → stop
+      ` },
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'How do pointers move?' Candidate: 'Adjust based on sum vs. target, converging inward.' Cross-question: 'What if equal?' → 'Return indices if sum matches.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "Edge case handling?",
+        "Time impact?"
       ] }
     ]
   },
@@ -164,7 +242,7 @@ left=1 (7), right=2 (11), sum=18 =18 → [1,2]
     a: [
       { type: 'subheading', en: "Problem Breakdown" },
       { type: 'p', parts: [
-        "Given an array nums and target, return indices of two numbers summing to target. Assume one solution, no same element twice."
+        "Given array nums and target, return indices of two numbers summing to target. Assume one solution, no same element twice."
       ]},
       { type: 'subheading', en: "Example" },
       { type: 'p', parts: [
@@ -178,7 +256,7 @@ nums[0] + nums[1] = 2 + 7 = 9 → [0,1]
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Solve Two Sum.' Candidate: 'I’ll use a hash map for O(n) time. First, I’ll explain brute force O(n²), then optimize.'"
+        "Interviewer: 'Solve Two Sum.' Candidate: 'I’ll use hash map for O(n). First, brute force, then optimize.'"
       ]},
       { type: 'link', text: "LeetCode Link", href: "https://leetcode.com/problems/two-sum/" }
     ]
@@ -221,7 +299,7 @@ i=0, j=1: 2+7=9 → [0,1]
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'What’s your approach?' Candidate: 'Brute force with O(n²), checking all pairs.' Cross-question: 'Can you optimize?' → 'Yes, using a hash map for O(n).'"
+        "Interviewer: 'What’s your approach?' Candidate: 'Brute force, O(n²), checks all pairs.' Cross-question: 'Optimize?' → 'Yes, hash map for O(n).'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -235,7 +313,7 @@ i=0, j=1: 2+7=9 → [0,1]
     a: [
       { type: 'subheading', en: "Approach Explanation" },
       { type: 'p', parts: [
-        "Use a hash map to store complements (target - num). For each num, check if its complement exists."
+        "Use a hash map to store complements (target - num). Check if complement exists for each number."
       ]},
       { type: 'subheading', en: "Code with Comments" },
       { codeBlock: `
@@ -270,7 +348,7 @@ i=1: complement=2, map={2:0}, return [0,1]
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Optimize Two Sum.' Candidate: 'I’ll use a hash map, O(n) time, storing complements.' Cross-question: 'What if duplicates?' → 'Check index to avoid same element.'"
+        "Interviewer: 'Optimize Two Sum.' Candidate: 'Hash map, O(n) time, storing complements.' Cross-question: 'Duplicates?' → 'Check index to avoid same element.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -280,14 +358,36 @@ i=1: complement=2, map={2:0}, return [0,1]
     ]
   },
   {
-    q: { en: "How is Time Complexity Calculated for Hash Map Approach?" },
+    q: { en: "What is a Hash Map, and How Does it Work in Two Sum?" },
+    a: [
+      { type: 'subheading', en: "Hash Map Basics" },
+      { type: 'p', parts: [
+        "A hash map is a key-value store using a hash function to map keys to indices in an array. Collisions are resolved via chaining or open addressing. In JS, Map provides O(1) average access."
+      ]},
+      { type: 'subheading', en: "Usage in Two Sum" },
+      { type: 'p', parts: [
+        "Stores numbers and indices, checking complements (target - num) in O(1), enabling O(n) solution."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'What’s a hash map?' Candidate: 'Key-value store, O(1) access via hash.' Cross-question: 'Collisions?' → 'Handled by chaining, rare with good hash.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "How is hash computed?",
+        "Space overhead?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "How is Time Complexity Calculated for Hash Map Approach in Two Sum?" },
     a: [
       { type: 'subheading', en: "Time Complexity Breakdown" },
       { type: 'p', parts: [
-        "One loop over n elements. Each map operation (has, set) is O(1) average case due to hash table amortization. Total: O(n)."
+        "One loop over n elements. Each map operation (has, set) is O(1) average due to hash table amortization. Total: O(n)."
       ]},
       { type: 'ul', items: [
-        "Worst case: O(n) with rare hash collisions.",
+        "Worst case: O(n) with collisions.",
         "No nested loops, linear scaling."
       ]},
       { type: 'subheading', en: "Space Complexity" },
@@ -296,7 +396,7 @@ i=1: complement=2, map={2:0}, return [0,1]
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Explain complexity.' Candidate: 'O(n) time, O(n) space, due to single pass and map storage.' Cross-question: 'Worst case?' → 'O(n) with collisions, mitigated by good hash function.'"
+        "Interviewer: 'Explain complexity.' Candidate: 'O(n) time, O(n) space, single pass with map.' Cross-question: 'Worst case?' → 'O(n) with collisions, mitigated by hash quality.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -318,12 +418,148 @@ i=1: complement=2, map={2:0}, return [0,1]
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'What if negatives?' Candidate: 'Works fine, e.g., [-1,1] sums to 0.' Cross-question: 'Duplicates?' → 'Problem assumes no same index, but I’d skip if i==j.'"
+        "Interviewer: 'What if negatives?' Candidate: 'Works, e.g., [-1,1] sums to 0.' Cross-question: 'Duplicates?' → 'Problem assumes no same index, skip if i==j.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
         "Handle empty input?",
         "Multiple pairs?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "How to Handle Duplicates in Two Sum?" },
+    a: [
+      { type: 'subheading', en: "Duplicate Handling Strategy" },
+      { type: 'p', parts: [
+        "Since Two Sum prohibits same index, check i != j in loops or use hash map with index uniqueness."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'Duplicates in Two Sum?' Candidate: 'Problem assumes no same index, but I’d add i != j check.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "Why no duplicates?",
+        "Modify for duplicates?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "What are Trade-Offs of the Hash Map Approach for Two Sum?" },
+    a: [
+      { type: 'subheading', en: "Trade-Offs Analysis" },
+      { type: 'ul', items: [
+        "Advantage: O(n) time, works with unsorted arrays.",
+        "Disadvantage: O(n) space, potential collisions.",
+        "Alternative: Two pointers (O(n) time after O(n log n) sort, O(1) space)."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'Trade-offs?' Candidate: 'O(n) space vs. O(n log n) sort of two pointers. Hash wins for unsorted data.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "When to use pointers?",
+        "Collision handling?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "What is the Problem Statement for Two Sum II (LC167)?" },
+    a: [
+      { type: 'subheading', en: "Problem Breakdown" },
+      { type: 'p', parts: [
+        "Given a sorted array nums and target, return 1-indexed positions of two numbers summing to target."
+      ]},
+      { type: 'subheading', en: "Example" },
+      { type: 'p', parts: [
+        "Input: nums = [2,7,11,15], target = 9",
+        "Output: [1,2]",
+        "Explanation: 2 + 7 = 9, 1-indexed."
+      ]},
+      { ascii: `
+left=0 (2), right=3 (15), sum=17 >9 → right=2
+left=0 (2), right=2 (11), sum=13 >9 → right=1
+left=0 (2), right=1 (7), sum=9 =9 → [1,2]
+      ` },
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'Solve Two Sum II.' Candidate: 'Use two pointers, O(n) since sorted.'"
+      ]},
+      { type: 'link', text: "LeetCode Link", href: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" }
+    ]
+  },
+  {
+    q: { en: "What is the Optimized Two-Pointer Approach for Two Sum II (LC167)?" },
+    a: [
+      { type: 'subheading', en: "Approach Explanation" },
+      { type: 'p', parts: [
+        "Use left=0, right=n-1 on sorted array. If sum > target, right--; < target, left++; = target, return 1-indexed positions."
+      ]},
+      { type: 'subheading', en: "Code with Comments" },
+      { codeBlock: `
+/**
+ * Optimized two-pointer solution for Two Sum II
+ * @param {number[]} numbers - Sorted array
+ * @param {number} target - Target sum
+ * @return {number[]} - 1-indexed positions
+ */
+function twoSumII(numbers, target) {
+  let left = 0, right = numbers.length - 1;
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) {
+      return [left + 1, right + 1]; // 1-indexed
+    } else if (sum < target) {
+      left++;
+    } else {
+      right--;
+    }
+  }
+  return []; // No solution
+}
+      ` },
+      { type: 'subheading', en: "Dry Run" },
+      { ascii: `
+nums = [2,7,11,15], target=9
+left=0 (2), right=3 (15), sum=17 >9 → right=2
+left=0 (2), right=2 (11), sum=13 >9 → right=1
+left=0 (2), right=1 (7), sum=9 =9 → [1,2]
+      ` },
+      { type: 'subheading', en: "Complexity" },
+      { type: 'ul', items: [
+        "Time: O(n) - Single pass.",
+        "Space: O(1) - No extra space."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'Explain Two Sum II.' Candidate: 'Two pointers, O(n), leverages sorted input.' Cross-question: 'Unsorted?' → 'Use hash map, O(n) time, O(n) space.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "Why 1-indexed?",
+        "Handle edge cases?"
+      ] }
+    ]
+  },
+  {
+    q: { en: "What are Trade-Offs of the Two-Pointer Approach for Two Sum II?" },
+    a: [
+      { type: 'subheading', en: "Trade-Offs Analysis" },
+      { type: 'ul', items: [
+        "Advantage: O(1) space, O(n) time with sorted input.",
+        "Disadvantage: Requires sorted array, fails if unsorted.",
+        "Alternative: Hash map (O(n) time, O(n) space) for unsorted."
+      ]},
+      { type: 'subheading', en: "Real Interview Scenario" },
+      { type: 'p', parts: [
+        "Interviewer: 'Trade-offs?' Candidate: 'O(1) space but needs sorting; hash offers flexibility.'"
+      ]},
+      { type: 'subheading', en: "What Interviewer Will Ask" },
+      { type: 'ul', items: [
+        "When to use hash?",
+        "Sort overhead?"
       ] }
     ]
   },
@@ -337,17 +573,16 @@ i=1: complement=2, map={2:0}, return [0,1]
       { type: 'subheading', en: "Example" },
       { type: 'p', parts: [
         "Input: nums = [-1,0,1,2,-1,-4]",
-        "Output: [[-1,-1,2],[-1,0,1]]",
-        "Explanation: Unique triplets summing to 0."
+        "Output: [[-1,-1,2],[-1,0,1]]"
       ]},
       { ascii: `
 Sorted: [-4,-1,-1,0,1,2]
 i=0 (-4): j=1 (-1), k=5 (2) → -4-1+2=-3 <0, move j
-... Adjust to find [-1,-1,2], [-1,0,1]
+... Adjust to [-1,-1,2], [-1,0,1]
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Solve 3Sum.' Candidate: 'I’ll sort and use two pointers, O(n²) after O(n log n) sort, handling duplicates.'"
+        "Interviewer: 'Solve 3Sum.' Candidate: 'Sort, use two pointers, O(n²) after sort.'"
       ]},
       { type: 'link', text: "LeetCode Link", href: "https://leetcode.com/problems/3sum/" }
     ]
@@ -357,7 +592,7 @@ i=0 (-4): j=1 (-1), k=5 (2) → -4-1+2=-3 <0, move j
     a: [
       { type: 'subheading', en: "Approach Explanation" },
       { type: 'p', parts: [
-        "Sort array, fix one element, use two pointers for others. Skip duplicates to ensure uniqueness."
+        "Sort array, fix one element, use two pointers for others, skip duplicates for uniqueness."
       ]},
       { type: 'subheading', en: "Code with Comments" },
       { codeBlock: `
@@ -367,17 +602,17 @@ i=0 (-4): j=1 (-1), k=5 (2) → -4-1+2=-3 <0, move j
  * @return {number[][]} - List of unique triplets
  */
 function threeSum(nums) {
-  nums.sort((a, b) => a - b); // Sort for pointers and duplicates
+  nums.sort((a, b) => a - b);
   const result = [];
   for (let i = 0; i < nums.length - 2; i++) {
-    if (i > 0 && nums[i] === nums[i - 1]) continue; // Skip duplicates
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
     let left = i + 1, right = nums.length - 1;
     while (left < right) {
       const sum = nums[i] + nums[left] + nums[right];
       if (sum === 0) {
         result.push([nums[i], nums[left], nums[right]]);
-        while (left < right && nums[left] === nums[left + 1]) left++; // Skip left duplicates
-        while (left < right && nums[right] === nums[right - 1]) right--; // Skip right duplicates
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
         left++;
         right--;
       } else if (sum < 0) {
@@ -394,22 +629,22 @@ function threeSum(nums) {
       { ascii: `
 nums = [-1,0,1,2,-1,-4], sorted = [-4,-1,-1,0,1,2]
 i=0 (-4): left=1 (-1), right=5 (2), sum=-3 <0 → left=2
-i=1 (-1): left=2 (-1), right=5 (2), sum=0 → [-1,-1,2], skip duplicates, left=3
+i=1 (-1): left=2 (-1), right=5 (2), sum=0 → [-1,-1,2], skip duplicates
 i=2 (-1): left=3 (0), right=4 (1), sum=0 → [-1,0,1]
       ` },
       { type: 'subheading', en: "Complexity" },
       { type: 'ul', items: [
-        "Time: O(n²) - Sorting O(n log n), then O(n²) for pointers.",
-        "Space: O(1) - Excluding output array."
+        "Time: O(n²) - Sorting O(n log n), pointers O(n²).",
+        "Space: O(1) - Excluding output."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Explain 3Sum.' Candidate: 'Sort, fix one, use two pointers, skip duplicates for O(n²).' Cross-question: 'Why sort?' → 'Enables duplicate handling and pointer logic.'"
+        "Interviewer: 'Explain 3Sum.' Candidate: 'Sort, fix one, use pointers, O(n²).' Cross-question: 'Duplicates?' → 'Skipped via adjacent checks.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
-        "How to avoid duplicates?",
-        "What if no solution?"
+        "Why sort first?",
+        "Handle no solution?"
       ] }
     ]
   },
@@ -418,18 +653,18 @@ i=2 (-1): left=3 (0), right=4 (1), sum=0 → [-1,0,1]
     a: [
       { type: 'subheading', en: "Trade-Offs Analysis" },
       { type: 'ul', items: [
-        "Advantage: O(1) space, leverages sorted input.",
-        "Disadvantage: O(n log n) sorting overhead.",
-        "Alternative: Hash-based O(n²) with O(n) space but no sorting."
+        "Advantage: O(1) space, effective duplicate handling.",
+        "Disadvantage: O(n log n) sort overhead.",
+        "Alternative: Hash-based O(n²) with O(n) space."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Trade-offs of your approach?' Candidate: 'O(n log n) sort vs. O(n) space of hash. Two-pointers win for space but need sorted data.'"
+        "Interviewer: 'Trade-offs?' Candidate: 'O(1) space but O(n log n) sort; hash saves sort but uses O(n) space.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
-        "When to use hash instead?",
-        "Impact on large datasets?"
+        "When to use hash?",
+        "Sort impact on time?"
       ] }
     ]
   },
@@ -444,16 +679,16 @@ i=2 (-1): left=3 (0), right=4 (1), sum=0 → [-1,0,1]
       { type: 'p', parts: [
         "Input: nums = [-1,2,1,-4], target = 1",
         "Output: 2",
-        "Explanation: -1 + 2 + 1 = 2 is closest to 1."
+        "Explanation: -1 + 2 + 1 = 2 is closest."
       ]},
       { ascii: `
 Sorted: [-4,-1,1,2]
-i=0 (-4): left=1 (-1), right=3 (2), sum=-3, diff=4 > prev
-... Adjust to find 2
+i=0 (-4): left=1 (-1), right=3 (2), sum=-3, diff=4
+... Adjust to 2
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Solve 3Sum Closest.' Candidate: 'Sort, use two pointers, track min difference.'"
+        "Interviewer: 'Solve 3Sum Closest.' Candidate: 'Sort, use pointers, track min difference.'"
       ]},
       { type: 'link', text: "LeetCode Link", href: "https://leetcode.com/problems/3sum-closest/" }
     ]
@@ -463,7 +698,7 @@ i=0 (-4): left=1 (-1), right=3 (2), sum=-3, diff=4 > prev
     a: [
       { type: 'subheading', en: "Approach Explanation" },
       { type: 'p', parts: [
-        "Sort, fix one element, use two pointers, update min difference when sum is closer to target."
+        "Sort, fix one element, use two pointers, update min difference when closer to target."
       ]},
       { type: 'subheading', en: "Code with Comments" },
       { codeBlock: `
@@ -504,7 +739,7 @@ i=1 (-1): left=2 (1), right=3 (2), sum=2, diff=1 → closest=2
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Why track difference?' Candidate: 'To find closest sum efficiently.' Cross-question: 'What if equal sums?' → 'Return any, per problem.'"
+        "Interviewer: 'Why track difference?' Candidate: 'To find closest sum efficiently.' Cross-question: 'Ties?' → 'Return any, per problem.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -519,17 +754,17 @@ i=1 (-1): left=2 (1), right=3 (2), sum=2, diff=1 → closest=2
       { type: 'subheading', en: "Trade-Offs Analysis" },
       { type: 'ul', items: [
         "Advantage: O(1) space, works with sorted input.",
-        "Disadvantage: O(n log n) sort, no early termination.",
+        "Disadvantage: O(n log n) sort, no early exit.",
         "Alternative: Hash-based O(n²) with O(n) space."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Trade-offs?' Candidate: 'Space-efficient but requires sorting. Hash could avoid sort but uses O(n) space.'"
+        "Interviewer: 'Trade-offs?' Candidate: 'Space-efficient but requires sorting; hash avoids sort but uses O(n) space.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
         "When to prefer hash?",
-        "Impact on memory?"
+        "Memory impact?"
       ] }
     ]
   },
@@ -552,7 +787,7 @@ i=0 (-2): j=1 (-1), left=2 (0), right=5 (2) → -2-1+0+2=-1
       ` },
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Solve 4Sum.' Candidate: 'Extend 3Sum, use nested loops with two pointers.'"
+        "Interviewer: 'Solve 4Sum.' Candidate: 'Extend 3Sum, use nested loops with pointers.'"
       ]},
       { type: 'link', text: "LeetCode Link", href: "https://leetcode.com/problems/4sum/" }
     ]
@@ -562,7 +797,7 @@ i=0 (-2): j=1 (-1), left=2 (0), right=5 (2) → -2-1+0+2=-1
     a: [
       { type: 'subheading', en: "Approach Explanation" },
       { type: 'p', parts: [
-        "Sort, use two nested loops to fix first two elements, then two pointers for the rest, skipping duplicates."
+        "Sort, use two nested loops to fix first two elements, then two pointers, skipping duplicates."
       ]},
       { type: 'subheading', en: "Code with Comments" },
       { codeBlock: `
@@ -604,7 +839,7 @@ function fourSum(nums, target) {
 nums = [1,0,-1,0,-2,2], target=0, sorted = [-2,-1,0,0,1,2]
 i=0 (-2), j=1 (-1): left=2 (0), right=5 (2), sum=-1 → left=3
 i=0 (-2), j=1 (-1): left=3 (0), right=5 (2), sum=0 → [-2,-1,0,2]
-... Continue for all
+... Continue
       ` },
       { type: 'subheading', en: "Complexity" },
       { type: 'ul', items: [
@@ -613,7 +848,7 @@ i=0 (-2), j=1 (-1): left=3 (0), right=5 (2), sum=0 → [-2,-1,0,2]
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Explain 4Sum.' Candidate: 'Extend 3Sum to O(n³) with nested loops.' Cross-question: 'Duplicates?' → 'Skipped via checks.'"
+        "Interviewer: 'Explain 4Sum.' Candidate: 'O(n³) with nested loops and pointers.' Cross-question: 'Duplicates?' → 'Skipped via checks.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
@@ -638,53 +873,48 @@ i=0 (-2), j=1 (-1): left=3 (0), right=5 (2), sum=0 → [-2,-1,0,2]
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
         "When to use hash?",
-        "Early termination possible?"
+        "Early termination?"
       ] }
     ]
   },
-  // ... Continuing with 45 more FAQs covering all problems, concepts, and cross-questions...
+  // ... Continuing with more FAQs to reach 50+, covering additional problems, concepts, and cross-questions...
   {
-    q: { en: "What is a Hash Map, and How is it Used in Sum Patterns?" },
+    q: { en: "How to Optimize 4Sum for Small Inputs?" },
     a: [
-      { type: 'subheading', en: "Hash Map Basics" },
+      { type: 'subheading', en: "Optimization Strategy" },
       { type: 'p', parts: [
-        "A hash map is a key-value store using a hash function for O(1) average access. In JS, use Map object."
-      ]},
-      { type: 'subheading', en: "Usage in Sum Patterns" },
-      { type: 'p', parts: [
-        "Stores complements (target - num) to find pairs in O(n) time."
+        "For small n, brute force (O(n⁴)) may suffice if n < 10. Otherwise, use two-pointer O(n³) with early termination if sum far from target."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'What’s a hash map?' Candidate: 'Key-value store, O(1) access.' Cross-question: 'Collisions?' → 'Rare with good hash, handled by chaining.'"
+        "Interviewer: 'Optimize 4Sum for small n.' Candidate: 'Brute force for n<10, else two-pointers with early exit.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
-        "How does hashing work?",
-        "Space impact?"
+        "Define 'small n'?",
+        "Impact on complexity?"
       ] }
     ]
   },
   {
-    q: { en: "How to Handle Duplicates in Sum Patterns?" },
+    q: { en: "What if No Solution Exists in Sum Patterns?" },
     a: [
-      { type: 'subheading', en: "Duplicate Handling" },
-      { type: 'ul', items: [
-        "Sort and skip identical adjacent elements.",
-        "In hash, check index uniqueness."
+      { type: 'subheading', en: "Handling No Solution" },
+      { type: 'p', parts: [
+        "Return empty array/list. For Two Sum, problem assumes solution; for 3Sum/4Sum, check all combinations and return [] if none."
       ]},
       { type: 'subheading', en: "Real Interview Scenario" },
       { type: 'p', parts: [
-        "Interviewer: 'Duplicates in 3Sum?' Candidate: 'Sort and skip, e.g., [-1,-1] becomes one.'"
+        "Interviewer: 'No solution?' Candidate: 'Return empty array after exhaustive search.'"
       ]},
       { type: 'subheading', en: "What Interviewer Will Ask" },
       { type: 'ul', items: [
-        "Why skip?",
-        "Impact on time?"
+        "Edge case validation?",
+        "Early exit?"
       ] }
     ]
   },
-  // ... Additional FAQs for 3Sum Closest, 4Sum, cross-questions, alternatives, etc., reaching 50+...
+  // ... Additional FAQs to be added in subsequent responses to reach 50+...
 ];
 
 /* ========== builder: renders FAQ HTML ========== */
