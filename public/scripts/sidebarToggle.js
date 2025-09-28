@@ -501,7 +501,7 @@
     resetSubmenus();
   }
 
-  // Sidebar Script
+// Sidebar Script
   (function(){
     console.log('[sidebarToggle.js] Script loaded');
 
@@ -523,7 +523,19 @@
 
       sidebarWrapper.querySelectorAll('.sidebar-link').forEach(link => {
         link.addEventListener('click', (e) => {
+          e.preventDefault(); // Additional: Prevent default jump for smooth scroll
           e.stopPropagation();
+
+          // Additional: Smooth scroll to target ID (supports important1, important2, etc.)
+          const href = link.getAttribute('href');
+          const target = document.querySelector(href);
+          if (target) {
+            const offset = 80; // Adjust for fixed headers if any
+            const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+            window.scrollTo({ top, behavior: 'smooth' });
+          }
+
+          // Retain current: Close sidebar if open
           if (sidebarWrapper.classList.contains('open')) {
             sidebarWrapper.classList.remove('open');
             toggleBtn.classList.remove('active');
