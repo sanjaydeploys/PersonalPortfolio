@@ -1430,7 +1430,7 @@ function injectSlidingWindowFAQs() {
 
   if (container.dataset.faqsInjected === '1') return true;
 
-  const { html, sidebarLinks } = buildSlidingWindowFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', twoPointerKSumQA);
+  const { html, sidebarLinks } = buildSlidingWindowFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', prefixSumMonotonicQueueQA);
   container.innerHTML = html;
   container.dataset.faqsInjected = '1';
 
