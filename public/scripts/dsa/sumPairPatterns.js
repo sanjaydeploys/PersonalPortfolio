@@ -8746,7 +8746,6 @@ i=1 (-1): left=2 (-1), right=5 (2) → -3 → adjust
 /* ========== builder: renders FAQ HTML with navigation ========== */
 const buildSumPairFAQSection = (id, title, qaArray) => {
   let faqList = '<div class="faq-list">';
-  let navLinks = '<nav class="sidebar-nav" aria-label="Pattern navigation">';
   qaArray.forEach((item, index) => {
     const uniqueId = `${id}-q${index + 1}`;
     const qObj = getLangText(item.q, 'en');
