@@ -1,4 +1,4 @@
-/* prefixSumMonotonicQueueQA.js
+/* backtrackingPermutationsQA.js
    */
 
 /* ========== helpers ========== */
@@ -3410,7 +3410,7 @@ function backtrack(curr, pos, sum, nums, target, result) {
 
 ];
 /* ========== builder: renders FAQ HTML without sidebar navigation ========== */
-const buildSlidingWindowFAQSection = (id, title, qaArray) => {
+const buildbacktrackingPermutationsQAFAQSection = (id, title, qaArray) => {
   let faqList = '<div class="faq-list">';
   let importantCount = 1;
   let sidebarLinks = '';
@@ -3480,13 +3480,13 @@ const buildSlidingWindowFAQSection = (id, title, qaArray) => {
 };
 
 /* ========== injection + initial active state ========== */
-function injectSlidingWindowFAQs() {
+function injectbacktrackingPermutationsQAFAQs() {
   const container = document.getElementById('faqs-container') || document.querySelector('#faqs');
   if (!container) return false;
 
   if (container.dataset.faqsInjected === '1') return true;
 
-  const { html, sidebarLinks } = buildSlidingWindowFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', prefixSumMonotonicQueueQA);
+  const { html, sidebarLinks } = buildbacktrackingPermutationsQAFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', backtrackingPermutationsQA);
   container.innerHTML = html;
   container.dataset.faqsInjected = '1';
 
@@ -3517,7 +3517,7 @@ function injectSlidingWindowFAQs() {
   return true;
 }
 
-window.reinitializeSlidingWindowFAQs = injectSlidingWindowFAQs;
+window.reinitializebacktrackingPermutationsQAFAQs = injectbacktrackingPermutationsQAFAQs;
 
 injectSlidingWindowFAQs();
 
