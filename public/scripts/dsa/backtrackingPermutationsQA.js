@@ -80,10 +80,9 @@ const buildULDual = (items = []) => {
 };
 
 
-/* ========== FAQ data for Backtracking / Permutations Pattern (Batch 1) ========== */
-const backtrackingPermutationsQA = [
-  // Core Concepts
-  {
+/* ========== FAQ data for Prefix Sum & Monotonic Queue Patterns ========== */
+const prefixSumMonotonicQueueQA = [
+ {
     q: { en: "What is the Backtracking Pattern?" },
     level: 'fresher',
     important: true,
@@ -3410,7 +3409,7 @@ function backtrack(curr, pos, sum, nums, target, result) {
 
 ];
 /* ========== builder: renders FAQ HTML without sidebar navigation ========== */
-const buildbacktrackingPermutationsQAFAQSection = (id, title, qaArray) => {
+const buildSlidingWindowFAQSection = (id, title, qaArray) => {
   let faqList = '<div class="faq-list">';
   let importantCount = 1;
   let sidebarLinks = '';
@@ -3480,13 +3479,13 @@ const buildbacktrackingPermutationsQAFAQSection = (id, title, qaArray) => {
 };
 
 /* ========== injection + initial active state ========== */
-function injectbacktrackingPermutationsQAFAQs() {
+function injectSlidingWindowFAQs() {
   const container = document.getElementById('faqs-container') || document.querySelector('#faqs');
   if (!container) return false;
 
   if (container.dataset.faqsInjected === '1') return true;
 
-  const { html, sidebarLinks } = buildbacktrackingPermutationsQAFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', backtrackingPermutationsQA);
+  const { html, sidebarLinks } = buildSlidingWindowFAQSection('sliding-window-faqs', 'Sliding Window Patterns FAQs', prefixSumMonotonicQueueQA);
   container.innerHTML = html;
   container.dataset.faqsInjected = '1';
 
@@ -3517,7 +3516,7 @@ function injectbacktrackingPermutationsQAFAQs() {
   return true;
 }
 
-window.reinitializebacktrackingPermutationsQAFAQs = injectbacktrackingPermutationsQAFAQs;
+window.reinitializeSlidingWindowFAQs = injectSlidingWindowFAQs;
 
 injectSlidingWindowFAQs();
 
