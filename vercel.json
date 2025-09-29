@@ -183,7 +183,10 @@
       "source": "/prefix-sum-monotonic-queue-patterns",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/prefix-sum-monotonic-queue-patterns"
     },
-   
+    {
+      "source": "/backtracking-permutations-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/backtracking-permutations-patterns"
+    },
      {
       "source": "/dsa-prep-easy",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
