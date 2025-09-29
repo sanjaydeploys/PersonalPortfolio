@@ -191,6 +191,10 @@
       "source": "/binary-search-and-search-on-answer-pattern",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/binary-search-and-search-on-answer-pattern"
     },
+ {
+      "source": "/dynamic-programming-one-d-two-d-patterns",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dynamic-programming-one-d-two-d-patterns"
+    },
 
     
      {
