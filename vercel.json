@@ -187,6 +187,12 @@
       "source": "/backtracking-permutations-patterns",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/backtracking-permutations-patterns"
     },
+    {
+      "source": "/binary-search-and-search-on-answer-pattern",
+      "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/binary-search-and-search-on-answer-pattern"
+    },
+
+    
      {
       "source": "/dsa-prep-easy",
       "destination": "https://gj48940cgb.execute-api.ap-south-1.amazonaws.com/prod/dsa-prep-easy"
