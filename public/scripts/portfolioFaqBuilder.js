@@ -212,7 +212,9 @@ const portfolioQA = [
       { type: 'ul', items: [
         { type: 'link', en: 'Email: sanjay.deploys@gmail.com', hi: 'ईमेल: sanjay.deploys@gmail.com', href: 'mailto:sanjay.deploys@gmail.com' },
         { type: 'link', en: 'LinkedIn: linkedin.com/in/sanjay-patidar', hi: 'LinkedIn: linkedin.com/in/sanjay-patidar', href: 'https://www.linkedin.com/in/sanjay-patidar/' },
-        { type: 'link', en: 'GitHub: github.com/sanjaydeploys', hi: 'GitHub: github.com/sanjaydeploys', href: 'https://github.com/sanjaydeploys' }
+        { type: 'link', en: 'GitHub: github.com/sanjaydeploys', hi: 'GitHub: github.com/sanjaydeploys', href: 'https://github.com/sanjaydeploys' },
+                 { type: 'link', en: 'Portfolio: https://sanjaypatidar.in', hi: 'Portfolio: https://sanjaypatidar.in', href: 'https://sanjaypatidar.in' }
+
       ]}
     ]
   }
