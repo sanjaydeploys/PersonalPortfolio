@@ -36,6 +36,93 @@ Each of my projects is **backed by a real use case**, engineered for production-
 | [AgriBot](https://sanjaypatidar.in/agribot-case-study) | [Explore](https://sanjaypatidar.in/agribot) | N/A (Private) | Multilingual AI chatbot Android app for farmers, Kotlin/Python/LangChain, Gemini API backend on AWS |
 
 ---
+---
+
+## Technical Series and In-Depth Study Guides  
+**Author:** Sanjay Patidar — Full Stack Product Engineer  
+**Portfolio:** [sanjaypatidar.in](https://sanjaypatidar.in)
+
+This section consolidates my educational and research-led engineering content hosted on [sanjaypatidar.in](https://sanjaypatidar.in), covering two major domains:  
+1. Data Structures & Algorithms (DSA) Pattern Recognition Series  
+2. System Design Patterns and Scalable Architecture Series  
+
+Each topic is written, illustrated, and deployed using server-side rendering (SSR) to ensure SEO visibility, faster first-contentful paint (FCP), and accessibility for developers and recruiters.
+
+---
+
+### Summary Table — DSA and System Design Highlights
+
+| Domain | Series | Core Focus | Key Topics / Links |
+|---------|---------|-------------|--------------------|
+| **Data Structures & Algorithms** | [DSA Pattern Recognition Series](https://sanjaypatidar.in/dsa-pattern-recognition) | Recognition-based problem solving for FAANG interviews | [Sum / Pair Patterns](https://sanjaypatidar.in/sum-pair-patterns), [Sliding Window](https://sanjaypatidar.in/sliding-window-patterns), [Prefix Sum & Monotonic Queue](https://sanjaypatidar.in/prefix-sum-monotonic-queue-patterns), [Two-Pointer & k-Sum](https://sanjaypatidar.in/two-pointer-k-sum-patterns), [Backtracking](https://sanjaypatidar.in/backtracking-permutations-patterns), [Binary Search](https://sanjaypatidar.in/binary-search-and-search-on-answer-pattern), [Dynamic Programming](https://sanjaypatidar.in/dynamic-programming-one-d-two-d-patterns) |
+| **LeetCode Problem Guides** | [DSA Problem Solutions](https://sanjaypatidar.in/dsa-leetcode-series) | Brute-force to optimized solution walkthroughs | [Two Sum](https://sanjaypatidar.in/two-sum-pattern), [3Sum](https://sanjaypatidar.in/three-sum), [3Sum Closest](https://sanjaypatidar.in/three-sum-closest), [Minimum Window Substring](https://sanjaypatidar.in/minimum-variable-window-substring), [Find All Anagrams](https://sanjaypatidar.in/find-all-anagrams), [Sliding Window Maximum](https://sanjaypatidar.in/lc239-sliding-window-max), [Subarray Sum Equals K](https://sanjaypatidar.in/lc560-subarray-sum-k-solution) |
+| **System Design** | [System Design Study Roadmap](https://sanjaypatidar.in/system-design-roadmap) | Distributed systems and backend scalability | [API Design](https://sanjaypatidar.in/system-design-api-design-and-restful-services), [Load Balancing](https://sanjaypatidar.in/system-design-load-balancing-and-scalability), [Database Design](https://sanjaypatidar.in/system-design-database-design-and-trade-offs), [Caching](https://sanjaypatidar.in/system-design-caching), [Distributed Systems](https://sanjaypatidar.in/system-design-distributed-systems-and-messaging), [Microservices](https://sanjaypatidar.in/system-design-microservice-architecture), [Rate Limiting](https://sanjaypatidar.in/system-design-rate-limiting-and-throttling), [Data Partitioning](https://sanjaypatidar.in/system-design-data-partitioning-and-sharding), [Fault Tolerance](https://sanjaypatidar.in/system-design-fault-tolerance-and-reliability), [Case Studies](https://sanjaypatidar.in/system-design-case-studies) |
+
+---
+
+### 1. DSA Pattern Recognition Series  
+**Overview:**  
+A structured, pattern-based approach to solving Data Structures & Algorithms problems, designed to help developers identify recurring logical templates across FAANG-level interview problems.  
+
+**Core Pattern Categories:**  
+- [Sum / Pair Patterns (Two Sum Family)](https://sanjaypatidar.in/sum-pair-patterns) — Optimizing pair and sum-based problems using hash maps and two-pointer techniques.  
+- [Sliding Window (Fixed & Variable)](https://sanjaypatidar.in/sliding-window-patterns) — Managing dynamic subarray boundaries for substring, array, and frequency problems.  
+- [Prefix Sum & Monotonic Queue](https://sanjaypatidar.in/prefix-sum-monotonic-queue-patterns) — Efficient range queries and window maxima tracking.  
+- [Two-Pointer Family & k-Sum](https://sanjaypatidar.in/two-pointer-k-sum-patterns) — Generalized strategies for 3Sum, 4Sum, and sorted traversal logic.  
+- [Backtracking / Permutations](https://sanjaypatidar.in/backtracking-permutations-patterns) — Recursive exploration with pruning, state tracking, and DFS-based search.  
+- [Binary Search & Search-on-Answer](https://sanjaypatidar.in/binary-search-and-search-on-answer-pattern) — Range-based optimization and decision-bound searching.  
+- [Dynamic Programming 1D → 2D](https://sanjaypatidar.in/dynamic-programming-one-d-two-d-patterns) — Bottom-up tabulation and state transition modeling.  
+
+---
+
+### 2. In-Depth LeetCode Problem Guides  
+**Overview:**  
+Detailed walkthroughs of selected LeetCode problems demonstrating real-world applications of the above DSA patterns. Each guide covers the intuition, brute-force and optimized approaches, and complexity analysis.
+
+**Covered Problems:**  
+- [Two Sum (LeetCode 1)](https://sanjaypatidar.in/two-sum-pattern)  
+- [3Sum (LeetCode 15)](https://sanjaypatidar.in/three-sum)  
+- [3Sum Closest (LeetCode 16)](https://sanjaypatidar.in/three-sum-closest)  
+- [Minimum Window Substring (LeetCode 76)](https://sanjaypatidar.in/minimum-variable-window-substring)  
+- [Find All Anagrams in a String (LeetCode 438)](https://sanjaypatidar.in/find-all-anagrams)  
+- [Sliding Window Maximum (LeetCode 239)](https://sanjaypatidar.in/lc239-sliding-window-max)  
+- [Subarray Sum Equals K (LeetCode 560)](https://sanjaypatidar.in/lc560-subarray-sum-k-solution)  
+
+Each guide includes visual explanations, time-space analysis, and extended patterns for FAANG-level interviews.
+
+---
+
+### 3. System Design Patterns Series  
+**Overview:**  
+A comprehensive study roadmap covering distributed systems, backend scalability, and architectural trade-offs for designing high-performance, fault-tolerant systems.
+
+**Individual Pattern Guides:**  
+- [API Design & RESTful Services](https://sanjaypatidar.in/system-design-api-design-and-restful-services) — Endpoint modeling, stateless architecture, and version control.  
+- [Load Balancing & Scalability](https://sanjaypatidar.in/system-design-load-balancing-and-scalability) — Horizontal scaling, reverse proxies, and multi-region replication.  
+- [Database Design & Trade-offs](https://sanjaypatidar.in/system-design-database-design-and-trade-offs) — Relational vs. NoSQL, normalization, partitioning, and query performance.  
+- [Caching Strategies](https://sanjaypatidar.in/system-design-caching) — Cache invalidation, consistency models, and latency optimization.  
+- [Distributed Systems & Messaging](https://sanjaypatidar.in/system-design-distributed-systems-and-messaging) — Queues, Pub/Sub, event-driven patterns, and fault-tolerant pipelines.  
+- [Microservices Architecture](https://sanjaypatidar.in/system-design-microservice-architecture) — Service decomposition, inter-service communication, and API Gateway integration.  
+- [Rate Limiting & Throttling](https://sanjaypatidar.in/system-design-rate-limiting-and-throttling) — Token bucket algorithms and request control systems.  
+- [Data Partitioning & Sharding](https://sanjaypatidar.in/system-design-data-partitioning-and-sharding) — Horizontal scaling, consistent hashing, and shard balancing.  
+- [Fault Tolerance & Reliability](https://sanjaypatidar.in/system-design-fault-tolerance-and-reliability) — Redundancy, failover design, leader election, and graceful degradation.  
+- [System Design Case Studies](https://sanjaypatidar.in/system-design-case-studies) — End-to-end breakdowns of systems like URL shorteners, feed systems, and chat apps.
+
+---
+
+### 4. Integration and Technical Foundation  
+All the above content is integrated under a unified SSR + CSR hybrid stack:
+- **Frontend:** React.js with dynamic routing and SSR hydration (Vercel)  
+- **Backend:** AWS Lambda + API Gateway for serverless computation  
+- **SEO & Performance:** Optimized metadata, sitemap management, and fetch-priority tuning for FCP/LCP  
+- **Visualization:** Interactive AWS architecture canvas for system-level visualization  
+
+These resources represent a complete technical learning ecosystem focused on scalability, algorithmic reasoning, and production-grade engineering standards.
+
+---
+
+**Repository:** [github.com/sanjaydeploys](https://github.com/sanjaydeploys)  
+**Live Platform:** [sanjaypatidar.in](https://sanjaypatidar.in)
 
 ## Case Study Highlights
 
@@ -233,3 +320,4 @@ For in-depth reading, check out each individual case study linked above.
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=0E75B6&height=120&section=footer" />
 </p>
+
